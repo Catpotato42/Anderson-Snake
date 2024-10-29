@@ -12,9 +12,9 @@ public class Food : MonoBehaviour
     }
 
     void RandomPosition () {
-        int x = Random.Range(-16, 16);
-        int y = Random.Range(-16, 16);
-        transform.position = new Vector2 (x + .475f, y + .515f);
+        int x = Random.Range(-(GameManager.instance.MapSize / 2) + 1, GameManager.instance.MapSize / 2);
+        int y = Random.Range(-(GameManager.instance.MapSize / 2) + 1, GameManager.instance.MapSize / 2);
+        transform.position = new Vector2 (x, y);
     }
 
     void OnTriggerEnter2D () {

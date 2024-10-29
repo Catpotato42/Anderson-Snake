@@ -21,8 +21,12 @@ public class Player : MonoBehaviour
     private int snakeScore = 0;
 
     private float difficultyTime;
-
     private string difficultyScale;
+
+    private bool canChangeDirection = true;
+    //private float directionChangeCooldown = 0.1f;
+    //private float timeSinceLastChange = 0f;
+    //private Vector2 lastDirection;
 
     public int SnakeScore {
         get => snakeScore; 
@@ -40,9 +44,12 @@ public class Player : MonoBehaviour
     {
         difficultyScale = GameManager.instance.SkinPref;
         if (difficultyScale == "everett") {
-            difficultyTime = .01f;
+            difficultyTime = .05f;
         } else if (difficultyScale == "basic") {
             difficultyTime = .005f;
+        } else {
+            Debug.Log("Error: float difficultyTime not found.");
+            difficultyTime = .001f;
         }
         ResetSnake();
     }
@@ -60,13 +67,14 @@ public class Player : MonoBehaviour
     }
 
     void ResetSnake () {
-        //pos, rot, dir, time
-        transform.position = new Vector2(.475f, .515f);
+        //position , rotation, direction, time
+        transform.position = new Vector2(0, 0);
         transform.rotation = Quaternion.Euler(0,0,-90);
         direction = Vector2.right;
-        Time.timeScale = .2f;
+        Time.timeScale = .1f;
         SetScore(0);
         ResetSegments();
+        lastInput = "D";
     }
 
     void ResetSegments () {
@@ -79,7 +87,7 @@ public class Player : MonoBehaviour
         segments.Add(gameObject); //adds head (pause)
 
         //puts initial segments after head
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 2; i++) {
             Grow();
             Time.timeScale -= difficultyTime;
         }
@@ -94,14 +102,17 @@ public class Player : MonoBehaviour
         }
         else if (difficultyScale == "basic" && Time.timeScale <= .3f){
             Time.timeScale += difficultyTime;
+        } else if (Time.timeScale <= .3f) {
+            Time.timeScale += difficultyTime;
         }
     }
 
-    // Update is called once per frame
     void Update()
     {
         GetUserInput();
-        ProcessInputQueue();
+        if (canChangeDirection) {
+            ProcessInputQueue();
+        }
     }
 
     void FixedUpdate () {
@@ -136,52 +147,46 @@ public class Player : MonoBehaviour
         {
             KeyCode input = inputQueue.Dequeue();
             HandleInput(input);
+            
         }
     }
 
-    void HandleInput(KeyCode input)
-    {
+    void HandleInput(KeyCode input) {
+
         switch (input)
         {
             case KeyCode.W:
-                if (lastInput == "S") {
-                    break;
-                }
+                if (lastInput == "S") break;
                 lastInput = "W";
                 direction = Vector2.up;
-                transform.rotation = Quaternion.Euler(0,0,0);
+                transform.rotation = Quaternion.Euler(0, 0, 0);
                 break;
             case KeyCode.A:
-                if (lastInput == "D") {
-                    break;
-                }
+                if (lastInput == "D") break;
                 lastInput = "A";
                 direction = Vector2.left;
-                transform.rotation = Quaternion.Euler(0,0,90);
+                transform.rotation = Quaternion.Euler(0, 0, 90);
                 break;
             case KeyCode.S:
-                if (lastInput == "W") {
-                    break;
-                }
+                if (lastInput == "W") break;
                 lastInput = "S";
                 direction = Vector2.down;
-                transform.rotation = Quaternion.Euler(0,0,180);
+                transform.rotation = Quaternion.Euler(0, 0, 180);
                 break;
             case KeyCode.D:
-                if (lastInput == "A") {
-                    break;
-                }
+                if (lastInput == "A") break;
                 lastInput = "D";
                 direction = Vector2.right;
-                transform.rotation = Quaternion.Euler(0,0,-90);
+                transform.rotation = Quaternion.Euler(0, 0, -90);
                 break;
         }
+        canChangeDirection = false;
     }
-
     void MoveSnake () {
         float x = transform.position.x + direction.x;
         float y = transform.position.y + direction.y;
         transform.position = new Vector2 (x, y);
+        canChangeDirection = true;
         /*if (direction == Vector2.up) {
             lastInput = "W";
         } else if (direction == Vector2.left) {
@@ -202,6 +207,7 @@ public class Player : MonoBehaviour
 
     void OnTriggerEnter2D (Collider2D collide) {
         if (collide.CompareTag("Obstacle")) {
+            Debug.Log("u died");
             Time.timeScale = 0f;
         } else if (collide.CompareTag("Food")) {
             Grow();
