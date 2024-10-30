@@ -11,6 +11,8 @@ public class Player : MonoBehaviour
     [SerializeField] private GameObject segment;
     List<GameObject> segments = new List<GameObject>();
 
+    private GameObject highScoreObj;
+
     private Queue<KeyCode> inputQueue = new Queue<KeyCode>();
 
     public event Action<int> OnScoreChanged;
@@ -22,6 +24,7 @@ public class Player : MonoBehaviour
 
     private float difficultyTime;
     private string difficultyScale;
+    //private float localTimeScale;
 
     private bool canChangeDirection = true;
     //private float directionChangeCooldown = 0.1f;
@@ -42,9 +45,11 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        highScoreObj = GameObject.FindGameObjectWithTag("HighScore");
+
         difficultyScale = GameManager.instance.SkinPref;
         if (difficultyScale == "everett") {
-            difficultyTime = .05f;
+            difficultyTime = .015f;
         } else if (difficultyScale == "basic") {
             difficultyTime = .005f;
         } else {
@@ -97,12 +102,12 @@ public class Player : MonoBehaviour
         GameObject newSegment = Instantiate(segment);
         newSegment.transform.position = segments[segments.Count - 1].transform.position; //the position is exactly where the old one currently is.
         segments.Add(newSegment);
-        if (difficultyScale == "everett" && Time.timeScale <= .5f) {
+        if (difficultyScale == "everett" && Time.timeScale <= .1f) {
             Time.timeScale += difficultyTime;
         }
-        else if (difficultyScale == "basic" && Time.timeScale <= .3f){
+        else if (difficultyScale == "basic" && Time.timeScale <= .05f){
             Time.timeScale += difficultyTime;
-        } else if (Time.timeScale <= .3f) {
+        } else if (Time.timeScale <= .25f) {
             Time.timeScale += difficultyTime;
         }
     }
@@ -183,19 +188,11 @@ public class Player : MonoBehaviour
         canChangeDirection = false;
     }
     void MoveSnake () {
+
         float x = transform.position.x + direction.x;
         float y = transform.position.y + direction.y;
         transform.position = new Vector2 (x, y);
         canChangeDirection = true;
-        /*if (direction == Vector2.up) {
-            lastInput = "W";
-        } else if (direction == Vector2.left) {
-            lastInput = "A";
-        } else if (direction == Vector2.down) {
-            lastInput = "S";
-        } else if (direction == Vector2.right) {
-            lastInput = "D";
-        }*/
     }
 
     void MoveSegments () {
@@ -205,14 +202,32 @@ public class Player : MonoBehaviour
         }
     }
 
+    void updateHighScore () {
+        string tempHighScore;
+        if (difficultyScale == "everett") {
+            tempHighScore = "eHighScore";
+        } else if (difficultyScale == "basic") {
+            tempHighScore = "HighScore";
+        } else {
+            tempHighScore = null;
+        }
+        if (PlayerPrefs.GetInt(tempHighScore) < snakeScore) {
+            //Debug.Log(snakeScore+" snakeScore higher than "+PlayerPrefs.GetInt("highScore"));
+            PlayerPrefs.SetInt(tempHighScore, snakeScore);
+            HighScore highScore = highScoreObj.GetComponent<HighScore>();
+            highScore.updateHighScore(tempHighScore);
+        }
+    }
+
     void OnTriggerEnter2D (Collider2D collide) {
         if (collide.CompareTag("Obstacle")) {
-            Debug.Log("u died");
             Time.timeScale = 0f;
+            updateHighScore();
         } else if (collide.CompareTag("Food")) {
             Grow();
             AddScore(1);
-            if (snakeScore == 200 && PlayerPrefs.GetInt("scoreEverett") != 1) {
+            updateHighScore();
+            if (snakeScore == 10 && PlayerPrefs.GetInt("scoreEverett") != 1) {
                 //Debug.Log("Yeah it happened");
                 PlayerPrefs.SetInt("scoreEverett", 1);
                 OnEverettUnlock.Invoke(true);

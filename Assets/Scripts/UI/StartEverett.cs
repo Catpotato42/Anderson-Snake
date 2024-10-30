@@ -17,6 +17,7 @@ public class StartEverett : MonoBehaviour, IPointerClickHandler
         if (pointerEventData.button == PointerEventData.InputButton.Left) {
             //Debug.Log("clicked");
             GameManager.instance.SkinPref = "everett";
+            GameManager.instance.MapSize = 16;
             SceneManager.LoadScene(1);
         }
     }

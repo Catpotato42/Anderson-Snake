@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Obstacle
   - Food
+  - HighScore
   layers:
   - Default
   - TransparentFX
