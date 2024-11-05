@@ -22,14 +22,15 @@ public class Player : MonoBehaviour
 
     private int snakeScore = 0;
 
+    [SerializeField] private GameObject deathCanvas;
+    private bool isDead = false;
+    private DeathScreen deathScreen;
+
     private float difficultyTime;
     private string difficultyScale;
     //private float localTimeScale;
 
     private bool canChangeDirection = true;
-    //private float directionChangeCooldown = 0.1f;
-    //private float timeSinceLastChange = 0f;
-    //private Vector2 lastDirection;
 
     public int SnakeScore {
         get => snakeScore; 
@@ -37,17 +38,22 @@ public class Player : MonoBehaviour
             if (snakeScore != value){
                 snakeScore = value;
                 // Invoke the event whenever the score changes
-                OnScoreChanged?.Invoke(snakeScore);
+                OnScoreChanged.Invoke(snakeScore);
             }
+        }
+    }
+
+    void Awake () {
+        highScoreObj = GameObject.FindGameObjectWithTag("HighScore");
+        difficultyScale = GameManager.instance.SkinPref;
+        if (deathCanvas != null) {
+            deathScreen = deathCanvas.GetComponent<DeathScreen>();
         }
     }
     
     // Start is called before the first frame update
     void Start()
     {
-        highScoreObj = GameObject.FindGameObjectWithTag("HighScore");
-
-        difficultyScale = GameManager.instance.SkinPref;
         if (difficultyScale == "everett") {
             difficultyTime = .015f;
         } else if (difficultyScale == "basic") {
@@ -71,12 +77,14 @@ public class Player : MonoBehaviour
         SnakeScore -= newScore;
     }
 
-    void ResetSnake () {
+    public void ResetSnake () {
         //position , rotation, direction, time
+        isDead = false;
         transform.position = new Vector2(0, 0);
         transform.rotation = Quaternion.Euler(0,0,-90);
         direction = Vector2.right;
         Time.timeScale = .1f;
+        deathCanvas.SetActive(false);
         SetScore(0);
         ResetSegments();
         lastInput = "D";
@@ -92,22 +100,23 @@ public class Player : MonoBehaviour
         segments.Add(gameObject); //adds head (pause)
 
         //puts initial segments after head
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < PlayerPrefs.GetInt("extraSegments"); i++) {
+            AddScore(1);
             Grow();
-            Time.timeScale -= difficultyTime;
         }
+        Time.timeScale = .1f;
     }
 
     void Grow () {
         GameObject newSegment = Instantiate(segment);
         newSegment.transform.position = segments[segments.Count - 1].transform.position; //the position is exactly where the old one currently is.
         segments.Add(newSegment);
-        if (difficultyScale == "everett" && Time.timeScale <= .1f) {
+        if (difficultyScale == "everett" && Time.timeScale <= .2f) {
             Time.timeScale += difficultyTime;
         }
-        else if (difficultyScale == "basic" && Time.timeScale <= .05f){
+        else if (difficultyScale == "basic" && Time.timeScale <= .1f){
             Time.timeScale += difficultyTime;
-        } else if (Time.timeScale <= .25f) {
+        } else if (Time.timeScale <= .25f && difficultyScale == null || difficultyScale == "") {
             Time.timeScale += difficultyTime;
         }
     }
@@ -134,10 +143,11 @@ public class Player : MonoBehaviour
             QueueInput(KeyCode.D);
         } else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)) {
             QueueInput(KeyCode.A);
-        } else if (Input.GetKeyDown(KeyCode.R)) {
+        } else if (Input.GetKeyDown(KeyCode.R) && isDead || Input.GetKeyDown(KeyCode.Space) && isDead) {
             ResetSnake();
-        } else if (Input.GetKeyDown(KeyCode.Escape)) {
+        } else if (Input.GetKeyDown(KeyCode.Escape) && isDead) {
             SceneManager.LoadScene(0);
+            PlayerPrefs.SetInt("mapSize", 0);
         }
     }
 
@@ -222,13 +232,14 @@ public class Player : MonoBehaviour
     void OnTriggerEnter2D (Collider2D collide) {
         if (collide.CompareTag("Obstacle")) {
             Time.timeScale = 0f;
+            isDead = true;
+            deathScreen.Setup(snakeScore);
             updateHighScore();
         } else if (collide.CompareTag("Food")) {
-            Grow();
             AddScore(1);
             updateHighScore();
+            Grow();
             if (snakeScore == 10 && PlayerPrefs.GetInt("scoreEverett") != 1) {
-                //Debug.Log("Yeah it happened");
                 PlayerPrefs.SetInt("scoreEverett", 1);
                 OnEverettUnlock.Invoke(true);
             }

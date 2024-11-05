@@ -2,13 +2,12 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
-public class Start : MonoBehaviour, IPointerClickHandler
+public class Restart : MonoBehaviour, IPointerClickHandler
 {
+    [SerializeField] private Player player;
     public void OnPointerClick (PointerEventData pointerEventData) {
         if (pointerEventData.button == PointerEventData.InputButton.Left) {
-            GameManager.instance.SkinPref = "basic";
-            GameManager.instance.MapSize = 8;
-            SceneManager.LoadScene(1);
+            player.ResetSnake();
         }
     }
 }

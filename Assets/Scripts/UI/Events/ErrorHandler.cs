@@ -6,6 +6,16 @@ using UnityEngine.UI;
 public class ErrorHandler : MonoBehaviour
 {
 
+    //currently useless until I find errors I want to display, use this syntax to display:
+    //in variable declaration:
+    //[SerializeField] private GameObject errorPanel;
+    //private ErrorHandler errorHandler;
+    //in start or awake:
+    //if (errorPanel != null) { 
+    //  errorHandler = errorPanel.GetComponent<ErrorHandler>();
+    //}
+    //where you want the error to display:
+    //StartCoroutine(errorHandler.ShowError(string I want to display));
     void Awake()
     {
         SetVisible(false);
