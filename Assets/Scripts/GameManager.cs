@@ -37,17 +37,18 @@ public class GameManager : MonoBehaviour
     
 
     //upgrades stuff
-    public static Dictionary<int, UpgradeInfo> upgrades0 = new Dictionary<int, UpgradeInfo>();
-    public static Dictionary<int, UpgradeInfo> upgrades1 = new Dictionary<int, UpgradeInfo>();
-    public static Dictionary<int, UpgradeInfo> upgrades2 = new Dictionary<int, UpgradeInfo>();
-    public static Dictionary<int, UpgradeInfo> upgrades3 = new Dictionary<int, UpgradeInfo>();
-    public static Dictionary<int, UpgradeInfo> upgrades4 = new Dictionary<int, UpgradeInfo>();
-    public static Dictionary<int, UpgradeInfo> upgrades5 = new Dictionary<int, UpgradeInfo>();
-    private Dictionary<int, int> disallowedUpgrades = new Dictionary<int, int>(); //add in format rarity, index
+    public Dictionary<int, UpgradeInfo> upgrades0 = new Dictionary<int, UpgradeInfo>();
+    public Dictionary<int, UpgradeInfo> upgrades1 = new Dictionary<int, UpgradeInfo>();
+    public Dictionary<int, UpgradeInfo> upgrades2 = new Dictionary<int, UpgradeInfo>();
+    public Dictionary<int, UpgradeInfo> upgrades3 = new Dictionary<int, UpgradeInfo>();
+    public Dictionary<int, UpgradeInfo> upgrades4 = new Dictionary<int, UpgradeInfo>();
+    public Dictionary<int, UpgradeInfo> upgrades5 = new Dictionary<int, UpgradeInfo>();
+    private List<int> disallowedUpgrades = new List<int>(); //add in format index
     //end upgrades stuff
 
     [SerializeField] private GameObject mainCamera;
     [SerializeField] private GameObject errorPanel;
+    [SerializeField] private Player player;
     private GameObject highScoreObj;
     private ErrorHandler errorHandler;
 
@@ -62,7 +63,8 @@ public class GameManager : MonoBehaviour
     public int MapSize {
         get => mapSize;
         set => mapSize = value;
-    } 
+    }
+
     void Awake () { //sets map size, makes new instance, maybe gets skin preference
         if (instance == null) {
             instance = this;
@@ -103,7 +105,6 @@ public class GameManager : MonoBehaviour
             }
         }
     }
-
     void SetDictionaryValues () { //garter(common) is 0 (grey), python(uncommon) is 1 (green), rattlesnake(rare) is 2 (blue), gaboon viper(epic) is 3 (red shiny), king cobra(legendary) is 4 (gold metallic), rainbow boa(mythic) is 5 (rainbow)
         int i = 0;
         upgrades0.Add(i, new UpgradeInfo("mapSizeAdd1", 0, 0)); i++;
@@ -142,60 +143,62 @@ public class GameManager : MonoBehaviour
         switch (rarity) {
             case 0:
                 index = Random.Range(0, upgrades0.Count);
-                while (index == disallowedUpgrades[0]) {
+                while (disallowedUpgrades.Contains(index)) {
                     index = Random.Range(0, upgrades0.Count);
                 }
                 upgradeChosen = upgrades0[index];
                 break;
             case 1:
                 index = Random.Range(0, upgrades1.Count);
-                while (index == disallowedUpgrades[1]) {
+                while (disallowedUpgrades.Contains(index)) {
                     index = Random.Range(0, upgrades1.Count);
                 }
                 upgradeChosen = upgrades1[index];
                 break;
             case 2:
                 index = Random.Range(0, upgrades2.Count);
-                while (index == disallowedUpgrades[2]) {
+                while (disallowedUpgrades.Contains(index)) {
                     index = Random.Range(0, upgrades2.Count);
                 }
                 upgradeChosen = upgrades2[index];
                 break;
             case 3:
                 index = Random.Range(0, upgrades3.Count);
-                while (index == disallowedUpgrades[3]) {
+                while (disallowedUpgrades.Contains(index)) {
                     index = Random.Range(0, upgrades3.Count);
                 }
                 upgradeChosen = upgrades3[index];
                 break;
             case 4:
                 index = Random.Range(0, upgrades4.Count);
-                while (index == disallowedUpgrades[4]) {
+                while (disallowedUpgrades.Contains(index)) {
                     index = Random.Range(0, upgrades4.Count);
                 }
                 upgradeChosen = upgrades4[index];
                 break;
             case 5:
                 index = Random.Range(0, upgrades5.Count);
-                while (index == disallowedUpgrades[5]) {
+                while (disallowedUpgrades.Contains(index)) {
                     index = Random.Range(0, upgrades5.Count);
                 }
                 upgradeChosen = upgrades5[index];
                 break;
             default:
                 index = Random.Range(0, upgrades0.Count);
-                while (index == disallowedUpgrades[0]) {
+                while (disallowedUpgrades.Contains(index)) {
                     index = Random.Range(0, upgrades0.Count);
                 }
                 upgradeChosen = upgrades0[index];
                 Debug.Log("No rarity/ invalid rarity specified");
                 break;
         }
-        disallowedUpgrades.Add(rarity, index);
+        disallowedUpgrades.Add(index);
         return upgradeChosen;
     }
-    //in other program (buttons) call RunUpgrade
+    //in other program (button) call RunUpgrade
     public void RunUpgrade (string upgrade) {
-
+        Debug.Log(upgrade);
+        player.UpgradeNumber++;
+        player.Grow();
     }
 }

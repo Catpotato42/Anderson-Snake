@@ -390,6 +390,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mainCamera: {fileID: 519420028}
   errorPanel: {fileID: 1866427128}
+  player: {fileID: 1582855268}
 --- !u!4 &199291745
 Transform:
   m_ObjectHideFlags: 0
@@ -1289,6 +1290,7 @@ GameObject:
   - component: {fileID: 594663349}
   - component: {fileID: 594663348}
   - component: {fileID: 594663347}
+  - component: {fileID: 594663350}
   m_Layer: 5
   m_Name: Choice1
   m_TagString: Untagged
@@ -1398,6 +1400,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 594663345}
   m_CullTransparentMesh: 1
+--- !u!114 &594663350
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 594663345}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 015832cd39c68f84aa458938af3ab53f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &680264052
 GameObject:
   m_ObjectHideFlags: 0
@@ -1850,6 +1864,7 @@ GameObject:
   - component: {fileID: 932772448}
   - component: {fileID: 932772447}
   - component: {fileID: 932772446}
+  - component: {fileID: 932772449}
   m_Layer: 5
   m_Name: Choice3
   m_TagString: Untagged
@@ -1959,6 +1974,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 932772444}
   m_CullTransparentMesh: 1
+--- !u!114 &932772449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 932772444}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 015832cd39c68f84aa458938af3ab53f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &936280926
 GameObject:
   m_ObjectHideFlags: 0
@@ -2993,10 +3020,9 @@ GameObject:
   m_Component:
   - component: {fileID: 1429953615}
   - component: {fileID: 1429953617}
-  - component: {fileID: 1429953616}
   m_Layer: 5
   m_Name: Choices
-  m_TagString: Untagged
+  m_TagString: UpgradeOptions
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3023,18 +3049,6 @@ RectTransform:
   m_AnchoredPosition: {x: -270, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1429953616
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1429953614}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 015832cd39c68f84aa458938af3ab53f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1429953617
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3148,6 +3162,7 @@ GameObject:
   - component: {fileID: 1533294615}
   - component: {fileID: 1533294614}
   - component: {fileID: 1533294613}
+  - component: {fileID: 1533294616}
   m_Layer: 5
   m_Name: Choice2
   m_TagString: Untagged
@@ -3257,6 +3272,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1533294611}
   m_CullTransparentMesh: 1
+--- !u!114 &1533294616
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1533294611}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 015832cd39c68f84aa458938af3ab53f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1582855267
 GameObject:
   m_ObjectHideFlags: 0
@@ -3273,7 +3300,7 @@ GameObject:
   - component: {fileID: 1582855273}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
