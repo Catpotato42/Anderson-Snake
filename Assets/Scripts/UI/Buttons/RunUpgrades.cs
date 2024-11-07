@@ -11,7 +11,7 @@ public class RunUpgrades : MonoBehaviour, IPointerClickHandler
     private GameManager.UpgradeInfo upgradeInfo;
     private GameObject choiceParent;
     private List<GameObject> choices = new List<GameObject>();
-    private float python = 50, rattlesnake = 75, viper = 90, cobra = 95, boa = 97.5f;
+    private float python = 50, rattlesnake = 75, viper = 90, cobra = 95, boa = 97.5f; //may want to switch python and rattlesnake
     private int index = 0;
     void Start()
     {

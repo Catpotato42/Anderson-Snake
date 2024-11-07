@@ -159,7 +159,7 @@ public class GameManager : MonoBehaviour
         Dictionary<int, UpgradeInfo> selectedUpgrades = GetUpgradeDictionaryByRarity(rarity);
         upgradeChosen = ChooseUpgrade(selectedUpgrades, ref index, rarity);
         disallowedUpgrades.Add(new Tuple<int, int>(rarity, index));
-        Debug.Log("new disallowedUpgrade "+new Tuple<int, int>(rarity, index));
+        //Debug.Log("new disallowedUpgrade "+new Tuple<int, int>(rarity, index));
         return upgradeChosen;
     }
     
@@ -195,7 +195,7 @@ public class GameManager : MonoBehaviour
 
     //in other program (button) call RunUpgrade
     public void RunUpgrade (UpgradeInfo upgrade, int index) {
-        Debug.Log(upgrade.Name); //add one to the upgrade chosen
+        Debug.Log(upgrade.Name+", rarity "+upgrade.Rarity); //add one to the upgrade chosen
         Dictionary<int, UpgradeInfo> dict = GetUpgradeDictionaryByRarity(upgrade.Rarity);
         IncreaseUpgradeLevel(dict, index);
         player.UpgradeNumber++;
