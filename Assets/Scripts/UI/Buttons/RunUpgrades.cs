@@ -12,6 +12,7 @@ public class RunUpgrades : MonoBehaviour, IPointerClickHandler
     private GameObject choiceParent;
     private List<GameObject> choices = new List<GameObject>();
     private float python = 50, rattlesnake = 75, viper = 90, cobra = 95, boa = 97.5f;
+    private int index = 0;
     void Start()
     {
         
@@ -22,7 +23,9 @@ public class RunUpgrades : MonoBehaviour, IPointerClickHandler
         int k = 0;
         while (k < choiceParent.transform.childCount) {
             Transform tempChoice = choiceParent.transform.GetChild(k);
-            choices.Add(tempChoice.gameObject);
+            if (tempChoice.gameObject != gameObject){
+                choices.Add(tempChoice.gameObject);
+            }
             k++;
         }
         if (GameObject.FindGameObjectWithTag("Player") == null) {
@@ -36,7 +39,7 @@ public class RunUpgrades : MonoBehaviour, IPointerClickHandler
     private void InitButton (bool buttonOn) {
         gameObject.SetActive(buttonOn);
         float rarity = Random.Range(0, 1000)/10f;
-        Debug.Log("rarity number");
+        Debug.Log("rarity generation: "+rarity);
         if (rarity < python && rarity > 0) {
             rarity = 0; //garter
         } else if (rarity >= python && rarity < rattlesnake) {
@@ -54,21 +57,24 @@ public class RunUpgrades : MonoBehaviour, IPointerClickHandler
             Debug.Log("error: rarity out of bounds");
         }
         int finalRarity = (int)rarity;
-        upgradeInfo = GameManager.instance.ChooseRandomRunUpgrade(finalRarity);
+        player.OnUpgrade += InitButton;
+        int indexRef = 0;
+        upgradeInfo = GameManager.instance.ChooseRandomRunUpgrade(finalRarity, ref indexRef);
+        index = indexRef;
     }
 
     public void OnPointerClick (PointerEventData pointerEventData) {
         if (pointerEventData.button == PointerEventData.InputButton.Left) {
-            GameManager.instance.RunUpgrade(upgradeInfo.Name);
+            GameManager.instance.RunUpgrade(upgradeInfo, index);
             for (int i = 0; i < choices.Count; i++) {
-                if (choices[i] != gameObject) {
-                    choices[i].SetActive(false);
-                }
+                choices[i].GetComponent<RunUpgrades>().deactivateSelf();
             }
             gameObject.SetActive(false);
         }
     }
 
-
+    public void deactivateSelf() {
+        gameObject.SetActive(false);
+    }
 
 }

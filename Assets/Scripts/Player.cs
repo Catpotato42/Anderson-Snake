@@ -23,7 +23,7 @@ public class Player : MonoBehaviour
     private string lastInput = "D";
 
     private int snakeScore = 0;
-    private int[] growThreshold = {5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 175, 190, 205, 220, 235};
+    private List<int> growThreshold = new List<int>{5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 175, 190, 205, 220, 235};
     private int upgradeNumber = 0;
 
     [SerializeField] private GameObject deathCanvas;
@@ -34,6 +34,8 @@ public class Player : MonoBehaviour
     private string difficultyScale;
     private float temporaryTime = .001f;
     private float localTimeScale;
+    private bool paused = true;
+    private bool isChoosing = false;
 
     private bool canChangeDirection = true;
 
@@ -76,6 +78,7 @@ public class Player : MonoBehaviour
             difficultyTime = .001f;
         }
         ResetSnake();
+        paused = false;
     }
 
     private void SetScore (int newScore) {
@@ -127,6 +130,7 @@ public class Player : MonoBehaviour
         segments.Add(newSegment);
         if(Time.timeScale == temporaryTime) {
             Time.timeScale = localTimeScale;
+            isChoosing = false;
         }
         if (difficultyScale == "everett" && Time.timeScale <= .2f) {
             Time.timeScale += difficultyTime;
@@ -165,6 +169,17 @@ public class Player : MonoBehaviour
         } else if (Input.GetKeyDown(KeyCode.Escape) && isDead) {
             SceneManager.LoadScene(0);
             PlayerPrefs.SetInt("mapSize", 0);
+        } else if (Input.GetKeyDown(KeyCode.Space)) { //doesn't work right now because Time.timeScale freezes the game so frames don't progress
+            if (paused && !isChoosing && !isDead) {
+                Time.timeScale = localTimeScale;
+                paused = false;
+            } else if (!paused && !isChoosing && !isDead) {
+                localTimeScale = Time.timeScale;
+                Time.timeScale = 0f;
+                paused = true;
+            } else if (isChoosing || isDead) {
+                
+            }
         }
     }
 
@@ -259,8 +274,10 @@ public class Player : MonoBehaviour
                 PlayerPrefs.SetInt("scoreEverett", 1);
                 OnEverettUnlock.Invoke(true);
             }
-            if (snakeScore > growThreshold[upgradeNumber]) {
+            if (snakeScore >= growThreshold[upgradeNumber]) {
+                Debug.Log("Hit threshold "+upgradeNumber);
                 upgradeNumber++;
+                isChoosing = true;
                 localTimeScale = Time.timeScale;
                 Time.timeScale = temporaryTime;
                 OnUpgrade.Invoke(true);
