@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 using UnityEngine.SceneManagement;
+using Unity.VisualScripting.Dependencies.Sqlite;
 
 public class Player : MonoBehaviour
 {
@@ -17,10 +18,13 @@ public class Player : MonoBehaviour
 
     public event Action<int> OnScoreChanged;
     public event Action<bool> OnEverettUnlock;
+    public event Action<bool> OnUpgrade;
 
     private string lastInput = "D";
 
     private int snakeScore = 0;
+    private List<int> growThreshold = new List<int>{5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 175, 190, 205, 220, 235};
+    private int upgradeNumber = 0;
 
     [SerializeField] private GameObject deathCanvas;
     private bool isDead = false;
@@ -28,9 +32,20 @@ public class Player : MonoBehaviour
 
     private float difficultyTime;
     private string difficultyScale;
-    //private float localTimeScale;
+    private float temporaryTime = .001f;
+    private float localTimeScale;
+    private bool paused = true;
+    private bool isChoosing = false;
 
     private bool canChangeDirection = true;
+
+    public int UpgradeNumber {
+        get => upgradeNumber;
+        set {
+            upgradeNumber = value;
+        }
+
+    }
 
     public int SnakeScore {
         get => snakeScore; 
@@ -63,6 +78,7 @@ public class Player : MonoBehaviour
             difficultyTime = .001f;
         }
         ResetSnake();
+        paused = false;
     }
 
     private void SetScore (int newScore) {
@@ -80,6 +96,7 @@ public class Player : MonoBehaviour
     public void ResetSnake () {
         //position , rotation, direction, time
         isDead = false;
+        upgradeNumber = 0;
         transform.position = new Vector2(0, 0);
         transform.rotation = Quaternion.Euler(0,0,-90);
         direction = Vector2.right;
@@ -107,10 +124,14 @@ public class Player : MonoBehaviour
         Time.timeScale = .1f;
     }
 
-    void Grow () {
+    public void Grow () {
         GameObject newSegment = Instantiate(segment);
         newSegment.transform.position = segments[segments.Count - 1].transform.position; //the position is exactly where the old one currently is.
         segments.Add(newSegment);
+        if(Time.timeScale == temporaryTime) {
+            Time.timeScale = localTimeScale;
+            isChoosing = false;
+        }
         if (difficultyScale == "everett" && Time.timeScale <= .2f) {
             Time.timeScale += difficultyTime;
         }
@@ -148,6 +169,17 @@ public class Player : MonoBehaviour
         } else if (Input.GetKeyDown(KeyCode.Escape) && isDead) {
             SceneManager.LoadScene(0);
             PlayerPrefs.SetInt("mapSize", 0);
+        } else if (Input.GetKeyDown(KeyCode.Space)) { //doesn't work right now because Time.timeScale freezes the game so frames don't progress
+            if (paused && !isChoosing && !isDead) {
+                Time.timeScale = localTimeScale;
+                paused = false;
+            } else if (!paused && !isChoosing && !isDead) {
+                localTimeScale = Time.timeScale;
+                Time.timeScale = 0f;
+                paused = true;
+            } else if (isChoosing || isDead) {
+                
+            }
         }
     }
 
@@ -238,10 +270,17 @@ public class Player : MonoBehaviour
         } else if (collide.CompareTag("Food")) {
             AddScore(1);
             updateHighScore();
-            Grow();
             if (snakeScore == 10 && PlayerPrefs.GetInt("scoreEverett") != 1) {
                 PlayerPrefs.SetInt("scoreEverett", 1);
                 OnEverettUnlock.Invoke(true);
+            }
+            if (snakeScore >= growThreshold[upgradeNumber]) {
+                Debug.Log("Hit threshold "+upgradeNumber);
+                upgradeNumber++;
+                isChoosing = true;
+                localTimeScale = Time.timeScale;
+                Time.timeScale = temporaryTime;
+                OnUpgrade.Invoke(true);
             }
             //Debug.Log("Score = "+snakeScore);
         }
