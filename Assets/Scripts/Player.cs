@@ -109,13 +109,13 @@ public class Player : MonoBehaviour
     }
 
     public void ResetSnake () {
-        //position , rotation, direction, time
         isDead = false;
         upgradeNumber = 0;
         GameManager.instance.MapSize = PlayerPrefs.GetInt("mapSize") + 6;
         TileMapper.instance.RefreshTileMap();
         OnReset.Invoke();
         GameManager.instance.SetDictionaryValues(); //called in awake of gamemanager too, probably redundant.
+        //position , rotation, direction, time
         transform.position = new Vector2(0, 0);
         transform.rotation = Quaternion.Euler(0,0,-90);
         direction = Vector2.right;
@@ -131,13 +131,12 @@ public class Player : MonoBehaviour
         for (int i = 1; i < segments.Count; i++) {
             Destroy(segments[i].gameObject);
         }
-
         segments.Clear(); //removes segments
         segments.Add(gameObject); //adds head (pause)
 
         //puts initial segments after head
         for (int i = 0; i < PlayerPrefs.GetInt("extraSegments"); i++) {
-            AddScore(1);
+            //AddScore(1);
             Grow();
         }
         Time.timeScale = .1f;

@@ -79,8 +79,11 @@ public class GameManager : MonoBehaviour
             if (errorPanel != null) {
                 errorHandler = errorPanel.GetComponent<ErrorHandler>();
             }
+            for (int i = 0; i <= PlayerPrefs.GetInt("extraFood"); i++) {
+                Instantiate(Resources.Load("Prefabs/Food"));
+            }
         } else {
-            PlayerPrefs.SetInt("extraSegments", 1); //remove later
+            PlayerPrefs.SetInt("extraSegments", 1); //remove all the playerpref stuff later
             //reset all playerprefs here to what default values should be
             PlayerPrefs.SetInt("mapSize", 0);
         }
@@ -108,36 +111,35 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void SetDictionaryValues () { //garter(common) is 0 (grey), python(uncommon) is 1 (green), rattlesnake(rare) is 2 (blue), gaboon viper(epic) is 3 (red shiny), king cobra(legendary) is 4 (gold metallic), rainbow boa(mythic) is 5 (rainbow)
+    public void SetDictionaryValues () { //garter(common) is 0 (grey), python(uncommon) is 1 (green), rattlesnake(rare) is 2 (blue), gaboon viper(epic) is 3 (red shiny/royal purple), king cobra(legendary) is 4 (gold metallic/red), rainbow boa(mythic) is 5 (rainbow/aqua)
         upgrades0.Clear();
         upgrades1.Clear();
         upgrades2.Clear();
         upgrades3.Clear(); // how do I make this automated (be able to use a for loop to go through it) without having another layer I need to get
         upgrades4.Clear(); // to in order to access the UpgradeInfo values? is the way to group them without needing to go through that layer related to pointers?
         upgrades5.Clear();
-        int i = 0;
+        int i = 0; //garter \/
         upgrades0.Add(i, new UpgradeInfo("mapSizeAdd1", 0, 0)); i++; //MAKE SURE YOU DO NOT MISS AN INDEX OR START BELOW OR ABOVE 0
         upgrades0.Add(i, new UpgradeInfo("speedSlow", 0, 0)); i++;   //I could fix that by doing .Keys.ElementAt(index); but that still would require index to be a valid key so actually I couldn't that's just how dictionaries work this whole comment is stupid
         upgrades0.Add(i, new UpgradeInfo("damageAdd", 0, 0)); i++;
         upgrades0.Add(i, new UpgradeInfo("foodAdd", 0, 0)); i++;
         upgrades0.Add(i, new UpgradeInfo("removeSegment2", 0, 0)); i++; //index 4
-        i = 0;
+        i = 0; //python \/
         upgrades1.Add(i, new UpgradeInfo("xpMore", 0, 1)); i++;
         upgrades1.Add(i, new UpgradeInfo("damagePercentAdd", 0, 1)); i++;
         upgrades1.Add(i, new UpgradeInfo("speedPercentSlow", 0, 1)); i++;
         upgrades1.Add(i, new UpgradeInfo("mapSizeAdd2", 0, 1)); i++; //index 3
-        i = 0;
+        i = 0; //rattlesnake \/
         upgrades2.Add(i, new UpgradeInfo("removeSegment4", 0, 2)); i++;
         upgrades2.Add(i, new UpgradeInfo("rattleSnakePlaceholder", 0, 2)); i++; //index 1
-        i = 0;
+        i = 0;//viper \/
         upgrades3.Add(i, new UpgradeInfo("fireSpeedAdd", 0, 3)); i++; //index 0, this should be a lot of fireSpeed to make the rarity mean something
         upgrades3.Add(i, new UpgradeInfo("viperPlaceHolder", 0, 3)); i++; //so the non percent upgrades of higher rarities are still worth it long run
-        i = 0;
+        i = 0;//cobra \/
         upgrades4.Add(i, new UpgradeInfo("projectileAdd1", 0, 4)); i++;
         upgrades4.Add(i, new UpgradeInfo("KingCobraPlaceholder", 0, 4)); i++; //index 1
-        i = 0;
+        i = 0;//boa \/
         upgrades5.Add(i, new UpgradeInfo("RainBowBoaPlaceholder", 0, 5)); i++; //index 0
-        i = 0;
     }
 
     private Dictionary<int, UpgradeInfo> GetUpgradeDictionaryByRarity(int rarity) {
@@ -227,6 +229,9 @@ public class GameManager : MonoBehaviour
                 mapSize++;
                 TileMapper.instance.RefreshTileMap();
                 break;
+            case "foodAdd":
+                Instantiate(Resources.Load("Prefabs/TempFood"));
+                break;
             default:
                 Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
                 break;
@@ -237,8 +242,8 @@ public class GameManager : MonoBehaviour
     //python upgrades
     private void PythonUpgrades (UpgradeInfo currentUpgrade) {
         switch (currentUpgrade.Name) {
-            case "mapSizeAdd1":
-                mapSize++;
+            case "mapSizeAdd2":
+                mapSize += 2;
                 TileMapper.instance.RefreshTileMap();
                 break;
             default:
