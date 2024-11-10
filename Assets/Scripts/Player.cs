@@ -34,11 +34,15 @@ public class Player : MonoBehaviour
     private float difficultyTime;
     private string difficultyScale;
     private float temporaryTime = 0f;
-    private float localTimeScale;
+    private float localTimeScale = .1f;
     private bool paused = true;
     private bool isChoosing = false;
 
     private bool canChangeDirection = true;
+
+    public float DifficultyTime {
+        get => difficultyTime;
+    }
 
     public int UpgradeNumber {
         get => upgradeNumber;

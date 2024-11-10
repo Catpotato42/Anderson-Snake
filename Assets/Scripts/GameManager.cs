@@ -122,7 +122,6 @@ public class GameManager : MonoBehaviour
         upgrades0.Add(i, new UpgradeInfo("mapSizeAdd1", 0, 0)); i++; //MAKE SURE YOU DO NOT MISS AN INDEX OR START BELOW OR ABOVE 0
         upgrades0.Add(i, new UpgradeInfo("speedSlow", 0, 0)); i++;   //I could fix that by doing .Keys.ElementAt(index); but that still would require index to be a valid key so actually I couldn't that's just how dictionaries work this whole comment is stupid
         upgrades0.Add(i, new UpgradeInfo("damageAdd", 0, 0)); i++;
-        upgrades0.Add(i, new UpgradeInfo("foodAdd", 0, 0)); i++;
         upgrades0.Add(i, new UpgradeInfo("removeSegment2", 0, 0)); i++; //index 4
         i = 0; //python \/
         upgrades1.Add(i, new UpgradeInfo("xpMore", 0, 1)); i++;
@@ -132,6 +131,7 @@ public class GameManager : MonoBehaviour
         i = 0; //rattlesnake \/
         upgrades2.Add(i, new UpgradeInfo("removeSegment4", 0, 2)); i++;
         upgrades2.Add(i, new UpgradeInfo("rattleSnakePlaceholder", 0, 2)); i++; //index 1
+        upgrades2.Add(i, new UpgradeInfo("foodAdd", 0, 0)); i++;
         i = 0;//viper \/
         upgrades3.Add(i, new UpgradeInfo("fireSpeedAdd", 0, 3)); i++; //index 0, this should be a lot of fireSpeed to make the rarity mean something
         upgrades3.Add(i, new UpgradeInfo("viperPlaceHolder", 0, 3)); i++; //so the non percent upgrades of higher rarities are still worth it long run
@@ -150,7 +150,7 @@ public class GameManager : MonoBehaviour
             case 3: return upgrades3;
             case 4: return upgrades4;
             case 5: return upgrades5;
-            default: Debug.Log("Line 152 GameManager.cs rarity was not valid. rarity = "+rarity); return upgrades0;
+            default: Debug.Log("Line 153 GameManager.cs rarity was not valid. rarity = "+rarity); return upgrades0;
         }
     }
 
@@ -229,8 +229,8 @@ public class GameManager : MonoBehaviour
                 mapSize++;
                 TileMapper.instance.RefreshTileMap();
                 break;
-            case "foodAdd":
-                Instantiate(Resources.Load("Prefabs/TempFood"));
+            case "speedSlow":
+                //remove 3 player.DifficultyTime units from player time if that doesn't take player time below 0.
                 break;
             default:
                 Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
@@ -255,9 +255,8 @@ public class GameManager : MonoBehaviour
     //rattlesnake upgrades
     private void RattlesnakeUpgrades (UpgradeInfo currentUpgrade) {
         switch (currentUpgrade.Name) {
-            case "mapSizeAdd1":
-                mapSize++;
-                TileMapper.instance.RefreshTileMap();
+            case "foodAdd":
+                Instantiate(Resources.Load("Prefabs/TempFood"));
                 break;
             default:
                 Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
