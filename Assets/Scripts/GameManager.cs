@@ -131,7 +131,7 @@ public class GameManager : MonoBehaviour
         i = 0; //rattlesnake \/
         upgrades2.Add(i, new UpgradeInfo("removeSegment4", 0, 2)); i++;
         upgrades2.Add(i, new UpgradeInfo("rattleSnakePlaceholder", 0, 2)); i++; //index 1
-        upgrades2.Add(i, new UpgradeInfo("foodAdd", 0, 0)); i++;
+        upgrades2.Add(i, new UpgradeInfo("foodAdd", 0, 2)); i++;
         i = 0;//viper \/
         upgrades3.Add(i, new UpgradeInfo("fireSpeedAdd", 0, 3)); i++; //index 0, this should be a lot of fireSpeed to make the rarity mean something
         upgrades3.Add(i, new UpgradeInfo("viperPlaceHolder", 0, 3)); i++; //so the non percent upgrades of higher rarities are still worth it long run
