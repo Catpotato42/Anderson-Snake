@@ -19,6 +19,7 @@ public class Player : MonoBehaviour
     public event Action<int> OnScoreChanged;
     public event Action<bool> OnEverettUnlock;
     public event Action<bool> OnUpgrade;
+    public event Action OnReset;
 
     private string lastInput = "D";
 
@@ -32,7 +33,7 @@ public class Player : MonoBehaviour
 
     private float difficultyTime;
     private string difficultyScale;
-    private float temporaryTime = .001f;
+    private float temporaryTime = 0f;
     private float localTimeScale;
     private bool paused = true;
     private bool isChoosing = false;
@@ -60,23 +61,37 @@ public class Player : MonoBehaviour
 
     void Awake () {
         highScoreObj = GameObject.FindGameObjectWithTag("HighScore");
-        difficultyScale = GameManager.instance.SkinPref;
+        TileMapper.instance.RefreshTileMap(); //needs to be done in awake so that the food doesn't spawn wrong
         if (deathCanvas != null) {
             deathScreen = deathCanvas.GetComponent<DeathScreen>();
         }
+        //change skin, segments has its own script for this.
+        SpriteRenderer skin = gameObject.GetComponent<SpriteRenderer>();
+        if (GameManager.instance.SkinPref == "everett") {
+            skin.sprite = Resources.Load<Sprite>("Skins/EverettHead");
+        } else {
+            skin.sprite = Resources.Load<Sprite>("Skins/Square");
+        }
+        difficultyScale = GameManager.instance.SkinPref;
     }
     
     // Start is called before the first frame update
     void Start()
     {
+        Debug.Log("Extra segments: "+PlayerPrefs.GetInt("extraSegments"));
+        Debug.Log("High score: "+PlayerPrefs.GetInt("highScore"));
+        Debug.Log("Unlocked Everett: "+PlayerPrefs.GetInt("scoreEverett"));
+        Debug.Log("Everett high score: "+PlayerPrefs.GetInt("eHighScore"));    
         if (difficultyScale == "everett") {
             difficultyTime = .015f;
         } else if (difficultyScale == "basic") {
             difficultyTime = .005f;
+            Debug.Log("Difficulty = basic");
         } else {
             Debug.Log("Error: float difficultyTime not found.");
             difficultyTime = .001f;
         }
+        Debug.Log("now resetting snake");
         ResetSnake();
         paused = false;
     }
@@ -97,6 +112,10 @@ public class Player : MonoBehaviour
         //position , rotation, direction, time
         isDead = false;
         upgradeNumber = 0;
+        GameManager.instance.MapSize = PlayerPrefs.GetInt("mapSize") + 6;
+        TileMapper.instance.RefreshTileMap();
+        OnReset.Invoke();
+        GameManager.instance.SetDictionaryValues(); //called in awake of gamemanager too, probably redundant.
         transform.position = new Vector2(0, 0);
         transform.rotation = Quaternion.Euler(0,0,-90);
         direction = Vector2.right;
@@ -265,6 +284,7 @@ public class Player : MonoBehaviour
         if (collide.CompareTag("Obstacle")) {
             Time.timeScale = 0f;
             isDead = true;
+            Debug.Log(upgradeNumber);
             deathScreen.Setup(snakeScore);
             updateHighScore();
         } else if (collide.CompareTag("Food")) {
@@ -275,7 +295,7 @@ public class Player : MonoBehaviour
                 OnEverettUnlock.Invoke(true);
             }
             if (snakeScore >= growThreshold[upgradeNumber]) {
-                Debug.Log("Hit threshold "+upgradeNumber);
+                Debug.Log("Hit threshold "+upgradeNumber+" at score "+snakeScore);
                 upgradeNumber++;
                 isChoosing = true;
                 localTimeScale = Time.timeScale;

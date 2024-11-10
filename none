@@ -1,0 +1,86 @@
+* [33mcommit e6d8af34b97e0f1661c31636cc137cb0f337786b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32munstable[m[33m, [m[1;31morigin/unstable[m[33m)[m
+[31m|[m Author: Catpotato42 <simon.a.harrington@gmail.com>
+[31m|[m Date:   Sat Nov 9 19:42:53 2024 -0800
+[31m|[m 
+[31m|[m     Implementation of upgrades - WIP
+[31m|[m     
+[31m|[m     working on the implementation of upgrades, testing mapSize after I push this to unstable
+[31m|[m 
+* [33mcommit 428a0c0ec30b05a1a4737b93cd01160600a6e704[m
+[31m|[m Author: Catpotato42 <simon.a.harrington@gmail.com>
+[31m|[m Date:   Thu Nov 7 14:25:41 2024 -0800
+[31m|[m 
+[31m|[m     Debug changes
+[31m|[m     
+[31m|[m     title
+[31m|[m     
+[31m|[m *   [33mcommit 41d1ad85ef487ec0ecb5be936b33def08b9aa2f3[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+[31m|[m [32m|[m[31m\[m  Merge: 2e446d9 4ce67ad
+[31m|[m [32m|[m[31m/[m  Author: Catpotato42 <52795409+Catpotato42@users.noreply.github.com>
+[31m|[m[31m/[m[32m|[m   Date:   Thu Nov 7 14:18:19 2024 -0800
+[31m|[m [32m|[m   
+[31m|[m [32m|[m       Merge pull request #1 from Catpotato42/unstable
+[31m|[m [32m|[m       
+[31m|[m [32m|[m       Unstable -> main
+[31m|[m [32m|[m 
+* [32m|[m [33mcommit 4ce67ad178b9442af71e8d81694be8d7337b9a8d[m
+[33m|[m [32m|[m Author: Catpotato42 <simon.a.harrington@gmail.com>
+[33m|[m [32m|[m Date:   Thu Nov 7 14:15:43 2024 -0800
+[33m|[m [32m|[m 
+[33m|[m [32m|[m     WORKING
+[33m|[m [32m|[m     
+[33m|[m [32m|[m     now stable, will push to main
+[33m|[m [32m|[m 
+* [32m|[m [33mcommit c47781a2c612bf4ab17e2c97c924dac3ae06eaf3[m
+[32m|[m[32m/[m  Author: Catpotato42 <simon.a.harrington@gmail.com>
+[32m|[m   Date:   Wed Nov 6 23:52:46 2024 -0800
+[32m|[m   
+[32m|[m       Broken when snake reached second threshold
+[32m|[m       
+[32m|[m       implemented some roguelike upgrade stuff but it breaks whenever you get a second upgrade
+[32m|[m 
+* [33mcommit 2e446d9e79c48c289a97123ef533288bf7a5e292[m
+[33m|[m Author: Catpotato42 <simon.a.harrington@gmail.com>
+[33m|[m Date:   Tue Nov 5 12:48:49 2024 -0800
+[33m|[m 
+[33m|[m     Unstable working on run upgrades
+[33m|[m     
+[33m|[m     moved stuff around, started to make playerPrefs only for settings (no settings implemented just stopped using one or two playerPrefs in favor of static variables), started working on run upgrades through a dictionary in GameManager, removed errorHandler stuff (implementation still available, object is just inactive now). Other small changes and bugfixes like speed is now actually capped based on difficulty.
+[33m|[m 
+* [33mcommit 043b3b5be931a468f06889b83055888ac1746b4d[m
+[33m|[m Author: Catpotato42 <simon.a.harrington@gmail.com>
+[33m|[m Date:   Wed Oct 30 20:20:12 2024 -0700
+[33m|[m 
+[33m|[m     tilemap start
+[33m|[m     
+[33m|[m     Added a new scene for tilemap additions
+[33m|[m 
+* [33mcommit 1a5ddc981c87a998a03633e335e0c4a4c14d57f0[m
+[33m|[m Author: Catpotato42 <simon.a.harrington@gmail.com>
+[33m|[m Date:   Wed Oct 30 02:40:45 2024 -0700
+[33m|[m 
+[33m|[m     maps, errors, high scores, everett mode
+[33m|[m     
+[33m|[m     fully implemented maps with compatibility to add more with only a couple lines of code, high scores also with different possibilities based on the map, and everett mode with the unlock requirements and all.
+[33m|[m 
+* [33mcommit f80cc9f459880b12a1ff9e3f3c850bfcca58cbb4[m
+[33m|[m Author: Catpotato42 <simon.a.harrington@gmail.com>
+[33m|[m Date:   Tue Oct 29 09:04:40 2024 -0700
+[33m|[m 
+[33m|[m     Finally fixed the controls
+[33m|[m     
+[33m|[m     You can no longer turn into yourself and there is quick responsiveness in the controls. Also added all the backgrounds and tried them out, background8x8.png finally works if instantiated at .5, .5. (Snake can use 0, 0 as starting point) However, this is 8x8 so has no center. May look at google snake to see what size map is most fun to play in (i.e. is a center square required)
+[33m|[m 
+* [33mcommit e48fcf11533c7e0ac47c5bbe11fa2bd121e0fb1d[m
+[33m|[m Author: Catpotato42 <simon.a.harrington@gmail.com>
+[33m|[m Date:   Mon Oct 28 22:34:31 2024 -0700
+[33m|[m 
+[33m|[m     Added all project files
+[33m|[m     
+[33m|[m     has basic snake functionality, a title screen, everett mode and ability to swap sprites and difficulty based on conditions controlled in playerprefs, and a gamemanager.
+[33m|[m 
+* [33mcommit 509aa21d6328c7f3ea7076b6bc2f4fc3743b0fb0[m
+  Author: Catpotato42 <simon.a.harrington@gmail.com>
+  Date:   Mon Oct 28 22:20:09 2024 -0700
+  
+      Initial commit
