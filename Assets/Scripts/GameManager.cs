@@ -212,12 +212,13 @@ public class GameManager : MonoBehaviour
             Debug.Log("Rarity mismatch, rarity = "+currentUpgrade.Rarity);
         }
         player.Grow();
-        Debug.Log(currentUpgrade.Name+" increased to "+currentUpgrade.Level);
+        //Debug.Log(currentUpgrade.Name+" increased to "+currentUpgrade.Level);
     }
 
     //in other program (button) call RunUpgrade
     public void RunUpgrade (UpgradeInfo upgrade, int index) {
-        Debug.Log(upgrade.Name+", rarity "+upgrade.Rarity); //add one to the upgrade chosen
+        //Debug.Log(upgrade.Name+", rarity "+upgrade.Rarity); 
+        //add one to the upgrade chosen
         IncreaseUpgradeLevel(upgrade);
         disallowedUpgrades.Clear();
     }
@@ -228,9 +229,17 @@ public class GameManager : MonoBehaviour
             case "mapSizeAdd1":
                 mapSize++;
                 TileMapper.instance.RefreshTileMap();
+                Debug.Log(currentUpgrade.Name+" increased to "+currentUpgrade.Level);
                 break;
             case "speedSlow":
-                //remove 3 player.DifficultyTime units from player time if that doesn't take player time below 0.
+                //remove 3 player.DifficultyTime units from player time if that doesn't take player time below default .1f.
+                for (int i = 0; i < 3; i++) {
+                    if (player.LocalTimeScale > .1f + player.DifficultyTime) {
+                        player.LocalTimeScale -= player.DifficultyTime;
+                        Debug.Log("subtracted "+player.DifficultyTime+ " from player localTimeScale.");
+                    }
+                }
+                Debug.Log("Player time scale = "+player.LocalTimeScale);
                 break;
             default:
                 Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
