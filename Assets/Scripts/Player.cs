@@ -72,6 +72,7 @@ public class Player : MonoBehaviour
         } else {
             skin.sprite = Resources.Load<Sprite>("Skins/Square");
         }
+        difficultyScale = GameManager.instance.SkinPref;
     }
     
     // Start is called before the first frame update
