@@ -32,7 +32,7 @@ public class Player : MonoBehaviour
 
     private float difficultyTime;
     private string difficultyScale;
-    private float temporaryTime = .001f;
+    private float temporaryTime = 0f;
     private float localTimeScale;
     private bool paused = true;
     private bool isChoosing = false;
@@ -69,6 +69,10 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        Debug.Log("Extra segments: "+PlayerPrefs.GetInt("extraSegments"));
+        Debug.Log("High score: "+PlayerPrefs.GetInt("highScore"));
+        Debug.Log("Unlocked Everett: "+PlayerPrefs.GetInt("scoreEverett"));
+        Debug.Log("Everett high score: "+PlayerPrefs.GetInt("eHighScore"));    
         if (difficultyScale == "everett") {
             difficultyTime = .015f;
         } else if (difficultyScale == "basic") {
@@ -265,6 +269,7 @@ public class Player : MonoBehaviour
         if (collide.CompareTag("Obstacle")) {
             Time.timeScale = 0f;
             isDead = true;
+            Debug.Log(upgradeNumber);
             deathScreen.Setup(snakeScore);
             updateHighScore();
         } else if (collide.CompareTag("Food")) {
@@ -275,8 +280,7 @@ public class Player : MonoBehaviour
                 OnEverettUnlock.Invoke(true);
             }
             if (snakeScore >= growThreshold[upgradeNumber]) {
-                Debug.Log("Hit threshold "+upgradeNumber);
-                upgradeNumber++;
+                Debug.Log("Hit threshold "+upgradeNumber+" at score "+snakeScore);
                 isChoosing = true;
                 localTimeScale = Time.timeScale;
                 Time.timeScale = temporaryTime;

@@ -4,11 +4,11 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
 
-public class TileMap : MonoBehaviour
+public class TileMapper : MonoBehaviour
 {
     [SerializeField] private Tilemap floorMap, obstacleMap;
     [SerializeField] private TileBase floorTile, l, lup, ld, r, rup, rd, up, d;
-    public static TileMap instance;
+    public static TileMapper instance;
     void Start() {
         RefreshTileMap();
     }

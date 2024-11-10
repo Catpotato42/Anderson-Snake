@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -39,8 +40,8 @@ public class RunUpgrades : MonoBehaviour, IPointerClickHandler
     private void InitButton (bool buttonOn) {
         gameObject.SetActive(buttonOn);
         float rarity = Random.Range(0, 1000)/10f;
-        Debug.Log("rarity generation: "+rarity);
-        if (rarity < python && rarity > 0) {
+        //Debug.Log("rarity generation: "+rarity);
+        if (rarity < python && rarity >= 0) {
             rarity = 0; //garter
         } else if (rarity >= python && rarity < rattlesnake) {
             rarity = 1; //python
@@ -58,9 +59,10 @@ public class RunUpgrades : MonoBehaviour, IPointerClickHandler
         }
         int finalRarity = (int)rarity;
         player.OnUpgrade += InitButton;
-        int indexRef = 0;
-        upgradeInfo = GameManager.instance.ChooseRandomRunUpgrade(finalRarity, ref indexRef);
-        index = indexRef;
+        upgradeInfo = GameManager.instance.ChooseRandomRunUpgrade(finalRarity, ref index);
+        GameObject titleUpgradeObj = gameObject.transform.GetChild(0).gameObject; //there should be a textmeshpro as the child
+        TextMeshProUGUI titleUpgrade = titleUpgradeObj.GetComponent<TextMeshProUGUI>(); //INSTEAD I SHOULD JUST INSTANTIATE A PREFAB
+        titleUpgrade.text = upgradeInfo.Name+", Level "+upgradeInfo.Level; //also need color based on rarity, more text objects
     }
 
     public void OnPointerClick (PointerEventData pointerEventData) {

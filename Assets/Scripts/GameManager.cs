@@ -52,6 +52,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject mainCamera;
     [SerializeField] private GameObject errorPanel;
     [SerializeField] private Player player;
+    [SerializeField] private TileMapper tileMap;
     private GameObject highScoreObj;
     private ErrorHandler errorHandler;
 
@@ -123,10 +124,7 @@ public class GameManager : MonoBehaviour
         upgrades1.Add(i, new UpgradeInfo("mapSizeAdd2", 0, 1)); i++; //index 3
         i = 0;
         upgrades2.Add(i, new UpgradeInfo("removeSegment4", 0, 2)); i++;
-        upgrades2.Add(i, new UpgradeInfo("rattleSnakePlaceholder", 0, 2)); i++;
-        upgrades2.Add(i, new UpgradeInfo("rattleSnakePlaceholder", 0, 2)); i++;
-        upgrades2.Add(i, new UpgradeInfo("rattleSnakePlaceholder", 0, 2)); i++;
-        upgrades2.Add(i, new UpgradeInfo("rattleSnakePlaceholder", 0, 2)); i++; //index 4
+        upgrades2.Add(i, new UpgradeInfo("rattleSnakePlaceholder", 0, 2)); i++; //index 1
         i = 0;
         upgrades3.Add(i, new UpgradeInfo("fireSpeedAdd", 0, 3)); i++; //index 0, this should be a lot of fireSpeed
         i = 0;
@@ -153,9 +151,10 @@ public class GameManager : MonoBehaviour
     // this method should be called by the button which gets a signal from the player 
     //when the snakeScore gets to certain thresholds. these thresholds should be stored in an array in the 
     //player script so that they can be accessed and changed by different upgrades that the player acquires.
+
+    //returns a new random upgrade, removes it from disallowed upgrades
     public UpgradeInfo ChooseRandomRunUpgrade(int rarity, ref int index) { 
         UpgradeInfo upgradeChosen;
-        index = 0;
         Dictionary<int, UpgradeInfo> selectedUpgrades = GetUpgradeDictionaryByRarity(rarity);
         upgradeChosen = ChooseUpgrade(selectedUpgrades, ref index, rarity);
         disallowedUpgrades.Add(new Tuple<int, int>(rarity, index));
@@ -163,13 +162,12 @@ public class GameManager : MonoBehaviour
         return upgradeChosen;
     }
     
-    //hopefully you can tell where I call this method
+    //called in ChooseRandomRunUpgrade, returns a new random upgrade
     private UpgradeInfo ChooseUpgrade (Dictionary<int, UpgradeInfo> upgradeChoose, ref int index, int rarity) {
         List<int> validKeys = upgradeChoose.Keys.Where(key => !disallowedUpgrades.Contains(new Tuple<int, int>(rarity, key))
         && !permanentDisallowedUpgrades.Contains(new Tuple<int, int>(rarity, key))).ToList(); //don't really understand Linq expressions but saw it on StackOverflow
         index = UnityEngine.Random.Range(0, validKeys.Count);
         if (validKeys.Count > 0) {
-            index = UnityEngine.Random.Range(0, validKeys.Count);
             return upgradeChoose[validKeys[index]];
         } else {
             if (rarity !=0) {
@@ -190,7 +188,13 @@ public class GameManager : MonoBehaviour
     }
 
     private void IncreaseUpgradeLevel (Dictionary<int, UpgradeInfo> dict, int index) {
-        dict[index].Level++;
+        UpgradeInfo currentUpgrade = dict[index];
+        currentUpgrade.Level++;
+        if (currentUpgrade.Rarity == 0) {
+            GarterUpgrades(currentUpgrade);
+        }
+        player.Grow();
+        Debug.Log(dict[index].Name+" increased to "+dict[index].Level);
     }
 
     //in other program (button) call RunUpgrade
@@ -200,6 +204,84 @@ public class GameManager : MonoBehaviour
         IncreaseUpgradeLevel(dict, index);
         player.UpgradeNumber++;
         disallowedUpgrades.Clear();
-        player.Grow();
+    }
+
+    //garter upgrades
+    private void GarterUpgrades (UpgradeInfo currentUpgrade) { //class isn't passed by reference, the reference to the class is passed by value. Ask stratton about primitive types -> pointers to a location in memory, classes when given to methods are references to a class outside which values can be modified inside the method. 
+        switch (currentUpgrade.Name) {
+            case "mapSizeAdd1":
+                mapSize++;
+                tileMap.RefreshTileMap();
+                break;
+            default:
+                Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
+                break;
+
+        }
+    }
+
+    //python upgrades
+    private void PythonUpgrades (UpgradeInfo currentUpgrade) {
+        switch (currentUpgrade.Name) {
+            case "mapSizeAdd1":
+                mapSize++;
+                tileMap.RefreshTileMap();
+                break;
+            default:
+                Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
+                break;
+        }
+    }
+
+    //rattlesnake upgrades
+    private void RattlesnakeUpgrades (UpgradeInfo currentUpgrade) {
+        switch (currentUpgrade.Name) {
+            case "mapSizeAdd1":
+                mapSize++;
+                tileMap.RefreshTileMap();
+                break;
+            default:
+                Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
+                break;
+        }
+    }
+
+    //viper upgrades
+    private void ViperUpgrades (UpgradeInfo currentUpgrade) {
+        switch (currentUpgrade.Name) {
+            case "mapSizeAdd1":
+                mapSize++;
+                tileMap.RefreshTileMap();
+                break;
+            default:
+                Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
+                break;
+        }
+    }
+
+    //cobra upgrades
+    private void CobraUpgrades (UpgradeInfo currentUpgrade) {
+        switch (currentUpgrade.Name) {
+            case "mapSizeAdd1":
+                mapSize++;
+                tileMap.RefreshTileMap();
+                break;
+            default:
+                Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
+                break;
+        }
+    }
+
+    //boa upgrades
+    private void BoaUpgrades (UpgradeInfo currentUpgrade) {
+        switch (currentUpgrade.Name) {
+            case "mapSizeAdd1":
+                mapSize++;
+                tileMap.RefreshTileMap();
+                break;
+            default:
+                Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
+                break;
+        }
     }
 }
