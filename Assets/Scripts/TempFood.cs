@@ -1,23 +1,25 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
-public class Food : MonoBehaviour
+public class TempFood : MonoBehaviour
 {
     private GameObject playerObj;
+    private Player player;
     void Awake()
     {
         playerObj = GameObject.FindGameObjectWithTag("Player");
-        Player player = playerObj.GetComponent<Player>();   
+        player = playerObj.GetComponent<Player>();        
         RandomPosition();
-        player.OnReset += RandomPosition;
+        player.OnReset += RemoveFood;
     }
 
     private void RandomPosition () {
         int x = Random.Range(-(GameManager.instance.MapSize / 2) + 1, GameManager.instance.MapSize / 2);
         int y = Random.Range(-(GameManager.instance.MapSize / 2) + 1, GameManager.instance.MapSize / 2);
         transform.position = new Vector2 (x, y);
+    }
+
+    private void RemoveFood () {
+        Destroy(gameObject);
     }
 
     void OnTriggerEnter2D () {

@@ -33,12 +33,25 @@ public class Player : MonoBehaviour
 
     private float difficultyTime;
     private string difficultyScale;
-    private float temporaryTime = 0f;
+    private float customFixedInterval = 0.02f; // Time interval in seconds (same as default Time.fixedDeltaTime so should run fixedupdate at the same rate)
+    private float timeSinceLastUpdate = 0f;
     private float localTimeScale;
     private bool paused = true;
     private bool isChoosing = false;
 
     private bool canChangeDirection = true;
+
+    public float DifficultyTime {
+        get => difficultyTime;
+    }
+
+
+    public float LocalTimeScale {
+        get => localTimeScale;
+        set {
+            localTimeScale = value;
+        }
+    }
 
     public int UpgradeNumber {
         get => upgradeNumber;
@@ -84,8 +97,9 @@ public class Player : MonoBehaviour
         Debug.Log("Everett high score: "+PlayerPrefs.GetInt("eHighScore"));    
         if (difficultyScale == "everett") {
             difficultyTime = .015f;
+            Debug.Log("Difficulty = everett");
         } else if (difficultyScale == "basic") {
-            difficultyTime = .005f;
+            difficultyTime = .008f;
             Debug.Log("Difficulty = basic");
         } else {
             Debug.Log("Error: float difficultyTime not found.");
@@ -109,17 +123,18 @@ public class Player : MonoBehaviour
     }
 
     public void ResetSnake () {
-        //position , rotation, direction, time
         isDead = false;
         upgradeNumber = 0;
         GameManager.instance.MapSize = PlayerPrefs.GetInt("mapSize") + 6;
         TileMapper.instance.RefreshTileMap();
         OnReset.Invoke();
         GameManager.instance.SetDictionaryValues(); //called in awake of gamemanager too, probably redundant.
+        //position , rotation, direction, time
         transform.position = new Vector2(0, 0);
         transform.rotation = Quaternion.Euler(0,0,-90);
         direction = Vector2.right;
-        Time.timeScale = .1f;
+        localTimeScale = .1f;
+        Time.timeScale = 1f;
         deathCanvas.SetActive(false);
         SetScore(0);
         ResetSegments();
@@ -131,33 +146,38 @@ public class Player : MonoBehaviour
         for (int i = 1; i < segments.Count; i++) {
             Destroy(segments[i].gameObject);
         }
-
         segments.Clear(); //removes segments
         segments.Add(gameObject); //adds head (pause)
 
         //puts initial segments after head
-        for (int i = 0; i < PlayerPrefs.GetInt("extraSegments"); i++) {
-            AddScore(1);
+        for (int i = 0; i < PlayerPrefs.GetInt("extraSegments") + 1; i++) {
             Grow();
         }
-        Time.timeScale = .1f;
+        localTimeScale = .1f;
     }
 
     public void Grow () {
-        GameObject newSegment = Instantiate(segment);
-        newSegment.transform.position = segments[segments.Count - 1].transform.position; //the position is exactly where the old one currently is.
-        segments.Add(newSegment);
-        if(Time.timeScale == temporaryTime) {
-            Time.timeScale = localTimeScale;
+        if (segments.Count == 1) {
+            GameObject newSegment = Instantiate(segment);
+            newSegment.transform.position = transform.position - (Vector3)direction;;
+            segments.Add(newSegment);
+        } else {
+            GameObject newSegment = Instantiate(segment);
+            newSegment.transform.position = segments[segments.Count - 1].transform.position;
+            segments.Add(newSegment);
+        }
+        if(Time.timeScale == 0) {
+            Time.timeScale = 1f;
             isChoosing = false;
         }
-        if (difficultyScale == "everett" && Time.timeScale <= .2f) {
-            Time.timeScale += difficultyTime;
+        if (difficultyScale == "everett" && localTimeScale <= .3f) {
+            localTimeScale += difficultyTime;
         }
-        else if (difficultyScale == "basic" && Time.timeScale <= .1f){
-            Time.timeScale += difficultyTime;
-        } else if (Time.timeScale <= .25f && difficultyScale == null || difficultyScale == "") {
-            Time.timeScale += difficultyTime;
+        else if (difficultyScale == "basic" && localTimeScale <= .25f){
+            localTimeScale += difficultyTime;
+        } else if (localTimeScale <= .25f && difficultyScale == null || difficultyScale == "") {
+            Debug.Log("problem in grow function of player script, difficulty scale = "+ difficultyScale);
+            localTimeScale += difficultyTime;
         }
     }
 
@@ -169,7 +189,18 @@ public class Player : MonoBehaviour
         }
     }
 
-    void FixedUpdate () {
+    void FixedUpdate() {
+        // Using Time.fixedDeltaTime to accumulate time
+        timeSinceLastUpdate += Time.fixedDeltaTime;
+        //if timesincelast > .02 (normal amount for fixed update) / localtime (.1 or something, so it takes 10x longer to perform an action.)
+        if (timeSinceLastUpdate >= customFixedInterval/localTimeScale) {
+            PerformCustomFixedUpdateLogic();
+
+            timeSinceLastUpdate = 0f;
+        }
+    }
+
+    void PerformCustomFixedUpdateLogic() {
         MoveSegments();
         MoveSnake();
     }
@@ -188,12 +219,11 @@ public class Player : MonoBehaviour
         } else if (Input.GetKeyDown(KeyCode.Escape) && isDead) {
             SceneManager.LoadScene(0);
             PlayerPrefs.SetInt("mapSize", 0);
-        } else if (Input.GetKeyDown(KeyCode.Space)) { //doesn't work right now because Time.timeScale freezes the game so frames don't progress
+        } else if (Input.GetKeyDown(KeyCode.Space)) {
             if (paused && !isChoosing && !isDead) {
-                Time.timeScale = localTimeScale;
+                Time.timeScale = 1f;
                 paused = false;
             } else if (!paused && !isChoosing && !isDead) {
-                localTimeScale = Time.timeScale;
                 Time.timeScale = 0f;
                 paused = true;
             } else if (isChoosing || isDead) {
@@ -298,8 +328,7 @@ public class Player : MonoBehaviour
                 Debug.Log("Hit threshold "+upgradeNumber+" at score "+snakeScore);
                 upgradeNumber++;
                 isChoosing = true;
-                localTimeScale = Time.timeScale;
-                Time.timeScale = temporaryTime;
+                Time.timeScale = 0f;
                 OnUpgrade.Invoke(true);
             }
             //Debug.Log("Score = "+snakeScore);
