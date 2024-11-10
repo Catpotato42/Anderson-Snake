@@ -8,6 +8,7 @@ public class TileMapper : MonoBehaviour
 {
     [SerializeField] private Tilemap floorMap, obstacleMap;
     [SerializeField] private TileBase floorTile, l, lup, ld, r, rup, rd, up, d;
+    [SerializeField] private GameObject mainCamera;
     public static TileMapper instance;
     void Start() {
         RefreshTileMap();
@@ -26,11 +27,13 @@ public class TileMapper : MonoBehaviour
         if (activeScene.name == "TitleScreen") {
             return;
         }
+        floorMap.ClearAllTiles();
+        obstacleMap.ClearAllTiles();
         int width = GameManager.instance.MapSize + 2, height = GameManager.instance.MapSize + 2;
         Vector3Int centerRef = new Vector3Int(-width / 2, -height / 2, 0);
 
         for (int y = 0; y < height; y++) { //goes down columns 
-            for (int x = 0; x < width; x++) {
+            for (int x = 0; x < width; x++) { //goes across rows
                 if (x != 0 && x != (width - 1) && y != 0 && y != (height - 1)) { //PLEASE MAKE THIS A SWITCH CASE FUTURE ME
                     Vector3Int floorPosition = new Vector3Int (x, y, 0);
                     floorMap.SetTile(floorPosition, floorTile);
@@ -64,5 +67,7 @@ public class TileMapper : MonoBehaviour
         //Debug.Log($"Center Position: {centerRef.x}, {centerRef.y}");
         floorMap.transform.position = new Vector3(centerRef.x + .5f, centerRef.y -.5f, 0);
         obstacleMap.transform.position = new Vector3(centerRef.x + .5f, centerRef.y - .5f, 0);
+        Camera mainCam = mainCamera.GetComponent<Camera>();
+        mainCam.orthographicSize = GameManager.instance.MapSize - (GameManager.instance.MapSize/7f);
     }
 }
