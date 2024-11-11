@@ -183,9 +183,9 @@ public class Player : MonoBehaviour
     }
 
     public void RemoveSegment () {
-        if (segments.Count == 1) {
+        if (segments.Count <= 2 && segments.Count > 0) {
             return;
-        } else if (segments.Count > 1) {
+        } else if (segments.Count > 2) {
             segments.RemoveAt(segments.Count - 1); //I'm not sure but this might be able to be implemented with segments.Remove(segments.FindLastIndex(segment));
         } else {
             Debug.Log("Error: Tried to call RemoveSegment (Player.cs public void RemoveSegment()) but segment.Count < 1 (no head (huh??)). segments.Count = " + segments.Count);
