@@ -128,7 +128,6 @@ public class Player : MonoBehaviour
         upgradeNumber = 0;
         GameManager.instance.MapSize = PlayerPrefs.GetInt("mapSize") + 6;
         TileMapper.instance.RefreshTileMap();
-        OnReset.Invoke(); //needs to be invoked BEFORE RefreshTileMap as the camera will go to current player position which is still not reset otherwise
         GameManager.instance.SetDictionaryValues(); //called in awake of gamemanager too, probably redundant.
         //position , rotation, direction, time
         transform.position = new Vector2(0, 0);
@@ -140,6 +139,7 @@ public class Player : MonoBehaviour
         SetScore(0);
         ResetSegments();
         lastInput = "D";
+        OnReset.Invoke(); //needs to be invoked AFTER RefreshTileMap and pos, rot... as player would see old tilemap and other stuff on countdown otherwise
     }
 
     void ResetSegments () {

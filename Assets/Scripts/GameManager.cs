@@ -94,7 +94,7 @@ public class GameManager : MonoBehaviour
 
     void Start () {
         if (SceneManager.GetActiveScene().buildIndex != 0) {
-            SetHighScore();           
+            SetHighScore();
         }
     }
 

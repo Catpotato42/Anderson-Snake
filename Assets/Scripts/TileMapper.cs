@@ -11,7 +11,7 @@ public class TileMapper : MonoBehaviour
     [SerializeField] private GameObject mainCamera;
     public static TileMapper instance;
     void Start() {
-        RefreshTileMap();
+        RefreshTileMap(); //could add RefreshTileMap into player OnReset action
     }
     
     void Awake () {
