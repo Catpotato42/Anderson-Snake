@@ -68,10 +68,10 @@ public class TileMapper : MonoBehaviour
         floorMap.transform.position = new Vector3(centerRef.x + .5f, centerRef.y -.5f, 0);
         obstacleMap.transform.position = new Vector3(centerRef.x + .5f, centerRef.y - .5f, 0);
         Camera mainCam = mainCamera.GetComponent<Camera>();
-        if (GameManager.instance.MapSize < 15) {
+        if (GameManager.instance.MapSize < 10) { //also represented by Action OnMapSize10 in GameManager 
             mainCam.orthographicSize = GameManager.instance.MapSize - (GameManager.instance.MapSize/7f);
         } else {
-            mainCam.orthographicSize = 17f;
+            mainCam.orthographicSize = 10f;
         }
     }
 }
