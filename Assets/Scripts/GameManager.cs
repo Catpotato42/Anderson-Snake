@@ -53,6 +53,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject mainCamera;
     [SerializeField] private GameObject errorPanel;
     [SerializeField] private Player player;
+
+    public Action OnMapSize15;
+
     private GameObject highScoreObj;
     private ErrorHandler errorHandler;
 
@@ -82,10 +85,12 @@ public class GameManager : MonoBehaviour
             for (int i = 0; i <= PlayerPrefs.GetInt("extraFood"); i++) {
                 Instantiate(Resources.Load("Prefabs/Food"));
             }
+            if (mapSize >= 15) {
+                OnMapSize15.Invoke();
+            }
         } else {
             PlayerPrefs.SetInt("extraSegments", 1); //remove all the playerpref stuff later
             //reset all playerprefs here to what default values should be
-            PlayerPrefs.SetInt("mapSize", 0);
         }
         //skinPref = ?
     }
@@ -212,6 +217,9 @@ public class GameManager : MonoBehaviour
             Debug.Log("Rarity mismatch, rarity = "+currentUpgrade.Rarity);
         }
         player.Grow();
+        if (mapSize >= 15) {
+            OnMapSize15.Invoke();
+        }
         //Debug.Log(currentUpgrade.Name+" increased to "+currentUpgrade.Level);
     }
 
