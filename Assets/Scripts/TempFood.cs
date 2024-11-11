@@ -3,10 +3,11 @@ using UnityEngine;
 public class TempFood : MonoBehaviour
 {
     private GameObject playerObj;
+    private Player player;
     void Awake()
     {
         playerObj = GameObject.FindGameObjectWithTag("Player");
-        Player player = playerObj.GetComponent<Player>();        
+        player = playerObj.GetComponent<Player>();        
         RandomPosition();
         player.OnReset += RemoveFood;
     }
@@ -18,9 +19,7 @@ public class TempFood : MonoBehaviour
     }
 
     private void RemoveFood () {
-        if (gameObject != null) {
-            Destroy(gameObject);
-        }
+        Destroy(gameObject);
     }
 
     void OnTriggerEnter2D () {

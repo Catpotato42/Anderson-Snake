@@ -53,6 +53,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject mainCamera;
     [SerializeField] private GameObject errorPanel;
     [SerializeField] private Player player;
+
+    public Action OnMapSize15;
+
     private GameObject highScoreObj;
     private ErrorHandler errorHandler;
 
@@ -82,10 +85,12 @@ public class GameManager : MonoBehaviour
             for (int i = 0; i <= PlayerPrefs.GetInt("extraFood"); i++) {
                 Instantiate(Resources.Load("Prefabs/Food"));
             }
+            if (mapSize >= 15) {
+                OnMapSize15.Invoke();
+            }
         } else {
             PlayerPrefs.SetInt("extraSegments", 1); //remove all the playerpref stuff later
             //reset all playerprefs here to what default values should be
-            PlayerPrefs.SetInt("mapSize", 0);
         }
         //skinPref = ?
     }
@@ -212,12 +217,16 @@ public class GameManager : MonoBehaviour
             Debug.Log("Rarity mismatch, rarity = "+currentUpgrade.Rarity);
         }
         player.Grow();
-        Debug.Log(currentUpgrade.Name+" increased to "+currentUpgrade.Level);
+        if (mapSize >= 15) {
+            OnMapSize15.Invoke();
+        }
+        //Debug.Log(currentUpgrade.Name+" increased to "+currentUpgrade.Level);
     }
 
     //in other program (button) call RunUpgrade
     public void RunUpgrade (UpgradeInfo upgrade, int index) {
-        Debug.Log(upgrade.Name+", rarity "+upgrade.Rarity); //add one to the upgrade chosen
+        //Debug.Log(upgrade.Name+", rarity "+upgrade.Rarity); 
+        //add one to the upgrade chosen
         IncreaseUpgradeLevel(upgrade);
         disallowedUpgrades.Clear();
     }
@@ -228,9 +237,17 @@ public class GameManager : MonoBehaviour
             case "mapSizeAdd1":
                 mapSize++;
                 TileMapper.instance.RefreshTileMap();
+                Debug.Log(currentUpgrade.Name+" increased to "+currentUpgrade.Level);
                 break;
             case "speedSlow":
-                //remove 3 player.DifficultyTime units from player time if that doesn't take player time below 0.
+                //remove 3 player.DifficultyTime units from player time if that doesn't take player time below default .1f.
+                for (int i = 0; i < 3; i++) {
+                    if (player.LocalTimeScale > .1f + player.DifficultyTime) {
+                        player.LocalTimeScale -= player.DifficultyTime;
+                        Debug.Log("subtracted "+player.DifficultyTime+ " from player localTimeScale.");
+                    }
+                }
+                Debug.Log("Player time scale = "+player.LocalTimeScale);
                 break;
             default:
                 Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
