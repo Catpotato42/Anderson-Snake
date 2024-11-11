@@ -94,10 +94,7 @@ public class GameManager : MonoBehaviour
 
     void Start () {
         if (SceneManager.GetActiveScene().buildIndex != 0) {
-            SetHighScore();
-            Camera mainCam = mainCamera.GetComponent<Camera>();
-            mainCam.orthographicSize = mapSize - (mapSize/7f);
-            mainCamera.transform.position = new Vector3(1, -.5f, -10);
+            SetHighScore();           
         }
     }
 
@@ -132,7 +129,6 @@ public class GameManager : MonoBehaviour
         upgrades1.Add(i, new UpgradeInfo("mapSizeAdd2", 0, 1)); i++; //index 3
         i = 0; //rattlesnake \/
         upgrades2.Add(i, new UpgradeInfo("removeSegment3", 0, 2)); i++;
-        upgrades2.Add(i, new UpgradeInfo("rattleSnakePlaceholder", 0, 2)); i++; //index 1
         upgrades2.Add(i, new UpgradeInfo("foodAdd", 0, 2)); i++;
         i = 0;//viper \/
         upgrades3.Add(i, new UpgradeInfo("fireSpeedAdd", 0, 3)); i++; //index 0, this should be a lot of fireSpeed to make the rarity mean something
@@ -248,6 +244,7 @@ public class GameManager : MonoBehaviour
                 break;
             case "removeSegment":
                 player.RemoveSegment();
+                player.RemoveSegment();
                 Debug.Log(currentUpgrade.Name+" increased to "+currentUpgrade.Level);
                 break;
             default:
@@ -278,7 +275,7 @@ public class GameManager : MonoBehaviour
             case "foodAdd":
                 Instantiate(Resources.Load("Prefabs/TempFood"));
                 break;
-            case "removeSegment4":
+            case "removeSegment3":
                 for (int i = 0; i < 4; i++) {
                     player.RemoveSegment();
                 }
@@ -320,6 +317,7 @@ public class GameManager : MonoBehaviour
     //boa upgrades
     private void BoaUpgrades (UpgradeInfo currentUpgrade) {
         //playing with the idea that boa upgrades make the player not grow as an added benefit to all of them.
+        player.DoneChoosing();
         switch (currentUpgrade.Name) {
             case "mapSizeAdd1":
                 mapSize++;

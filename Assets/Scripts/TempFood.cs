@@ -19,6 +19,7 @@ public class TempFood : MonoBehaviour
     }
 
     private void RemoveFood () {
+        player.OnReset -= RemoveFood;
         Destroy(gameObject);
     }
 

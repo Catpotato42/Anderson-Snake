@@ -128,7 +128,7 @@ public class Player : MonoBehaviour
         upgradeNumber = 0;
         GameManager.instance.MapSize = PlayerPrefs.GetInt("mapSize") + 6;
         TileMapper.instance.RefreshTileMap();
-        OnReset.Invoke();
+        OnReset.Invoke(); //needs to be invoked BEFORE RefreshTileMap as the camera will go to current player position which is still not reset otherwise
         GameManager.instance.SetDictionaryValues(); //called in awake of gamemanager too, probably redundant.
         //position , rotation, direction, time
         transform.position = new Vector2(0, 0);
@@ -182,11 +182,20 @@ public class Player : MonoBehaviour
         }
     }
 
+    public void DoneChoosing () { //allows rainbowboa upgrades to unpause the game without growing the player
+        if(Time.timeScale == 0) {
+            Time.timeScale = 1f;
+            isChoosing = false;
+        }
+    }
+
     public void RemoveSegment () {
         if (segments.Count <= 2 && segments.Count > 0) {
             return;
         } else if (segments.Count > 2) {
+            GameObject segmentToRemove = segments[segments.Count - 1];
             segments.RemoveAt(segments.Count - 1); //I'm not sure but this might be able to be implemented with segments.Remove(segments.FindLastIndex(segment));
+            Destroy(segmentToRemove); //This needs to be after removal from the list or else the RemoveAt is dereferencing a null pointer.
         } else {
             Debug.Log("Error: Tried to call RemoveSegment (Player.cs public void RemoveSegment()) but segment.Count < 1 (no head (huh??)). segments.Count = " + segments.Count);
         }
