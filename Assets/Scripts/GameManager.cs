@@ -53,18 +53,20 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject mainCamera;
     [SerializeField] private GameObject errorPanel;
     [SerializeField] private Player player;
+
+    public Action OnMapSize10; //not invoked but in tilemapper there is an if statement
+
     private GameObject highScoreObj;
     private ErrorHandler errorHandler;
 
-    
     private static string skinPref = "basic";
     public string SkinPref {
         get => skinPref;
         set => skinPref = value;
     }
-    private static int mapSize;
+    private static int mapSize; //doesn't matter that it's static, I change when the real game starts not in main menu.
 
-    public int MapSize {
+    public int MapSize { //this is really 6 + playerprefs mapSize, is changed on GM awake and player reset.
         get => mapSize;
         set => mapSize = value;
     }
@@ -75,6 +77,7 @@ public class GameManager : MonoBehaviour
         } else {
             Destroy(gameObject);
         }
+        mapSize = PlayerPrefs.GetInt("mapSize") + 6;
         if (SceneManager.GetActiveScene().buildIndex != 0) { //if not on the title screen
             if (errorPanel != null) {
                 errorHandler = errorPanel.GetComponent<ErrorHandler>();
@@ -85,7 +88,6 @@ public class GameManager : MonoBehaviour
         } else {
             PlayerPrefs.SetInt("extraSegments", 1); //remove all the playerpref stuff later
             //reset all playerprefs here to what default values should be
-            PlayerPrefs.SetInt("mapSize", 0);
         }
         //skinPref = ?
     }
@@ -212,6 +214,9 @@ public class GameManager : MonoBehaviour
             Debug.Log("Rarity mismatch, rarity = "+currentUpgrade.Rarity);
         }
         player.Grow();
+        if (mapSize >= 10) {
+            OnMapSize10.Invoke();
+        }
         //Debug.Log(currentUpgrade.Name+" increased to "+currentUpgrade.Level);
     }
 
