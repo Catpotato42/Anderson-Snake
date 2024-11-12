@@ -20,7 +20,11 @@ public class Food : MonoBehaviour
         transform.position = new Vector2 (x, y);
     }
 
-    void OnTriggerEnter2D () {
-        RandomPosition();
+    void OnTriggerEnter2D (Collider2D collider) {
+        if (!collider.CompareTag("Player") && !collider.CompareTag("Enemy")) {
+            return;
+        } else {
+            RandomPosition();
+        }
     }
 }

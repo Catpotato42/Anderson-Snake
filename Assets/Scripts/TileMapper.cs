@@ -71,7 +71,7 @@ public class TileMapper : MonoBehaviour
         if (GameManager.instance.MapSize < 10) { //also represented by Action OnMapSize10 in GameManager 
             mainCam.orthographicSize = GameManager.instance.MapSize - (GameManager.instance.MapSize/7f);
         } else {
-            mainCam.orthographicSize = 10f;
+            mainCam.orthographicSize = 9f;
         }
     }
 }

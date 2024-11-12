@@ -4,6 +4,7 @@ using System;
 using UnityEngine.SceneManagement;
 using Unity.VisualScripting.Dependencies.Sqlite;
 using UnityEditor.MPE;
+using Unity.VisualScripting;
 
 public class Player : MonoBehaviour
 {
@@ -14,6 +15,9 @@ public class Player : MonoBehaviour
     List<GameObject> segments = new List<GameObject>();
 
     private GameObject highScoreObj;
+
+    [SerializeField] private GameObject bulletPrefab;
+    private float fireForce = 5f;
 
     private Queue<KeyCode> inputQueue = new Queue<KeyCode>();
 
@@ -40,7 +44,18 @@ public class Player : MonoBehaviour
     private bool paused = true;
     private bool isChoosing = false;
 
+    private float fireCooldown = 2f;
+    private float fireCooldownTracker = 0f;
+    private bool canShoot = false;
+
     private bool canChangeDirection = true;
+
+    public float FireCooldown {
+        get => fireCooldown;
+        set {
+            fireCooldown = value;
+        }
+    }
 
     public float DifficultyTime {
         get => difficultyTime;
@@ -93,9 +108,9 @@ public class Player : MonoBehaviour
     void Start()
     {
         Debug.Log("Extra segments: "+PlayerPrefs.GetInt("extraSegments"));
-        Debug.Log("High score: "+PlayerPrefs.GetInt("highScore"));
+        //Debug.Log("High score: "+PlayerPrefs.GetInt("highScore"));
         Debug.Log("Unlocked Everett: "+PlayerPrefs.GetInt("scoreEverett"));
-        Debug.Log("Everett high score: "+PlayerPrefs.GetInt("eHighScore"));    
+        //Debug.Log("Everett high score: "+PlayerPrefs.GetInt("eHighScore"));    
         if (difficultyScale == "everett") {
             difficultyTime = .015f;
             Debug.Log("Difficulty = everett");
@@ -108,7 +123,6 @@ public class Player : MonoBehaviour
         }
         Debug.Log("now resetting snake");
         ResetSnake();
-        paused = false;
     }
 
     private void SetScore (int newScore) {
@@ -124,7 +138,7 @@ public class Player : MonoBehaviour
     }
 
     public void ResetSnake () {
-        isDead = false;
+        //isDead = false;
         upgradeNumber = 0;
         GameManager.instance.MapSize = PlayerPrefs.GetInt("mapSize") + 6;
         TileMapper.instance.RefreshTileMap();
@@ -140,6 +154,8 @@ public class Player : MonoBehaviour
         ResetSegments();
         lastInput = "D";
         OnReset.Invoke(); //needs to be invoked AFTER RefreshTileMap and pos, rot... as player would see old tilemap and other stuff on countdown otherwise
+        paused = false;
+        isDead = false;
     }
 
     void ResetSegments () {
@@ -201,8 +217,20 @@ public class Player : MonoBehaviour
         }
     }
 
-    void Update()
-    {
+    private void Fire () {
+        Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mousePosition.z = 0; //there has to be a way to just get Vector2 but this'll do
+        Vector3 direction = mousePosition - transform.position;
+        Quaternion rot = Quaternion.Euler(0, 0, Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg);
+        GameObject bullet = Instantiate(bulletPrefab, transform.position, rot);
+        bullet.GetComponent<Rigidbody2D>().velocity = direction.normalized * fireForce;
+    }
+
+    void Update() {
+        fireCooldownTracker += Time.deltaTime; //if TimeScale is 0, this won't increment as opposed to unscaledDeltaTime which would.
+        if (fireCooldownTracker > fireCooldown) {
+            canShoot = true;
+        }
         GetUserInput();
         if (canChangeDirection) {
             ProcessInputQueue();
@@ -239,7 +267,7 @@ public class Player : MonoBehaviour
         } else if (Input.GetKeyDown(KeyCode.Escape) && isDead) {
             SceneManager.LoadScene(0);
             PlayerPrefs.SetInt("mapSize", 0);
-        } else if (Input.GetKeyDown(KeyCode.Space)) {
+        } else if (Input.GetKeyDown(KeyCode.Space)) { //pausing is only in for testing purposes!
             if (paused && !isChoosing && !isDead) {
                 Time.timeScale = 1f;
                 paused = false;
@@ -249,6 +277,10 @@ public class Player : MonoBehaviour
             } else if (isChoosing || isDead) {
                 
             }
+        } else if (Input.GetKeyDown(KeyCode.Mouse0) && !isChoosing && !isDead && canShoot) {
+            Fire();
+            fireCooldownTracker = 0f; //needs to be before canShoot or maybe canShoot would set itself to true again?
+            canShoot = false;
         }
     }
 
@@ -330,7 +362,7 @@ public class Player : MonoBehaviour
     }
 
     void OnTriggerEnter2D (Collider2D collide) {
-        if (collide.CompareTag("Obstacle")) {
+        if (collide.CompareTag("Obstacle") || collide.CompareTag("Walls")) {
             Time.timeScale = 0f;
             isDead = true;
             Debug.Log(upgradeNumber);
