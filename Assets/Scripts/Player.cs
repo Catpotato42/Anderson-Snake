@@ -47,6 +47,16 @@ public class Player : MonoBehaviour
     private float fireCooldownTracker = 0f;
     private bool canShoot = false;
 
+    private bool dashing = false;
+    private int dashAmount = 3;
+    private int dashAmountTracker = 3;
+    private bool canDash = false;
+    private float dashCooldown = 1f;
+    private float dashCooldownTracker = 0f;
+    private float dashSpeed = .5f;
+    private float tempDashTime;
+
+
     private bool canChangeDirection = true;
 
     public float FireCooldown {
@@ -231,6 +241,10 @@ public class Player : MonoBehaviour
         if (fireCooldownTracker > fireCooldown) {
             canShoot = true;
         }
+        dashCooldownTracker += Time.deltaTime;
+        if (dashCooldownTracker > dashCooldown) {
+            canDash = true;
+        }
         GetUserInput();
         if (canChangeDirection) {
             ProcessInputQueue();
@@ -249,6 +263,14 @@ public class Player : MonoBehaviour
     }
 
     void PerformCustomFixedUpdateLogic() {
+        if (dashing) {
+            dashAmountTracker--;
+        } if (dashAmountTracker <= 0) {
+            dashing = false;
+            dashAmountTracker = dashAmount;
+            localTimeScale = tempDashTime;
+            tempDashTime = 0; //unnecessary
+        }
         MoveSegments();
         MoveSnake();
     }
@@ -267,8 +289,8 @@ public class Player : MonoBehaviour
         } else if (Input.GetKeyDown(KeyCode.Escape) && isDead) {
             SceneManager.LoadScene(0);
             PlayerPrefs.SetInt("mapSize", 0);
-        } else if (Input.GetKeyDown(KeyCode.Space)) { //pausing is only in for testing purposes!
-            if (paused && !isChoosing && !isDead) {
+        } else if (Input.GetKeyDown(KeyCode.Space) && canDash) { //pausing is only in for testing purposes! Dashing is the intended functionalty of space
+            /*if (paused && !isChoosing && !isDead) {
                 Time.timeScale = 1f;
                 paused = false;
             } else if (!paused && !isChoosing && !isDead) {
@@ -276,7 +298,12 @@ public class Player : MonoBehaviour
                 paused = true;
             } else if (isChoosing || isDead) {
                 
-            }
+            }*/
+            dashCooldownTracker = 0f;
+            dashing = true;
+            canDash = false;
+            tempDashTime = localTimeScale;
+            localTimeScale = dashSpeed;
         } else if (Input.GetKeyDown(KeyCode.Mouse0) && !isChoosing && !isDead && canShoot) {
             Fire();
             fireCooldownTracker = 0f; //needs to be before canShoot or maybe canShoot would set itself to true again?
