@@ -16,9 +16,6 @@ public class Player : MonoBehaviour
 
     private GameObject highScoreObj;
 
-    [SerializeField] private GameObject bulletPrefab;
-    private float fireForce = 5f;
-
     private Queue<KeyCode> inputQueue = new Queue<KeyCode>();
 
     public event Action<int> OnScoreChanged;
@@ -44,6 +41,8 @@ public class Player : MonoBehaviour
     private bool paused = true;
     private bool isChoosing = false;
 
+    [SerializeField] private GameObject bulletPrefab;
+    private float fireForce = 20f;
     private float fireCooldown = 2f;
     private float fireCooldownTracker = 0f;
     private bool canShoot = false;
@@ -223,6 +222,7 @@ public class Player : MonoBehaviour
         Vector3 direction = mousePosition - transform.position;
         Quaternion rot = Quaternion.Euler(0, 0, Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg);
         GameObject bullet = Instantiate(bulletPrefab, transform.position, rot);
+        bullet.GetComponent<Rigidbody2D>().collisionDetectionMode = CollisionDetectionMode2D.Continuous;
         bullet.GetComponent<Rigidbody2D>().velocity = direction.normalized * fireForce;
     }
 

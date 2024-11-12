@@ -23,7 +23,7 @@ public class UniversalBulletScript : MonoBehaviour
         }
     }
 
-    /*private void OnCollisionEnter2D (Collision2D collision) {
+    private void OnCollisionEnter2D (Collision2D collision) {
         Debug.Log("in OnCollisionEnter2D, tag = "+collision.gameObject.tag);
         if (!collision.gameObject.CompareTag("Obstacle")) { //If you are NOT colliding with the player or a segment
             if (collisions <= 0) {
@@ -32,16 +32,16 @@ public class UniversalBulletScript : MonoBehaviour
             } else {
                 collisions--;
                 Vector2 normal = collision.GetContact(0).normal;
-                GetComponent<Rigidbody2D>().velocity = Vector2.Reflect(GetComponent<Rigidbody2D>().velocity, normal);
+                Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
+                rigidbody.velocity = Vector2.Reflect(rigidbody.velocity, normal);
             }
         } else {
             Physics2D.IgnoreCollision(GetComponent<Collider2D>(), collision.gameObject.GetComponent<Collider2D>(), true);
             Debug.Log("Bullet ignored collision with: " + collision.gameObject.name);
         }
+    }
 
-    }*/
-
-    private void OnTriggerEnter2D(Collider2D collider) {
+    /*private void OnTriggerEnter2D(Collider2D collider) {
         Debug.Log("In collision (bullet)");
         if (collider.CompareTag("Walls")) {
             if (collisions <= 0) {
@@ -55,7 +55,7 @@ public class UniversalBulletScript : MonoBehaviour
                 GetComponent<Rigidbody2D>().MovePosition((Vector2)transform.position + GetComponent<Rigidbody2D>().velocity * Time.fixedDeltaTime);
             }
         }
-    }
+    }*/
 }
 
 

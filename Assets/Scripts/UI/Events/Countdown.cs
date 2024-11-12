@@ -12,6 +12,7 @@ public class Countdown : MonoBehaviour
         player.OnReset += CountdownStart;
     }
     private void CountdownStart() {
+        gameObject.SetActive(true);
         StartCoroutine(CountdownRoutine());
     }
 
@@ -28,5 +29,6 @@ public class Countdown : MonoBehaviour
         Time.timeScale = 1f;
         yield return new WaitForSecondsRealtime(.8f);
         Countdown.text = "";
+        gameObject.SetActive(false);
     }
 }
