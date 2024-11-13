@@ -10,7 +10,6 @@ public class Enemy : MonoBehaviour
     private float health;
     void Awake() {
         playerObj = GameObject.FindGameObjectWithTag("Player");
-        RandomPosition();
         player = playerObj.GetComponent<Player>();
         player.OnReset += RemoveEnemy;
         if (gameObject.CompareTag("Enemy1")) {
@@ -20,18 +19,6 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    private void RandomPosition () {
-        int x = Random.Range(-(GameManager.instance.MapSize / 2) + 1, GameManager.instance.MapSize / 2);
-        int y = Random.Range(-(GameManager.instance.MapSize / 2) + 1, GameManager.instance.MapSize / 2);
-        Vector3 xy = new Vector3 (x, y, 0);
-        for (int i = 0; i < player.segments.Count; i++) {
-            if (player.segments[i].transform.position == xy) {
-                RandomPosition();
-                return;
-            }
-        }
-        transform.position = xy;
-    }
 
     private void RemoveEnemy () {
         player.OnReset -= RemoveEnemy;

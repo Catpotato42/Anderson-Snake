@@ -1332,6 +1332,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b27cdfd13e886d542a61bcd7eb43edaf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enemy0: {fileID: 1350645996848221418, guid: 1be8709ca4e95194680d229cfbb03577, type: 3}
+  enemy1: {fileID: 1350645996848221418, guid: 1be8709ca4e95194680d229cfbb03577, type: 3}
+  enemy2: {fileID: 1350645996848221418, guid: 1be8709ca4e95194680d229cfbb03577, type: 3}
+  enemy3: {fileID: 1350645996848221418, guid: 1be8709ca4e95194680d229cfbb03577, type: 3}
 --- !u!4 &694370625
 Transform:
   m_ObjectHideFlags: 0
