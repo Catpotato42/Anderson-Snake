@@ -5,13 +5,10 @@ using UnityEngine;
 
 public class Food : MonoBehaviour
 {
-    private GameObject playerObj;
     void Awake()
-    {
-        playerObj = GameObject.FindGameObjectWithTag("Player");
-        Player player = playerObj.GetComponent<Player>();   
+    { 
         RandomPosition();
-        player.OnReset += RandomPosition;
+        Player.instance.OnReset += RandomPosition;
     }
 
     private void RandomPosition () {

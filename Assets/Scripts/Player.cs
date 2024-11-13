@@ -9,6 +9,7 @@ using Unity.VisualScripting;
 public class Player : MonoBehaviour
 {
 
+    public static Player instance;
     Vector2 direction;
 
     [SerializeField] private GameObject segment;
@@ -98,6 +99,12 @@ public class Player : MonoBehaviour
     }
 
     void Awake () {
+        if (instance != null && instance != this) { 
+            Destroy(this); 
+        } 
+        else { 
+            instance = this; 
+        }
         highScoreObj = GameObject.FindGameObjectWithTag("HighScore");
         TileMapper.instance.RefreshTileMap(); //needs to be done in awake so that the food doesn't spawn wrong
         if (deathCanvas != null) {
