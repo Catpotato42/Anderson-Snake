@@ -87,13 +87,16 @@ public class EnemySpawner : MonoBehaviour
         if (wavetimeTracker >= waves0[wavesTracker].Interval) {
             wavetimeTracker = 0;
             for (int i = 0; i < waves0[wavesTracker].Amount; i++) {
-                Instantiate(enemyList[waves0[wavesTracker].EnemyType]);
+                Vector3 newEnemyPos = RandomPosition();
+                Instantiate(enemyList[waves0[wavesTracker].EnemyType], newEnemyPos, Quaternion.identity);
             } 
             for (int i = 0; i < waves1[wavesTracker].Amount; i++) {
-                Instantiate(enemyList[waves1[wavesTracker].EnemyType]);
+                Vector3 newEnemyPos = RandomPosition();
+                Instantiate(enemyList[waves1[wavesTracker].EnemyType], newEnemyPos, Quaternion.identity);
             }
             for (int i = 0; i < waves2[wavesTracker].Amount; i++) {
-                Instantiate(enemyList[waves2[wavesTracker].EnemyType]);
+                Vector3 newEnemyPos = RandomPosition();
+                Instantiate(enemyList[waves2[wavesTracker].EnemyType], newEnemyPos, Quaternion.identity);
             }
             if (waves0[wavesTracker+1] == null) {
                 waves0.Add(wavesTracker+1, new WaveInfo("enemy0", 5, 30));

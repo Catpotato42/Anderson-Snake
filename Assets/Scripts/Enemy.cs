@@ -32,6 +32,8 @@ public class Enemy : MonoBehaviour
             if (health <= 0) {
                 RemoveEnemy();
             }
+        } else if (collision.gameObject.CompareTag("Player")) {
+            //I'm scrapping this enemy idea. Bosses only.
         }
     }
 
