@@ -26,7 +26,7 @@ public class Player : MonoBehaviour
     private string lastInput = "D";
 
     private int snakeScore = 0;
-    private List<int> growThreshold = new List<int>{5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 175, 190, 205, 220, 235};
+    private List<int> growThreshold = new List<int>();
     private int upgradeNumber = 0;
 
     [SerializeField] private GameObject deathCanvas;
@@ -38,7 +38,7 @@ public class Player : MonoBehaviour
     private float customFixedInterval = 0.02f; // Time interval in seconds (same as default Time.fixedDeltaTime so should run fixedupdate at the same rate)
     private float timeSinceLastUpdate = 0f;
     private float localTimeScale;
-    private bool paused = true;
+    //private bool paused = true;
     private bool isChoosing = false;
 
     [SerializeField] private GameObject bulletPrefab;
@@ -111,14 +111,33 @@ public class Player : MonoBehaviour
             skin.sprite = Resources.Load<Sprite>("Skins/Square");
         }
         difficultyScale = GameManager.instance.SkinPref;
+        InitThresholdValues();
+    }
+
+    private void InitThresholdValues () {
+        growThreshold.Add(5);
+        for (int i = 1; i < 5; i++) {
+            growThreshold.Add(growThreshold[i - 1] + 5);
+        } for (int i = 5; i < 15; i++) {
+            growThreshold.Add(growThreshold[i - 1] + 10);
+        } for (int i = 10; i < 15; i++) {
+            growThreshold.Add(growThreshold[i - 1] + 20);
+        } for (int i = 15; i < 30; i++) {
+            growThreshold.Add(growThreshold[i - 1] + 30);
+        }
+        string printThresholdVals = "";
+        for (int i = 0; i < 30; i++) {
+            printThresholdVals += growThreshold[i]+", ";
+        }
+        Debug.Log("Threshold vals = "+printThresholdVals);
     }
     
     // Start is called before the first frame update
     void Start()
     {
-        Debug.Log("Extra segments: "+PlayerPrefs.GetInt("extraSegments"));
+        //Debug.Log("Extra segments: "+PlayerPrefs.GetInt("extraSegments"));
         //Debug.Log("High score: "+PlayerPrefs.GetInt("highScore"));
-        Debug.Log("Unlocked Everett: "+PlayerPrefs.GetInt("scoreEverett"));
+        //Debug.Log("Unlocked Everett: "+PlayerPrefs.GetInt("scoreEverett"));
         //Debug.Log("Everett high score: "+PlayerPrefs.GetInt("eHighScore"));    
         if (difficultyScale == "everett") {
             difficultyTime = .015f;
@@ -130,7 +149,7 @@ public class Player : MonoBehaviour
             Debug.Log("Error: float difficultyTime not found.");
             difficultyTime = .001f;
         }
-        Debug.Log("now resetting snake");
+        //Debug.Log("now resetting snake");
         ResetSnake();
     }
 
@@ -148,6 +167,7 @@ public class Player : MonoBehaviour
 
     public void ResetSnake () {
         //isDead = false;
+        canDash = false;
         upgradeNumber = 0;
         GameManager.instance.MapSize = PlayerPrefs.GetInt("mapSize") + 6;
         TileMapper.instance.RefreshTileMap();
@@ -163,7 +183,7 @@ public class Player : MonoBehaviour
         ResetSegments();
         lastInput = "D";
         OnReset.Invoke(); //needs to be invoked AFTER RefreshTileMap and pos, rot... as player would see old tilemap and other stuff on countdown otherwise
-        paused = false;
+        //paused = false;
         isDead = false;
     }
 
@@ -238,11 +258,11 @@ public class Player : MonoBehaviour
 
     void Update() {
         fireCooldownTracker += Time.deltaTime; //if TimeScale is 0, this won't increment as opposed to unscaledDeltaTime which would.
-        if (fireCooldownTracker > fireCooldown) {
+        if (fireCooldownTracker > fireCooldown && !canShoot) {
             canShoot = true;
         }
         dashCooldownTracker += Time.deltaTime;
-        if (dashCooldownTracker > dashCooldown) {
+        if (dashCooldownTracker > dashCooldown && !canDash) {
             canDash = true;
         }
         GetUserInput();
@@ -275,7 +295,7 @@ public class Player : MonoBehaviour
         MoveSnake();
     }
 
-    void GetUserInput () {
+    private void GetUserInput () {
         if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow)) {
             QueueInput(KeyCode.W);
         } else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) {
@@ -392,10 +412,11 @@ public class Player : MonoBehaviour
         if (collide.CompareTag("Obstacle") || collide.CompareTag("Walls")) {
             Time.timeScale = 0f;
             isDead = true;
-            Debug.Log(upgradeNumber);
+            Debug.Log("died with "+upgradeNumber+" upgrades");
             deathScreen.Setup(snakeScore);
             updateHighScore();
         } else if (collide.CompareTag("Food")) {
+            upgradeNumber++; //so if 2 food are hit at the same time and both get into this bit, only one gets the upgrade.
             AddScore(1);
             updateHighScore();
             if (snakeScore == 10 && PlayerPrefs.GetInt("scoreEverett") != 1) {
@@ -403,12 +424,13 @@ public class Player : MonoBehaviour
                 OnEverettUnlock.Invoke(true);
             }
             if (snakeScore >= growThreshold[upgradeNumber]) {
-                Debug.Log("Hit threshold "+upgradeNumber+" at score "+snakeScore);
+                Debug.Log("Hit threshold "+(upgradeNumber-1)+" at score "+snakeScore+", threshold was"+growThreshold[upgradeNumber-1]+" and next should be "+growThreshold[upgradeNumber]);
                 upgradeNumber++;
                 isChoosing = true;
                 Time.timeScale = 0f;
                 OnUpgrade.Invoke(true);
             }
+            upgradeNumber--; //does multithreading mean that 2 of these methods can run at the same time? TODO look what multithreading is up
             //Debug.Log("Score = "+snakeScore);
         }
     }

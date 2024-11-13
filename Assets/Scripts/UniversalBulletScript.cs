@@ -24,7 +24,7 @@ public class UniversalBulletScript : MonoBehaviour
     }
 
     private void OnCollisionEnter2D (Collision2D collision) {
-        Debug.Log("in OnCollisionEnter2D, tag = "+collision.gameObject.tag);
+        //Debug.Log("in OnCollisionEnter2D, tag = "+collision.gameObject.tag);
         if (!collision.gameObject.CompareTag("Obstacle")) { //If you are NOT colliding with the player or a segment
             if (collisions <= 0) {
                 //Debug.Log("destroying bullet "+gameObject.name);
@@ -37,7 +37,7 @@ public class UniversalBulletScript : MonoBehaviour
             }
         } else {
             Physics2D.IgnoreCollision(GetComponent<Collider2D>(), collision.gameObject.GetComponent<Collider2D>(), true);
-            Debug.Log("Bullet ignored collision with: " + collision.gameObject.name);
+            //Debug.Log("Bullet ignored collision with: " + collision.gameObject.name);
         }
     }
 
