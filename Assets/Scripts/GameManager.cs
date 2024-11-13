@@ -59,10 +59,10 @@ public class GameManager : MonoBehaviour
     private GameObject highScoreObj;
     private ErrorHandler errorHandler;
 
-    private static string skinPref = "basic";
-    public string SkinPref {
-        get => skinPref;
-        set => skinPref = value;
+    private static string difficulty = "basic"; //set in Start and StartEverett, is static so it carries through from main menu.
+    public string Difficulty {
+        get => difficulty;
+        set => difficulty = value;
     }
     private static int mapSize; //doesn't matter that it's static, I change when the real game starts not in main menu.
 
@@ -102,9 +102,9 @@ public class GameManager : MonoBehaviour
         if (GameObject.FindGameObjectWithTag("HighScore") != null) {
             highScoreObj = GameObject.FindGameObjectWithTag("HighScore");
             HighScore highScore = highScoreObj.GetComponent<HighScore>();
-            if (skinPref == "everett") {
+            if (difficulty == "everett") {
                 highScore.updateHighScore("eHighScore");
-            } else if (skinPref == "basic") {
+            } else if (difficulty == "basic") {
                 highScore.updateHighScore("HighScore");
             }
         }

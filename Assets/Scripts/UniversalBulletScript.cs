@@ -33,29 +33,13 @@ public class UniversalBulletScript : MonoBehaviour
                 collisions--;
                 Vector2 normal = collision.GetContact(0).normal;
                 Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
-                rigidbody.velocity = Vector2.Reflect(rigidbody.velocity, normal);
+                rigidbody.velocity = Vector2.Reflect(rigidbody.velocity, normal).normalized * rigidbody.velocity.magnitude * .9f; //reduces velocity by 10%
             }
         } else {
             Physics2D.IgnoreCollision(GetComponent<Collider2D>(), collision.gameObject.GetComponent<Collider2D>(), true);
             //Debug.Log("Bullet ignored collision with: " + collision.gameObject.name);
         }
     }
-
-    /*private void OnTriggerEnter2D(Collider2D collider) {
-        Debug.Log("In collision (bullet)");
-        if (collider.CompareTag("Walls")) {
-            if (collisions <= 0) {
-                Debug.Log("destroy");
-                Destroy(gameObject);
-            } else {
-                Debug.Log("about to reflect, collisions = "+collisions);
-                collisions--;
-                Vector2 normal = (collider.ClosestPoint(transform.position) - (Vector2)transform.position).normalized;
-                GetComponent<Rigidbody2D>().velocity = Vector2.Reflect(GetComponent<Rigidbody2D>().velocity, normal);
-                GetComponent<Rigidbody2D>().MovePosition((Vector2)transform.position + GetComponent<Rigidbody2D>().velocity * Time.fixedDeltaTime);
-            }
-        }
-    }*/
 }
 
 

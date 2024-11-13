@@ -10,7 +10,7 @@ TagManager:
   - UpgradeOptions
   - Walls
   - BasicBullet
-  - Enemy
+  - Enemy1
   layers:
   - Default
   - TransparentFX

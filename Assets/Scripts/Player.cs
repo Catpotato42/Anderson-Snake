@@ -12,7 +12,7 @@ public class Player : MonoBehaviour
     Vector2 direction;
 
     [SerializeField] private GameObject segment;
-    List<GameObject> segments = new List<GameObject>();
+    public List<GameObject> segments = new List<GameObject>();
 
     private GameObject highScoreObj;
 
@@ -105,12 +105,12 @@ public class Player : MonoBehaviour
         }
         //change skin, segments has its own script for this.
         SpriteRenderer skin = gameObject.GetComponent<SpriteRenderer>();
-        if (GameManager.instance.SkinPref == "everett") {
+        if (GameManager.instance.Difficulty == "everett") {
             skin.sprite = Resources.Load<Sprite>("Skins/EverettHead");
         } else {
             skin.sprite = Resources.Load<Sprite>("Skins/Square");
         }
-        difficultyScale = GameManager.instance.SkinPref;
+        difficultyScale = GameManager.instance.Difficulty;
         InitThresholdValues();
     }
 
