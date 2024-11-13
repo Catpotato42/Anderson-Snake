@@ -42,7 +42,7 @@ public class Player : MonoBehaviour
     private bool isChoosing = false;
 
     [SerializeField] private GameObject bulletPrefab;
-    private float fireForce = 20f;
+    private float fireForce = 10f;
     private float fireCooldown = 2f;
     private float fireCooldownTracker = 0f;
     private bool canShoot = false;
@@ -416,7 +416,6 @@ public class Player : MonoBehaviour
             deathScreen.Setup(snakeScore);
             updateHighScore();
         } else if (collide.CompareTag("Food")) {
-            upgradeNumber++; //so if 2 food are hit at the same time and both get into this bit, only one gets the upgrade.
             AddScore(1);
             updateHighScore();
             if (snakeScore == 10 && PlayerPrefs.GetInt("scoreEverett") != 1) {
@@ -424,13 +423,16 @@ public class Player : MonoBehaviour
                 OnEverettUnlock.Invoke(true);
             }
             if (snakeScore >= growThreshold[upgradeNumber]) {
-                Debug.Log("Hit threshold "+(upgradeNumber-1)+" at score "+snakeScore+", threshold was"+growThreshold[upgradeNumber-1]+" and next should be "+growThreshold[upgradeNumber]);
+                Debug.Log("Hit threshold "+upgradeNumber+" at score "+snakeScore+", threshold was "+growThreshold[upgradeNumber]+" and next should be "+growThreshold[upgradeNumber+1]);
                 upgradeNumber++;
+                if (upgradeNumber == growThreshold.Count) {
+                    growThreshold.Add(growThreshold[upgradeNumber-1] + 50);
+                }
                 isChoosing = true;
                 Time.timeScale = 0f;
                 OnUpgrade.Invoke(true);
             }
-            upgradeNumber--; //does multithreading mean that 2 of these methods can run at the same time? TODO look what multithreading is up
+            //does multithreading mean that 2 of these methods can run at the same time? TODO look what multithreading is up
             //Debug.Log("Score = "+snakeScore);
         }
     }
