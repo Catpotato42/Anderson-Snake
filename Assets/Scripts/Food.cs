@@ -5,9 +5,10 @@ using UnityEngine;
 
 public class Food : MonoBehaviour
 {
-    void Awake()
-    { 
+    void Awake() { 
         RandomPosition();
+    }
+    void Start () {
         Player.instance.OnReset += RandomPosition;
     }
 

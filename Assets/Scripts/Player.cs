@@ -99,11 +99,10 @@ public class Player : MonoBehaviour
     }
 
     void Awake () {
-        if (instance != null && instance != this) { 
-            Destroy(this); 
-        } 
-        else { 
-            instance = this; 
+        if (instance == null) {
+            instance = this;
+        } else {
+            Destroy(gameObject);
         }
         highScoreObj = GameObject.FindGameObjectWithTag("HighScore");
         TileMapper.instance.RefreshTileMap(); //needs to be done in awake so that the food doesn't spawn wrong
@@ -112,12 +111,12 @@ public class Player : MonoBehaviour
         }
         //change skin, segments has its own script for this.
         SpriteRenderer skin = gameObject.GetComponent<SpriteRenderer>();
-        if (GameManager.instance.SkinPref == "everett") {
+        if (GameManager.instance.Difficulty == "everett") {
             skin.sprite = Resources.Load<Sprite>("Skins/EverettHead");
         } else {
             skin.sprite = Resources.Load<Sprite>("Skins/Square");
         }
-        difficultyScale = GameManager.instance.SkinPref;
+        difficultyScale = GameManager.instance.Difficulty;
         InitThresholdValues();
     }
 
@@ -152,6 +151,12 @@ public class Player : MonoBehaviour
         } else if (difficultyScale == "basic") {
             difficultyTime = .008f;
             Debug.Log("Difficulty = basic");
+        } else if (difficultyScale == "medium") {
+            difficultyTime = .01f;
+            Debug.Log("Difficulty = medium");
+        } else if (difficultyScale == "hard") {
+            difficultyTime = .012f;
+            Debug.Log("Difficulty = hard");
         } else {
             Debug.Log("Error: float difficultyTime not found.");
             difficultyTime = .001f;
@@ -223,10 +228,13 @@ public class Player : MonoBehaviour
             Time.timeScale = 1f;
             isChoosing = false;
         }
-        if (difficultyScale == "everett" && localTimeScale <= .3f) {
+        if (difficultyScale == "everett" && localTimeScale <= .4f) {
             localTimeScale += difficultyTime;
-        }
-        else if (difficultyScale == "basic" && localTimeScale <= .25f){
+        } else if (difficultyScale == "basic" && localTimeScale <= .25f){
+            localTimeScale += difficultyTime;
+        } else if (difficultyScale == "medium" && localTimeScale <= .28f){
+            localTimeScale += difficultyTime;
+        } else if (difficultyScale == "hard" && localTimeScale <= .33f){
             localTimeScale += difficultyTime;
         } else if (localTimeScale <= .25f && difficultyScale == null || difficultyScale == "") {
             Debug.Log("problem in grow function of player script, difficulty scale = "+ difficultyScale);
@@ -425,11 +433,11 @@ public class Player : MonoBehaviour
         } else if (collide.CompareTag("Food")) {
             AddScore(1);
             updateHighScore();
-            if (snakeScore == 10 && PlayerPrefs.GetInt("scoreEverett") != 1) {
-                PlayerPrefs.SetInt("scoreEverett", 1);
+            if (snakeScore == 10 && PlayerPrefs.GetInt("hasEverett") != 1) {
+                PlayerPrefs.SetInt("hasEverett", 1);
                 OnEverettUnlock.Invoke(true);
             }
-            if (snakeScore >= growThreshold[upgradeNumber]) {
+            if (snakeScore == growThreshold[upgradeNumber]) {
                 Debug.Log("Hit threshold "+upgradeNumber+" at score "+snakeScore+", threshold was "+growThreshold[upgradeNumber]+" and next should be "+growThreshold[upgradeNumber+1]);
                 upgradeNumber++;
                 if (upgradeNumber == growThreshold.Count) {
