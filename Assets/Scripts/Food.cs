@@ -5,13 +5,11 @@ using UnityEngine;
 
 public class Food : MonoBehaviour
 {
-    private GameObject playerObj;
-    void Awake()
-    {
-        playerObj = GameObject.FindGameObjectWithTag("Player");
-        Player player = playerObj.GetComponent<Player>();   
+    void Awake() { 
         RandomPosition();
-        player.OnReset += RandomPosition;
+    }
+    void Start () {
+        Player.instance.OnReset += RandomPosition;
     }
 
     private void RandomPosition () {
@@ -20,7 +18,11 @@ public class Food : MonoBehaviour
         transform.position = new Vector2 (x, y);
     }
 
-    void OnTriggerEnter2D () {
-        RandomPosition();
+    void OnTriggerEnter2D (Collider2D collider) {
+        if (!collider.CompareTag("Player") && !collider.CompareTag("Enemy")) {
+            return;
+        } else {
+            RandomPosition();
+        }
     }
 }

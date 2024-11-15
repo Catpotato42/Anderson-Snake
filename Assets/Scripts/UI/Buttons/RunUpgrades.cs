@@ -14,6 +14,8 @@ public class RunUpgrades : MonoBehaviour, IPointerClickHandler
     private List<GameObject> choices = new List<GameObject>();
     private float python = 50, rattlesnake = 75, viper = 90, cobra = 95, boa = 97.5f; //may want to switch python and rattlesnake
     private int index = 0;
+    private string choiceNumber = "-1";
+    private bool chosen = false;
     void Start()
     {
         
@@ -27,6 +29,9 @@ public class RunUpgrades : MonoBehaviour, IPointerClickHandler
             if (tempChoice.gameObject != gameObject){
                 choices.Add(tempChoice.gameObject);
             }
+            if (tempChoice.gameObject == gameObject) {
+                choiceNumber = ""+(k+1);
+            }
             k++;
         }
         if (GameObject.FindGameObjectWithTag("Player") == null) {
@@ -39,6 +44,7 @@ public class RunUpgrades : MonoBehaviour, IPointerClickHandler
 
     private void InitButton (bool buttonOn) {
         gameObject.SetActive(buttonOn);
+        chosen = false;
         float rarity = Random.Range(0, 1000)/10f;
         //Debug.Log("rarity generation: "+rarity);
         if (rarity < python && rarity >= 0) {
@@ -62,8 +68,24 @@ public class RunUpgrades : MonoBehaviour, IPointerClickHandler
         displayUpgrade();
     }
 
+    void Update() {
+        GetUserInput();
+    }
+
+    private void GetUserInput () {
+        if (Input.GetKeyDown(choiceNumber) && !chosen) {
+            chosen = true;
+            GameManager.instance.RunUpgrade(upgradeInfo, index);
+            for (int i = 0; i < choices.Count; i++) {
+                choices[i].GetComponent<RunUpgrades>().deactivateSelf();
+            }
+            gameObject.SetActive(false);
+        }
+    }
+
     public void OnPointerClick (PointerEventData pointerEventData) {
-        if (pointerEventData.button == PointerEventData.InputButton.Left) {
+        if (pointerEventData.button == PointerEventData.InputButton.Left && !chosen) { //OnPointerClick fires first so it would be possible to get a frame-perfect double upgrade
+            chosen = true;
             GameManager.instance.RunUpgrade(upgradeInfo, index);
             for (int i = 0; i < choices.Count; i++) {
                 choices[i].GetComponent<RunUpgrades>().deactivateSelf();

@@ -8,6 +8,11 @@ TagManager:
   - Food
   - HighScore
   - UpgradeOptions
+  - Walls
+  - BasicBullet
+  - Enemy
+  - Warning
+  - Laser
   layers:
   - Default
   - TransparentFX

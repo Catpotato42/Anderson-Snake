@@ -59,10 +59,10 @@ public class GameManager : MonoBehaviour
     private GameObject highScoreObj;
     private ErrorHandler errorHandler;
 
-    private static string skinPref = "basic";
-    public string SkinPref {
-        get => skinPref;
-        set => skinPref = value;
+    private static string difficulty = "basic";
+    public string Difficulty {
+        get => difficulty;
+        set => difficulty = value;
     }
     private static int mapSize; //doesn't matter that it's static, I change when the real game starts not in main menu.
 
@@ -89,15 +89,12 @@ public class GameManager : MonoBehaviour
             PlayerPrefs.SetInt("extraSegments", 1); //remove all the playerpref stuff later
             //reset all playerprefs here to what default values should be
         }
-        //skinPref = ?
+        //difficulty = ?
     }
 
     void Start () {
         if (SceneManager.GetActiveScene().buildIndex != 0) {
             SetHighScore();
-            Camera mainCam = mainCamera.GetComponent<Camera>();
-            mainCam.orthographicSize = mapSize - (mapSize/7f);
-            mainCamera.transform.position = new Vector3(1, -.5f, -10);
         }
     }
 
@@ -105,10 +102,14 @@ public class GameManager : MonoBehaviour
         if (GameObject.FindGameObjectWithTag("HighScore") != null) {
             highScoreObj = GameObject.FindGameObjectWithTag("HighScore");
             HighScore highScore = highScoreObj.GetComponent<HighScore>();
-            if (skinPref == "everett") {
+            if (difficulty == "everett") {
                 highScore.updateHighScore("eHighScore");
-            } else if (skinPref == "basic") {
+            } else if (difficulty == "basic") {
                 highScore.updateHighScore("HighScore");
+            } else if (difficulty == "medium") {
+                highScore.updateHighScore("mHighScore");
+            } else if (difficulty == "hard") {
+                highScore.updateHighScore("hHighScore");
             }
         }
     }
@@ -124,15 +125,14 @@ public class GameManager : MonoBehaviour
         upgrades0.Add(i, new UpgradeInfo("mapSizeAdd1", 0, 0)); i++; //MAKE SURE YOU DO NOT MISS AN INDEX OR START BELOW OR ABOVE 0
         upgrades0.Add(i, new UpgradeInfo("speedSlow", 0, 0)); i++;   //I could fix that by doing .Keys.ElementAt(index); but that still would require index to be a valid key so actually I couldn't that's just how dictionaries work this whole comment is stupid
         upgrades0.Add(i, new UpgradeInfo("damageAdd", 0, 0)); i++;
-        upgrades0.Add(i, new UpgradeInfo("removeSegment2", 0, 0)); i++; //index 4
+        upgrades0.Add(i, new UpgradeInfo("removeSegment", 0, 0)); i++; //index 4
         i = 0; //python \/
         upgrades1.Add(i, new UpgradeInfo("xpMore", 0, 1)); i++;
         upgrades1.Add(i, new UpgradeInfo("damagePercentAdd", 0, 1)); i++;
         upgrades1.Add(i, new UpgradeInfo("speedPercentSlow", 0, 1)); i++;
         upgrades1.Add(i, new UpgradeInfo("mapSizeAdd2", 0, 1)); i++; //index 3
         i = 0; //rattlesnake \/
-        upgrades2.Add(i, new UpgradeInfo("removeSegment4", 0, 2)); i++;
-        upgrades2.Add(i, new UpgradeInfo("rattleSnakePlaceholder", 0, 2)); i++; //index 1
+        upgrades2.Add(i, new UpgradeInfo("removeSegment3", 0, 2)); i++;
         upgrades2.Add(i, new UpgradeInfo("foodAdd", 0, 2)); i++;
         i = 0;//viper \/
         upgrades3.Add(i, new UpgradeInfo("fireSpeedAdd", 0, 3)); i++; //index 0, this should be a lot of fireSpeed to make the rarity mean something
@@ -213,7 +213,6 @@ public class GameManager : MonoBehaviour
         } else {
             Debug.Log("Rarity mismatch, rarity = "+currentUpgrade.Rarity);
         }
-        player.Grow();
         if (mapSize >= 10) {
             OnMapSize10.Invoke();
         }
@@ -229,22 +228,26 @@ public class GameManager : MonoBehaviour
     }
 
     //garter upgrades
-    private void GarterUpgrades (UpgradeInfo currentUpgrade) { //class isn't passed by reference, the reference to the class is passed by value. Ask stratton about primitive types -> pointers to a location in memory, classes when given to methods are references to a class outside which values can be modified inside the method. 
+    private void GarterUpgrades (UpgradeInfo currentUpgrade) { //class isn't passed by reference, the reference to the class is passed by value. Ask stratton about primitive types -> pointers to a location in memory, classes when given to methods are references to a class outside which values can be modified inside the method.
+        player.Grow();
         switch (currentUpgrade.Name) {
             case "mapSizeAdd1":
                 mapSize++;
                 TileMapper.instance.RefreshTileMap();
-                Debug.Log(currentUpgrade.Name+" increased to "+currentUpgrade.Level);
                 break;
             case "speedSlow":
-                //remove 3 player.DifficultyTime units from player time if that doesn't take player time below default .1f.
-                for (int i = 0; i < 3; i++) {
-                    if (player.LocalTimeScale > .1f + player.DifficultyTime) {
+                //remove 2 player.DifficultyTime units from player time if that doesn't take player time below a little below .1f.
+                for (int i = 0; i < 2; i++) {
+                    if (player.LocalTimeScale > .08f + player.DifficultyTime) {
                         player.LocalTimeScale -= player.DifficultyTime;
                         Debug.Log("subtracted "+player.DifficultyTime+ " from player localTimeScale.");
                     }
                 }
                 Debug.Log("Player time scale = "+player.LocalTimeScale);
+                break;
+            case "removeSegment":
+                player.RemoveSegment();
+                player.RemoveSegment();
                 break;
             default:
                 Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
@@ -255,6 +258,7 @@ public class GameManager : MonoBehaviour
 
     //python upgrades
     private void PythonUpgrades (UpgradeInfo currentUpgrade) {
+        player.Grow();
         switch (currentUpgrade.Name) {
             case "mapSizeAdd2":
                 mapSize += 2;
@@ -268,9 +272,15 @@ public class GameManager : MonoBehaviour
 
     //rattlesnake upgrades
     private void RattlesnakeUpgrades (UpgradeInfo currentUpgrade) {
+        player.Grow();
         switch (currentUpgrade.Name) {
             case "foodAdd":
                 Instantiate(Resources.Load("Prefabs/TempFood"));
+                break;
+            case "removeSegment3":
+                for (int i = 0; i < 4; i++) {
+                    player.RemoveSegment();
+                }
                 break;
             default:
                 Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
@@ -280,6 +290,7 @@ public class GameManager : MonoBehaviour
 
     //viper upgrades
     private void ViperUpgrades (UpgradeInfo currentUpgrade) {
+        player.Grow();
         switch (currentUpgrade.Name) {
             case "mapSizeAdd1":
                 mapSize++;
@@ -293,6 +304,7 @@ public class GameManager : MonoBehaviour
 
     //cobra upgrades
     private void CobraUpgrades (UpgradeInfo currentUpgrade) {
+        player.Grow();
         switch (currentUpgrade.Name) {
             case "mapSizeAdd1":
                 mapSize++;
@@ -306,6 +318,8 @@ public class GameManager : MonoBehaviour
 
     //boa upgrades
     private void BoaUpgrades (UpgradeInfo currentUpgrade) {
+        //playing with the idea that boa upgrades make the player not grow as an added benefit to all of them.
+        player.DoneChoosing();
         switch (currentUpgrade.Name) {
             case "mapSizeAdd1":
                 mapSize++;

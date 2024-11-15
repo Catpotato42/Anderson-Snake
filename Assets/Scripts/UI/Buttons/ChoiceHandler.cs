@@ -1,14 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 public class ChoiceHandler : MonoBehaviour
 {
-    // Start is called before the first frame update
+    [SerializeField] private GameObject choice;
     void Start()
     {
-        Instantiate(Resources.Load("Prefabs/Choice1"), this.transform);
-        Instantiate(Resources.Load("Prefabs/Choice1"), this.transform);
-        Instantiate(Resources.Load("Prefabs/Choice1"), this.transform);
+        Instantiate(choice, this.transform);
+        Instantiate(choice, this.transform);
+        Instantiate(choice, this.transform);
     }
 }

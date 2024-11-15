@@ -4,10 +4,12 @@ using System;
 using UnityEngine.SceneManagement;
 using Unity.VisualScripting.Dependencies.Sqlite;
 using UnityEditor.MPE;
+using Unity.VisualScripting;
 
 public class Player : MonoBehaviour
 {
 
+    public static Player instance;
     Vector2 direction;
 
     [SerializeField] private GameObject segment;
@@ -25,7 +27,7 @@ public class Player : MonoBehaviour
     private string lastInput = "D";
 
     private int snakeScore = 0;
-    private List<int> growThreshold = new List<int>{5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 175, 190, 205, 220, 235};
+    private List<int> growThreshold = new List<int>();
     private int upgradeNumber = 0;
 
     [SerializeField] private GameObject deathCanvas;
@@ -37,10 +39,33 @@ public class Player : MonoBehaviour
     private float customFixedInterval = 0.02f; // Time interval in seconds (same as default Time.fixedDeltaTime so should run fixedupdate at the same rate)
     private float timeSinceLastUpdate = 0f;
     private float localTimeScale;
-    private bool paused = true;
+    //private bool paused = true;
     private bool isChoosing = false;
 
+    [SerializeField] private GameObject bulletPrefab;
+    private float fireForce = 10f;
+    private float fireCooldown = 2f;
+    private float fireCooldownTracker = 0f;
+    private bool canShoot = false;
+
+    private bool dashing = false;
+    private int dashAmount = 3;
+    private int dashAmountTracker = 3;
+    private bool canDash = false;
+    private float dashCooldown = 1f;
+    private float dashCooldownTracker = 0f;
+    private float dashSpeed = .5f;
+    private float tempDashTime;
+
+
     private bool canChangeDirection = true;
+
+    public float FireCooldown {
+        get => fireCooldown;
+        set {
+            fireCooldown = value;
+        }
+    }
 
     public float DifficultyTime {
         get => difficultyTime;
@@ -74,6 +99,11 @@ public class Player : MonoBehaviour
     }
 
     void Awake () {
+        if (instance == null) {
+            instance = this;
+        } else {
+            Destroy(gameObject);
+        }
         highScoreObj = GameObject.FindGameObjectWithTag("HighScore");
         TileMapper.instance.RefreshTileMap(); //needs to be done in awake so that the food doesn't spawn wrong
         if (deathCanvas != null) {
@@ -81,34 +111,58 @@ public class Player : MonoBehaviour
         }
         //change skin, segments has its own script for this.
         SpriteRenderer skin = gameObject.GetComponent<SpriteRenderer>();
-        if (GameManager.instance.SkinPref == "everett") {
+        if (GameManager.instance.Difficulty == "everett") {
             skin.sprite = Resources.Load<Sprite>("Skins/EverettHead");
         } else {
             skin.sprite = Resources.Load<Sprite>("Skins/Square");
         }
-        difficultyScale = GameManager.instance.SkinPref;
+        difficultyScale = GameManager.instance.Difficulty;
+        InitThresholdValues();
+    }
+
+    private void InitThresholdValues () {
+        growThreshold.Add(5);
+        for (int i = 1; i < 5; i++) {
+            growThreshold.Add(growThreshold[i - 1] + 5);
+        } for (int i = 5; i < 15; i++) {
+            growThreshold.Add(growThreshold[i - 1] + 10);
+        } for (int i = 10; i < 15; i++) {
+            growThreshold.Add(growThreshold[i - 1] + 20);
+        } for (int i = 15; i < 30; i++) {
+            growThreshold.Add(growThreshold[i - 1] + 30);
+        }
+        string printThresholdVals = "";
+        for (int i = 0; i < 30; i++) {
+            printThresholdVals += growThreshold[i]+", ";
+        }
+        Debug.Log("Threshold vals = "+printThresholdVals);
     }
     
     // Start is called before the first frame update
     void Start()
     {
-        Debug.Log("Extra segments: "+PlayerPrefs.GetInt("extraSegments"));
-        Debug.Log("High score: "+PlayerPrefs.GetInt("highScore"));
-        Debug.Log("Unlocked Everett: "+PlayerPrefs.GetInt("scoreEverett"));
-        Debug.Log("Everett high score: "+PlayerPrefs.GetInt("eHighScore"));    
+        //Debug.Log("Extra segments: "+PlayerPrefs.GetInt("extraSegments"));
+        //Debug.Log("High score: "+PlayerPrefs.GetInt("highScore"));
+        //Debug.Log("Unlocked Everett: "+PlayerPrefs.GetInt("scoreEverett"));
+        //Debug.Log("Everett high score: "+PlayerPrefs.GetInt("eHighScore"));    
         if (difficultyScale == "everett") {
             difficultyTime = .015f;
             Debug.Log("Difficulty = everett");
         } else if (difficultyScale == "basic") {
             difficultyTime = .008f;
             Debug.Log("Difficulty = basic");
+        } else if (difficultyScale == "medium") {
+            difficultyTime = .01f;
+            Debug.Log("Difficulty = medium");
+        } else if (difficultyScale == "hard") {
+            difficultyTime = .012f;
+            Debug.Log("Difficulty = hard");
         } else {
             Debug.Log("Error: float difficultyTime not found.");
             difficultyTime = .001f;
         }
-        Debug.Log("now resetting snake");
+        //Debug.Log("now resetting snake");
         ResetSnake();
-        paused = false;
     }
 
     private void SetScore (int newScore) {
@@ -124,11 +178,11 @@ public class Player : MonoBehaviour
     }
 
     public void ResetSnake () {
-        isDead = false;
+        //isDead = false;
+        canDash = false;
         upgradeNumber = 0;
         GameManager.instance.MapSize = PlayerPrefs.GetInt("mapSize") + 6;
         TileMapper.instance.RefreshTileMap();
-        OnReset.Invoke();
         GameManager.instance.SetDictionaryValues(); //called in awake of gamemanager too, probably redundant.
         //position , rotation, direction, time
         transform.position = new Vector2(0, 0);
@@ -140,6 +194,9 @@ public class Player : MonoBehaviour
         SetScore(0);
         ResetSegments();
         lastInput = "D";
+        OnReset.Invoke(); //needs to be invoked AFTER RefreshTileMap and pos, rot... as player would see old tilemap and other stuff on countdown otherwise
+        //paused = false;
+        isDead = false;
     }
 
     void ResetSegments () {
@@ -171,10 +228,13 @@ public class Player : MonoBehaviour
             Time.timeScale = 1f;
             isChoosing = false;
         }
-        if (difficultyScale == "everett" && localTimeScale <= .3f) {
+        if (difficultyScale == "everett" && localTimeScale <= .4f) {
             localTimeScale += difficultyTime;
-        }
-        else if (difficultyScale == "basic" && localTimeScale <= .25f){
+        } else if (difficultyScale == "basic" && localTimeScale <= .25f){
+            localTimeScale += difficultyTime;
+        } else if (difficultyScale == "medium" && localTimeScale <= .28f){
+            localTimeScale += difficultyTime;
+        } else if (difficultyScale == "hard" && localTimeScale <= .33f){
             localTimeScale += difficultyTime;
         } else if (localTimeScale <= .25f && difficultyScale == null || difficultyScale == "") {
             Debug.Log("problem in grow function of player script, difficulty scale = "+ difficultyScale);
@@ -182,18 +242,44 @@ public class Player : MonoBehaviour
         }
     }
 
+    public void DoneChoosing () { //allows rainbowboa upgrades to unpause the game without growing the player
+        if(Time.timeScale == 0) {
+            Time.timeScale = 1f;
+            isChoosing = false;
+        }
+    }
+
     public void RemoveSegment () {
-        if (segments.Count == 1) {
+        if (segments.Count <= 2 && segments.Count > 0) {
             return;
-        } else if (segments.Count > 1) {
+        } else if (segments.Count > 2) {
+            GameObject segmentToRemove = segments[segments.Count - 1];
             segments.RemoveAt(segments.Count - 1); //I'm not sure but this might be able to be implemented with segments.Remove(segments.FindLastIndex(segment));
+            Destroy(segmentToRemove); //This needs to be after removal from the list or else the RemoveAt is dereferencing a null pointer.
         } else {
             Debug.Log("Error: Tried to call RemoveSegment (Player.cs public void RemoveSegment()) but segment.Count < 1 (no head (huh??)). segments.Count = " + segments.Count);
         }
     }
 
-    void Update()
-    {
+    private void Fire () {
+        Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mousePosition.z = 0; //there has to be a way to just get Vector2 but this'll do
+        Vector3 direction = mousePosition - transform.position;
+        Quaternion rot = Quaternion.Euler(0, 0, Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg);
+        GameObject bullet = Instantiate(bulletPrefab, transform.position, rot);
+        bullet.GetComponent<Rigidbody2D>().collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        bullet.GetComponent<Rigidbody2D>().velocity = direction.normalized * fireForce;
+    }
+
+    void Update() {
+        fireCooldownTracker += Time.deltaTime; //if TimeScale is 0, this won't increment as opposed to unscaledDeltaTime which would.
+        if (fireCooldownTracker > fireCooldown && !canShoot) {
+            canShoot = true;
+        }
+        dashCooldownTracker += Time.deltaTime;
+        if (dashCooldownTracker > dashCooldown && !canDash) {
+            canDash = true;
+        }
         GetUserInput();
         if (canChangeDirection) {
             ProcessInputQueue();
@@ -212,11 +298,19 @@ public class Player : MonoBehaviour
     }
 
     void PerformCustomFixedUpdateLogic() {
+        if (dashing) {
+            dashAmountTracker--;
+        } if (dashAmountTracker <= 0) {
+            dashing = false;
+            dashAmountTracker = dashAmount;
+            localTimeScale = tempDashTime;
+            tempDashTime = 0; //unnecessary
+        }
         MoveSegments();
         MoveSnake();
     }
 
-    void GetUserInput () {
+    private void GetUserInput () {
         if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow)) {
             QueueInput(KeyCode.W);
         } else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) {
@@ -230,8 +324,8 @@ public class Player : MonoBehaviour
         } else if (Input.GetKeyDown(KeyCode.Escape) && isDead) {
             SceneManager.LoadScene(0);
             PlayerPrefs.SetInt("mapSize", 0);
-        } else if (Input.GetKeyDown(KeyCode.Space)) {
-            if (paused && !isChoosing && !isDead) {
+        } else if (Input.GetKeyDown(KeyCode.Space) && canDash) { //pausing is only in for testing purposes! Dashing is the intended functionalty of space
+            /*if (paused && !isChoosing && !isDead) {
                 Time.timeScale = 1f;
                 paused = false;
             } else if (!paused && !isChoosing && !isDead) {
@@ -239,7 +333,16 @@ public class Player : MonoBehaviour
                 paused = true;
             } else if (isChoosing || isDead) {
                 
-            }
+            }*/
+            dashCooldownTracker = 0f;
+            dashing = true;
+            canDash = false;
+            tempDashTime = localTimeScale;
+            localTimeScale = dashSpeed;
+        } else if (Input.GetKeyDown(KeyCode.Mouse0) && !isChoosing && !isDead && canShoot) {
+            Fire();
+            fireCooldownTracker = 0f; //needs to be before canShoot or maybe canShoot would set itself to true again?
+            canShoot = false;
         }
     }
 
@@ -321,26 +424,30 @@ public class Player : MonoBehaviour
     }
 
     void OnTriggerEnter2D (Collider2D collide) {
-        if (collide.CompareTag("Obstacle")) {
+        if (collide.CompareTag("Obstacle") || collide.CompareTag("Walls") || collide.CompareTag("Laser")) {
             Time.timeScale = 0f;
             isDead = true;
-            Debug.Log(upgradeNumber);
+            Debug.Log("died with "+upgradeNumber+" upgrades");
             deathScreen.Setup(snakeScore);
             updateHighScore();
         } else if (collide.CompareTag("Food")) {
             AddScore(1);
             updateHighScore();
-            if (snakeScore == 10 && PlayerPrefs.GetInt("scoreEverett") != 1) {
-                PlayerPrefs.SetInt("scoreEverett", 1);
+            if (snakeScore == 10 && PlayerPrefs.GetInt("hasEverett") != 1) {
+                PlayerPrefs.SetInt("hasEverett", 1);
                 OnEverettUnlock.Invoke(true);
             }
-            if (snakeScore >= growThreshold[upgradeNumber]) {
-                Debug.Log("Hit threshold "+upgradeNumber+" at score "+snakeScore);
+            if (snakeScore == growThreshold[upgradeNumber]) {
+                Debug.Log("Hit threshold "+upgradeNumber+" at score "+snakeScore+", threshold was "+growThreshold[upgradeNumber]+" and next should be "+growThreshold[upgradeNumber+1]);
                 upgradeNumber++;
+                if (upgradeNumber == growThreshold.Count) {
+                    growThreshold.Add(growThreshold[upgradeNumber-1] + 50);
+                }
                 isChoosing = true;
                 Time.timeScale = 0f;
                 OnUpgrade.Invoke(true);
             }
+            //does multithreading mean that 2 of these methods can run at the same time? TODO look what multithreading is up
             //Debug.Log("Score = "+snakeScore);
         }
     }

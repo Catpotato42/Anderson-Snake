@@ -2,14 +2,10 @@ using UnityEngine;
 
 public class TempFood : MonoBehaviour
 {
-    private GameObject playerObj;
-    private Player player;
     void Awake()
-    {
-        playerObj = GameObject.FindGameObjectWithTag("Player");
-        player = playerObj.GetComponent<Player>();        
+    {    
         RandomPosition();
-        player.OnReset += RemoveFood;
+        Player.instance.OnReset += RemoveFood;
     }
 
     private void RandomPosition () {
@@ -19,10 +15,15 @@ public class TempFood : MonoBehaviour
     }
 
     private void RemoveFood () {
+        Player.instance.OnReset -= RemoveFood;
         Destroy(gameObject);
     }
 
-    void OnTriggerEnter2D () {
-        RandomPosition();
+    void OnTriggerEnter2D (Collider2D collider) {
+        if (!collider.CompareTag("Player") && !collider.CompareTag("Enemy")) {
+            return;
+        } else {
+            RandomPosition();
+        }
     }
 }
