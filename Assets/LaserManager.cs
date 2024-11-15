@@ -37,18 +37,25 @@ public class LaserManager : MonoBehaviour
         if (difficulty == "basic") {
             lt = new List<int> {5, 12, 18, 30};
         } else if (difficulty == "medium") {
-            lt = new List<int> {5, 12, 18, 30};
+            lt = new List<int> {5, 9, 13, 20};
         } else if (difficulty == "hard") {
-            lt = new List<int> {5, 12, 18, 30};
+            lt = new List<int> {3, 8, 10, 15};
         } else if (difficulty == "everett") {
-            lt = new List<int> {5, 12, 18, 30};
+            lt = new List<int> {1, 3, 5, 10};
         }
     }
 
     private void InitializeLaserWaves () {
+        StopAllCoroutines();
         timeTracker = 0;
         laserWaveTracker = 0;
         laserWave = new LaserWaves(1, 15, 3, true);
+        foreach (GameObject temp in GameObject.FindGameObjectsWithTag("Laser")) {
+            Destroy(temp);
+        }
+        foreach (GameObject temp in GameObject.FindGameObjectsWithTag("Warning")) {
+            Destroy(temp);
+        }
     }
 
     void Update () {
@@ -76,33 +83,33 @@ public class LaserManager : MonoBehaviour
         if (laserWaveTracker < lt[0]) {
             nextAmount = Random.Range(1,3); //max exclusive
             nextWaveTime = Random.Range(10, 20);
-            nextSpawnTime = 2;
+            nextSpawnTime = 4;
             vertical = false;
         } else if (laserWaveTracker >= lt[0] && laserWaveTracker < lt[1]) {
             nextAmount = Random.Range(2,5); //max exclusive
             nextWaveTime = Random.Range(10, 20);
-            nextSpawnTime = 2;
+            nextSpawnTime = 4;
             vertical = System.Convert.ToBoolean(Random.Range(0,2));
         } else if (laserWaveTracker >= lt[1] && laserWaveTracker < lt[2]) {
             nextAmount = Random.Range(4,7); //max exclusive
             nextWaveTime = Random.Range(8, 18);
-            nextSpawnTime = 1.5f;
+            nextSpawnTime = 3f;
             vertical = System.Convert.ToBoolean(Random.Range(0,2));
         } else if (laserWaveTracker >= lt[2] && laserWaveTracker < lt[3]) {
             nextAmount = Random.Range(6,11); //max exclusive
             nextWaveTime = Random.Range(8, 18);
-            nextSpawnTime = 1.5f;
+            nextSpawnTime = 3f;
             vertical = System.Convert.ToBoolean(Random.Range(0,2));
         } else if (laserWaveTracker >= lt[3]){
             nextAmount = Random.Range(10,15); //max exclusive
             nextWaveTime = Random.Range(6, 16);
-            nextSpawnTime = 1.5f;
+            nextSpawnTime = 2f;
             vertical = System.Convert.ToBoolean(Random.Range(0,2));
         }
-        if (laserWaveTracker >= 30 && (GameManager.instance.Difficulty == "hard" || GameManager.instance.Difficulty == "everett")) {
+        if (laserWaveTracker >= lt[3] && (GameManager.instance.Difficulty == "hard" || GameManager.instance.Difficulty == "everett")) {
             nextAmount = Random.Range(12,17); //max exclusive
             nextWaveTime = Random.Range(4, 16);
-            nextSpawnTime = 1f;
+            nextSpawnTime = 2f;
             vertical = System.Convert.ToBoolean(Random.Range(0,2));
         }
         //then set laserWave to a new Tuple containing these.
@@ -118,22 +125,11 @@ public class LaserManager : MonoBehaviour
 
     private System.Collections.IEnumerator LocationValues (LaserWaves currWave) {
         //waits a random interval between warning laser spawns to make it look visually interesting, added onto amount of time to wait to spawn the real laser in coroutine
-        float randomTime = Random.Range(0, 51)/100f; //max exclusive
+        float randomTime = Random.Range(0, 101)/100f; //max exclusive
         //Debug.Log("boutta wait for "+randomTime+" seconds this IEnum boring ah hell");
         yield return new WaitForSeconds(randomTime);
-        //Debug.Log("Ever watched Oppenheimer that's what writing these debugs feels like. I'm also only writing to myself cause this stupid ass fucking code won't ");
-        float odd;
-        if ((GameManager.instance.MapSize % 2) == 0) {
-            odd = .5f;
-        } else {
-            odd = 1;
-        }
-        Vector3 location;
-        if (currWave.Vertical) {
-            location = new Vector3(Random.Range(-(GameManager.instance.MapSize / 2) + 1, GameManager.instance.MapSize / 2), odd - 1, 0);
-        } else {
-            location = new Vector3(odd, Random.Range(-(GameManager.instance.MapSize / 2) + 1, GameManager.instance.MapSize / 2), 0);
-        }
+        //Debug.Log("Ever watched Oppenheimer that's what writing these debugs feels like. I'm also only writing to myself and this stupid ass code won't ");
+        Vector3 location = CalculateLocation(currWave);
         Debug.Log("location: "+location);
         GameObject warningObject = Instantiate(laserWarning, location, Quaternion.identity);
         if (currWave.Vertical) {
@@ -141,14 +137,20 @@ public class LaserManager : MonoBehaviour
         } else {
             warningObject.transform.localScale = new Vector2(GameManager.instance.MapSize, 1);
         }
-        StartCoroutine(SpawnLaser(currWave.SpawnTime, randomTime, currWave.Vertical, location, warningObject));
+        StartCoroutine(SpawnLaser(currWave, randomTime, location, warningObject));
     }
 
-    private System.Collections.IEnumerator SpawnLaser (float waitTime, float extraTime, bool vertical, Vector3 location, GameObject warning) {
-        //Debug.Log("in IEnum SpawnLaser, waitTime = "+waitTime+", extraTime (randomTime) = "+extraTime);
-        yield return new WaitForSeconds(waitTime + extraTime);
+    private System.Collections.IEnumerator SpawnLaser (LaserWaves currWave, float extraTime, Vector3 location, GameObject warning) {
+        //Debug.Log("in IEnum SpawnLaser, SpawnTime = "+currWave.SpawnTime+", extraTime (randomTime) = "+extraTime);
+        yield return new WaitForSeconds(currWave.SpawnTime - extraTime);
+        //in case the center has changed due to the map size changing by 1.
+        if (currWave.Vertical) {
+            location.y = CalculateOdd() - 1;
+        } else {
+            location.x = CalculateOdd();
+        }
         GameObject laserRef  = Instantiate(laser, location, Quaternion.identity);
-        if (vertical) {
+        if (currWave.Vertical) {
             laserRef.transform.localScale = new Vector2(1, GameManager.instance.MapSize);
         } else {
             laserRef.transform.localScale = new Vector2(GameManager.instance.MapSize, 1);
@@ -157,5 +159,26 @@ public class LaserManager : MonoBehaviour
         Destroy(warning);
         yield return new WaitForSeconds(1.5f);
         Destroy(laserRef);
+    }
+
+    private Vector3 CalculateLocation (LaserWaves currWave) {
+        float odd = CalculateOdd(); //calculate if the map size is odd, if it is returns 1 else .5, factors that into the center of location.
+        Vector3 location;
+        if (currWave.Vertical) {
+            location = new Vector3(Random.Range(-(GameManager.instance.MapSize / 2) + 1, GameManager.instance.MapSize / 2), odd - 1, 0);
+        } else {
+            location = new Vector3(odd, Random.Range(-(GameManager.instance.MapSize / 2) + 1, GameManager.instance.MapSize / 2), 0);
+        }
+        return location;
+    }
+
+    private float CalculateOdd () {
+        float calcOdd;
+        if ((GameManager.instance.MapSize % 2) == 0) {
+            calcOdd = .5f;
+        } else {
+            calcOdd = 1;
+        }
+        return calcOdd;
     }
 }

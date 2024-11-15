@@ -424,7 +424,7 @@ public class Player : MonoBehaviour
     }
 
     void OnTriggerEnter2D (Collider2D collide) {
-        if (collide.CompareTag("Obstacle") || collide.CompareTag("Walls")) {
+        if (collide.CompareTag("Obstacle") || collide.CompareTag("Walls") || collide.CompareTag("Laser")) {
             Time.timeScale = 0f;
             isDead = true;
             Debug.Log("died with "+upgradeNumber+" upgrades");

@@ -234,12 +234,11 @@ public class GameManager : MonoBehaviour
             case "mapSizeAdd1":
                 mapSize++;
                 TileMapper.instance.RefreshTileMap();
-                Debug.Log(currentUpgrade.Name+" increased to "+currentUpgrade.Level);
                 break;
             case "speedSlow":
-                //remove 2 player.DifficultyTime units from player time if that doesn't take player time below default .1f.
+                //remove 2 player.DifficultyTime units from player time if that doesn't take player time below a little below .1f.
                 for (int i = 0; i < 2; i++) {
-                    if (player.LocalTimeScale > .1f + player.DifficultyTime) {
+                    if (player.LocalTimeScale > .08f + player.DifficultyTime) {
                         player.LocalTimeScale -= player.DifficultyTime;
                         Debug.Log("subtracted "+player.DifficultyTime+ " from player localTimeScale.");
                     }
@@ -249,7 +248,6 @@ public class GameManager : MonoBehaviour
             case "removeSegment":
                 player.RemoveSegment();
                 player.RemoveSegment();
-                Debug.Log(currentUpgrade.Name+" increased to "+currentUpgrade.Level);
                 break;
             default:
                 Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
