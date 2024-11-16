@@ -81,7 +81,7 @@ public class LaserManager : MonoBehaviour
         float nextSpawnTime = 3;
         bool vertical = true; //set as these also for debugging purposes.
         if (laserWaveTracker < lt[0]) {
-            nextAmount = Random.Range(1,3); //max exclusive
+            nextAmount = Random.Range(5,7); //max exclusive, change back to 1, 3
             nextWaveTime = Random.Range(10, 20);
             nextSpawnTime = 4;
             vertical = false;
@@ -118,6 +118,9 @@ public class LaserManager : MonoBehaviour
 
     private void WaveSpawning (LaserWaves currWave) {
         //Debug.Log("'Hacker voice': I'm in IEnumerator WaveSpawning");
+        if (currWave.Amount > GameManager.instance.MapSize - 2) {
+            currWave.Amount = GameManager.instance.MapSize - 2;
+        }
         for (int i = 0; i < currWave.Amount; i++) {
             StartCoroutine(LocationValues(currWave));
         }

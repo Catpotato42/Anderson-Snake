@@ -2,9 +2,8 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 using UnityEngine.SceneManagement;
-using Unity.VisualScripting.Dependencies.Sqlite;
-using UnityEditor.MPE;
-using Unity.VisualScripting;
+using UnityEditor.Experimental.GraphView;
+using System.Collections;
 
 public class Player : MonoBehaviour
 {
@@ -56,6 +55,8 @@ public class Player : MonoBehaviour
     private float dashCooldownTracker = 0f;
     private float dashSpeed = .5f;
     private float tempDashTime;
+
+    private Vector2 lastSegmentDirection;
 
 
     private bool canChangeDirection = true;
@@ -343,6 +344,9 @@ public class Player : MonoBehaviour
             Fire();
             fireCooldownTracker = 0f; //needs to be before canShoot or maybe canShoot would set itself to true again?
             canShoot = false;
+        } else if (Input.GetKeyDown(KeyCode.F)) {
+            inputQueue.Clear();
+            QueueInput(KeyCode.F);
         }
     }
 
@@ -389,21 +393,59 @@ public class Player : MonoBehaviour
                 direction = Vector2.right;
                 transform.rotation = Quaternion.Euler(0, 0, -90);
                 break;
+            case KeyCode.F:
+                StartCoroutine(ReverseSnake());
+                break;
+
         }
         canChangeDirection = false;
     }
-    void MoveSnake () {
+    private void MoveSnake () {
         float x = transform.position.x + direction.x;
         float y = transform.position.y + direction.y;
         transform.position = new Vector2 (x, y);
         canChangeDirection = true;
     }
 
-    void MoveSegments () {
+    private void MoveSegments () {
         //put on top of one in front
-        for (int i = segments.Count - 1; i > 0; i--) {
+        for (int i = segments.Count - 2; i > 0; i--) {
             segments[i].transform.position = segments[i - 1].transform.position;
         }
+        Vector3 oldPosLast = segments[segments.Count - 1].transform.position; //getting the direction 
+        segments[segments.Count - 1].transform.position = segments[segments.Count - 2].transform.position;
+        Vector3 newPosLast = segments[segments.Count - 1].transform.position;
+        float diffPosX = newPosLast.x - oldPosLast.x;
+        float diffPosY = newPosLast.y - oldPosLast.y;
+        if (diffPosX != 0) {
+            diffPosX = diffPosX/MathF.Abs(diffPosX);
+        }
+        if (diffPosY != 0) {
+            diffPosY = diffPosY/MathF.Abs(diffPosY);
+        }
+        lastSegmentDirection = new Vector2(diffPosX, diffPosY);
+    }
+
+    private IEnumerator ReverseSnake() { //implement a cooldown on this
+        //switch head and tail
+        yield return new WaitForEndOfFrame(); //so that all segments are moved
+        if (Time.timeScale > 0f) {
+            float tempTime = Time.timeScale;
+            Time.timeScale = 0f;
+            segments[0].transform.position = segments[segments.Count - 1].transform.position;
+            if (lastSegmentDirection == Vector2.up) {
+                direction = Vector2.down;
+            } else if (lastSegmentDirection == Vector2.right) {
+                direction = Vector2.left;
+            } else if (lastSegmentDirection == Vector2.down) {
+                direction = Vector2.up;
+            } else if (lastSegmentDirection == Vector2.left) {
+                direction = Vector2.right;
+            }
+            MoveSnake();
+            Time.timeScale = tempTime;
+        }
+        canChangeDirection = true;
     }
 
     void updateHighScore () {
