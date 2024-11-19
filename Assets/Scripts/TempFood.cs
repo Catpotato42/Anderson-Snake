@@ -9,8 +9,8 @@ public class TempFood : MonoBehaviour
     }
 
     private void RandomPosition () {
-        int x = Random.Range(-(GameManager.instance.MapSize / 2) + 1, GameManager.instance.MapSize / 2);
-        int y = Random.Range(-(GameManager.instance.MapSize / 2) + 1, GameManager.instance.MapSize / 2);
+        int x = Random.Range(-(GameManager.instance.MapSizeTemp / 2) + 1, GameManager.instance.MapSizeTemp / 2);
+        int y = Random.Range(-(GameManager.instance.MapSizeTemp / 2) + 1, GameManager.instance.MapSizeTemp / 2);
         transform.position = new Vector2 (x, y);
     }
 

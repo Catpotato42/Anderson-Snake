@@ -2,11 +2,18 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
-public class StartEverett : MonoBehaviour, IPointerClickHandler
+public class StartEverett : MonoBehaviour, IPointerClickHandler, ISaveManager
 {
+    private bool hasEverett = false;
+    public void LoadData (GameData data) {
+        this.hasEverett = data.hasEverett;
+    }
+    public void SaveData (GameData data) {
+        return;
+    }
     void Start () {
         //Debug.Log("hasEverett exists: "+PlayerPrefs.HasKey("hasEverett"));
-        if (PlayerPrefs.GetInt("hasEverett") == 1) {
+        if (hasEverett) {
             gameObject.SetActive(true);
             //Debug.Log("active");
         } else {

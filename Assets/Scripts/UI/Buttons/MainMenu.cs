@@ -6,7 +6,7 @@ public class MainMenu : MonoBehaviour, IPointerClickHandler
 {
     public void OnPointerClick (PointerEventData pointerEventData) {
         if (pointerEventData.button == PointerEventData.InputButton.Left) {
-            PlayerPrefs.SetInt("mapSize", 0); //placeholder for resetting all temporary playerPrefs (upgrades)
+            //TODO: save the game
             SceneManager.LoadScene(0);
         }
     }

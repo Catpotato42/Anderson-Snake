@@ -8,7 +8,7 @@ public class CameraScript : MonoBehaviour
     void Start() {
         cameraDetached = false;
         gameObject.transform.position = new Vector3 (1, -.5f, -10); //maybe redundant because player calls OnReset but probably not as onreset is called in start also
-        if (GameManager.instance.MapSize >= 10) { //if playerprefs mapSize + GameManager MapSize >= 15
+        if (GameManager.instance.MapSizeTemp >= 10) { //if MapSize + GameManager MapSizeTemp >= 16
             DetachCamera();
         }
         GameManager.instance.OnMapSize10 += DetachCamera; //this could probably be changed to just set cameraDetached to true, maybe todo but it's fine as is.
@@ -21,7 +21,7 @@ public class CameraScript : MonoBehaviour
     }
     
     private void AttachCamera () {
-        if (GameManager.instance.MapSize < 10) {
+        if (GameManager.instance.MapSizeTemp < 10) {
             cameraDetached = false;
             gameObject.transform.position = new Vector3 (1, -.5f, -10);
         }

@@ -2,10 +2,9 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 using UnityEngine.SceneManagement;
-using UnityEditor.Experimental.GraphView;
 using System.Collections;
 
-public class Player : MonoBehaviour
+public class Player : MonoBehaviour, ISaveManager
 {
 
     //TODO:
@@ -24,6 +23,7 @@ public class Player : MonoBehaviour
     List<GameObject> segments = new List<GameObject>();
 
     private GameObject highScoreObj;
+    private HighScore highScoreScript;
 
     private Queue<KeyCode> inputQueue = new Queue<KeyCode>();
 
@@ -73,8 +73,19 @@ public class Player : MonoBehaviour
     private float reverseCooldown = .3f;
     private float reverseCooldownTracker = 0;
 
+    private int health = 1;
+    public int Health {get => health; set => health = value;}
+
+    private int extraHealth = 0;
+    private int extraSegments;
+
     private Vector2 lastSegmentDirection;
 
+    private bool hasEverett;
+    private int highScore;
+    public int HighScore {
+        get => highScore;
+    }
 
     private bool canChangeDirection = true;
 
@@ -109,6 +120,26 @@ public class Player : MonoBehaviour
             }
         }
     }
+    private void SetScore (int newScore) {
+        SnakeScore = newScore;
+    }
+
+    private void AddScore (int newScore) {
+        SnakeScore += newScore;
+    }
+
+    private void SubtractScore (int newScore) {
+        SnakeScore -= newScore;
+    }
+
+    public void LoadData (GameData data) {
+        extraHealth = data.extraHealth;
+        hasEverett = data.hasEverett;
+        extraSegments = data.extraSegments;
+    }
+    public void SaveData(GameData data) {
+        data.extraHealth = extraHealth;
+    }
 
     void Awake () {
         if (instance == null) {
@@ -116,14 +147,16 @@ public class Player : MonoBehaviour
         } else {
             Destroy(gameObject);
         }
+        //game should load and set health, amount of segments, ...
         highScoreObj = GameObject.FindGameObjectWithTag("HighScore");
+        highScoreScript = highScoreObj.GetComponent<HighScore>();
         TileMapper.instance.RefreshTileMap(); //needs to be done in awake so that the food doesn't spawn wrong
         if (deathCanvas != null) {
             deathScreen = deathCanvas.GetComponent<DeathScreen>();
         }
         //change skin, segments has its own script for this.
         SpriteRenderer skin = gameObject.GetComponent<SpriteRenderer>();
-        if (GameManager.instance.Difficulty == "everett") {
+        if (GameManager.instance.SkinPref == "everett") {
             skin.sprite = Resources.Load<Sprite>("Skins/EverettHead");
         } else {
             skin.sprite = Resources.Load<Sprite>("Skins/Square");
@@ -152,11 +185,7 @@ public class Player : MonoBehaviour
     
     // Start is called before the first frame update
     void Start()
-    {
-        //Debug.Log("Extra segments: "+PlayerPrefs.GetInt("extraSegments"));
-        //Debug.Log("High score: "+PlayerPrefs.GetInt("highScore"));
-        //Debug.Log("Unlocked Everett: "+PlayerPrefs.GetInt("scoreEverett"));
-        //Debug.Log("Everett high score: "+PlayerPrefs.GetInt("eHighScore"));    
+    {   
         if (difficultyScale == "everett") {
             difficultyTime = .015f;
             Debug.Log("Difficulty = everett");
@@ -177,27 +206,17 @@ public class Player : MonoBehaviour
         ResetSnake();
     }
 
-    private void SetScore (int newScore) {
-        SnakeScore = newScore;
-    }
-
-    private void AddScore (int newScore) {
-        SnakeScore += newScore;
-    }
-
-    private void SubtractScore (int newScore) {
-        SnakeScore -= newScore;
-    }
-
     public void ResetSnake () {
         //isDead = false;
         canDash = false;
         canShoot = false;
         canReverse = false;
         upgradeNumber = 0;
-        GameManager.instance.MapSize = PlayerPrefs.GetInt("mapSize") + 6;
+        health = extraHealth + 1;
+        GameManager.instance.MapSizeTemp = GameManager.instance.MapSize + 6;
         TileMapper.instance.RefreshTileMap();
         GameManager.instance.SetDictionaryValues(); //called in awake of gamemanager too, probably redundant.
+        UpdateHighScore();
         //position , rotation, direction, time
         transform.position = new Vector2(0, 0);
         transform.rotation = Quaternion.Euler(0,0,-90);
@@ -222,7 +241,7 @@ public class Player : MonoBehaviour
         segments.Add(gameObject); //adds head (pause)
 
         //puts initial segments after head
-        for (int i = 0; i < PlayerPrefs.GetInt("extraSegments") + 1; i++) {
+        for (int i = 0; i < extraSegments + 1; i++) { //TODO: REPLACE, REMOVE, FIX, BAD
             Grow();
         }
         localTimeScale = .1f;
@@ -268,8 +287,8 @@ public class Player : MonoBehaviour
             return;
         } else if (segments.Count > 2) {
             GameObject segmentToRemove = segments[segments.Count - 1];
-            segments.RemoveAt(segments.Count - 1); //I'm not sure but this might be able to be implemented with segments.Remove(segments.FindLastIndex(segment));
-            Destroy(segmentToRemove); //This needs to be after removal from the list or else the RemoveAt is dereferencing a null pointer.
+            segments.RemoveAt(segments.Count - 1); //I'm not sure but this might be able to be implemented with segments.Remove(segments.FindLastIndex(segment)); no point in doing that but just I should prolly know
+            Destroy(segmentToRemove); //This needs to be after removal from the list or else the RemoveAt index is null.
         } else {
             Debug.Log("Error: Tried to call RemoveSegment (Player.cs public void RemoveSegment()) but segment.Count < 1 (no head (huh??)). segments.Count = " + segments.Count);
         }
@@ -344,8 +363,8 @@ public class Player : MonoBehaviour
         } else if (Input.GetKeyDown(KeyCode.R) && isDead || Input.GetKeyDown(KeyCode.Space) && isDead) {
             ResetSnake();
         } else if (Input.GetKeyDown(KeyCode.Escape) && isDead) {
+            //TODO: save game
             SceneManager.LoadScene(0);
-            PlayerPrefs.SetInt("mapSize", 0);
         } else if (Input.GetKeyDown(KeyCode.Space) && canDash) { //pausing is only in for testing purposes! Dashing is the intended functionalty of space
             /*if (paused && !isChoosing && !isDead) {
                 Time.timeScale = 1f;
@@ -462,7 +481,7 @@ public class Player : MonoBehaviour
         lastSegmentDirection = new Vector2(diffPosX, diffPosY);
     }
 
-    private IEnumerator ReverseSnake() { //implement a cooldown on this
+    private IEnumerator ReverseSnake() {
         //switch head and tail
         yield return new WaitForEndOfFrame(); //so that all segments are moved
         if (Time.timeScale > 0f) {
@@ -485,36 +504,40 @@ public class Player : MonoBehaviour
         canChangeDirection = true;
     }
 
-    void updateHighScore () {
-        string tempHighScore;
-        if (difficultyScale == "everett") {
-            tempHighScore = "eHighScore";
-        } else if (difficultyScale == "basic") {
-            tempHighScore = "HighScore";
-        } else {
-            tempHighScore = null;
-        }
-        if (PlayerPrefs.GetInt(tempHighScore) < snakeScore) {
+    void UpdateHighScore () { //High score script handles the individual high scores and separates them for us.
+        highScore = highScoreScript.GetHighScore(difficultyScale);
+        if (highScore < snakeScore) {
             //Debug.Log(snakeScore+" snakeScore higher than "+PlayerPrefs.GetInt("highScore"));
-            PlayerPrefs.SetInt(tempHighScore, snakeScore);
-            HighScore highScore = highScoreObj.GetComponent<HighScore>();
-            highScore.updateHighScore(tempHighScore);
+            highScore = snakeScore;
+            highScoreScript.UpdateHighScore(difficultyScale, highScore);
+        }
+    }
+
+    void OnHitLogic (Collider2D collide) {
+        health--;
+        if (health <= 0) {
+            Time.timeScale = 0f;
+            isDead = true;
+            Debug.Log("died with "+upgradeNumber+" upgrades");
+            deathScreen.Setup(snakeScore);
+            UpdateHighScore();
+        } else {
+            if (!collide.CompareTag("Laser")) {
+                StartCoroutine(ReverseSnake());
+                canChangeDirection = false;
+            }
         }
     }
 
     void OnTriggerEnter2D (Collider2D collide) {
         if (collide.CompareTag("Obstacle") || collide.CompareTag("Walls") || collide.CompareTag("Laser")) {
-            Time.timeScale = 0f;
-            isDead = true;
-            Debug.Log("died with "+upgradeNumber+" upgrades");
-            deathScreen.Setup(snakeScore);
-            updateHighScore();
+            OnHitLogic(collide);
         } else if (collide.CompareTag("Food")) {
             AddScore(1);
-            updateHighScore();
-            if (snakeScore == 10 && PlayerPrefs.GetInt("hasEverett") != 1) {
-                PlayerPrefs.SetInt("hasEverett", 1);
+            UpdateHighScore();
+            if (snakeScore == 10 && !hasEverett) {
                 OnEverettUnlock.Invoke(true);
+                hasEverett = true;
             }
             if (snakeScore == growThreshold[upgradeNumber]) {
                 if (upgradeNumber == growThreshold.Count - 1) {

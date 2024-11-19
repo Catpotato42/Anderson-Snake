@@ -29,7 +29,7 @@ public class TileMapper : MonoBehaviour
         }
         floorMap.ClearAllTiles();
         obstacleMap.ClearAllTiles();
-        int width = GameManager.instance.MapSize + 2, height = GameManager.instance.MapSize + 2;
+        int width = GameManager.instance.MapSizeTemp + 2, height = GameManager.instance.MapSizeTemp + 2;
         Vector3Int centerRef = new Vector3Int(-width / 2, -height / 2, 0);
 
         for (int y = 0; y < height; y++) { //goes down columns 
@@ -68,8 +68,8 @@ public class TileMapper : MonoBehaviour
         floorMap.transform.position = new Vector3(centerRef.x + .5f, centerRef.y -.5f, 0);
         obstacleMap.transform.position = new Vector3(centerRef.x + .5f, centerRef.y - .5f, 0);
         Camera mainCam = mainCamera.GetComponent<Camera>();
-        if (GameManager.instance.MapSize < 10) { //also represented by Action OnMapSize10 in GameManager 
-            mainCam.orthographicSize = GameManager.instance.MapSize - (GameManager.instance.MapSize/7f);
+        if (GameManager.instance.MapSizeTemp < 10) { //also represented by Action OnMapSize10 in GameManager 
+            mainCam.orthographicSize = GameManager.instance.MapSizeTemp - (GameManager.instance.MapSizeTemp/7f);
         } else {
             mainCam.orthographicSize = 9f;
         }

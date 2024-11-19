@@ -3,11 +3,62 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-public class HighScore : MonoBehaviour
+public class HighScore : MonoBehaviour, ISaveManager
 {
+    private int highScoreB = 0;
+    private int highScoreM = 0;
+    private int highScoreH = 0;
+    private int highScoreEv = 0;
+    public void SaveData (GameData data) {
+        data.highScoreB = highScoreB;
+        data.highScoreM = highScoreM;
+        data.highScoreH = highScoreH;
+        data.highScoreEv = highScoreEv;
+    }
+    public void LoadData (GameData data) {
+        highScoreB = data.highScoreB;
+        highScoreM = data.highScoreM;
+        highScoreH = data.highScoreH;
+        highScoreEv = data.highScoreEv;
+    }
     private TextMeshProUGUI scoreText;
-    public void updateHighScore (string highScore) {
+    public void UpdateHighScore (string difficulty, int newHighScore) {
         scoreText = gameObject.GetComponent<TextMeshProUGUI>();
-        scoreText.text = PlayerPrefs.GetInt(highScore).ToString();
+        switch(difficulty) {
+            case "basic":
+                highScoreB = newHighScore;
+                scoreText.text = highScoreB.ToString();
+                break;
+            case "medium":
+                highScoreM = newHighScore;
+                scoreText.text = highScoreM.ToString();
+                break;
+            case "hard":
+                highScoreH = newHighScore;
+                scoreText.text = highScoreH.ToString();
+                break;
+            case "everett":
+                highScoreEv = newHighScore;
+                scoreText.text = highScoreEv.ToString();
+                break;
+            default:
+                highScoreB = -1;
+                break;
+        }
+    }
+
+    public int GetHighScore (string difficulty) {
+        switch(difficulty) {
+            case "basic":
+                return highScoreB;
+            case "medium":
+                return highScoreM;
+            case "hard":
+                return highScoreH;
+            case "everett":
+                return highScoreEv;
+            default:
+                return -1;
+        }
     }
 }
