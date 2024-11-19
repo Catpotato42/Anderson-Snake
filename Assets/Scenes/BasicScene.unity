@@ -3222,6 +3222,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 96716c360df081448a558297ac55091b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  fileName: ASnakeData
 --- !u!4 &1709525298
 Transform:
   m_ObjectHideFlags: 0

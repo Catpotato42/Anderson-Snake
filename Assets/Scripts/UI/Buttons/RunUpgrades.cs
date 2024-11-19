@@ -8,7 +8,6 @@ using UnityEngine.UI;
 
 public class RunUpgrades : MonoBehaviour, IPointerClickHandler
 {
-    private Player player;
     private GameManager.UpgradeInfo upgradeInfo;
     private GameObject choiceParent;
     private List<GameObject> choices = new List<GameObject>();
@@ -37,8 +36,7 @@ public class RunUpgrades : MonoBehaviour, IPointerClickHandler
         if (GameObject.FindGameObjectWithTag("Player") == null) {
             Debug.Log("bro there's no player on this screen"); //shouldn't be possible anyways but idk I should add some of these to get faster at writing them and get in the habit
         }
-        player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
-        player.OnUpgrade += InitButton;
+        Player.instance.OnUpgrade += InitButton;
         gameObject.SetActive(false);
     }
 

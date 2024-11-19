@@ -1,7 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
 [System.Serializable]
 public class GameData
 {
@@ -12,6 +8,7 @@ public class GameData
     public bool hasEverett;
     public int extraSegments;
     public int extraFood;
+    public int extraChoices;
     public int highScoreB;
     public int highScoreM;
     public int highScoreH;
@@ -21,6 +18,8 @@ public class GameData
     //add: meta currency amount, make sure it is equal to currency + current score and if no current score is found just currency
     public GameData () {
         this.extraHealth = 0;
+        extraChoices = 0;
+        extraSegments = 0;
         mapSize = 0;
         hasMedium = false;
         hasHard = false;
@@ -29,6 +28,5 @@ public class GameData
         highScoreM = 0;
         highScoreH = 0;
         highScoreEv = 0;
-        extraSegments = 0;
     }
 }

@@ -43,6 +43,29 @@ public class HighScore : MonoBehaviour, ISaveManager
                 break;
             default:
                 highScoreB = -1;
+                scoreText.text = highScoreB.ToString();
+                break;
+        }
+    }
+
+    public void UpdateHighScore (string difficulty) {
+        scoreText = gameObject.GetComponent<TextMeshProUGUI>();
+        switch(difficulty) {
+            case "basic":
+                scoreText.text = highScoreB.ToString();
+                break;
+            case "medium":
+                scoreText.text = highScoreM.ToString();
+                break;
+            case "hard":
+                scoreText.text = highScoreH.ToString();
+                break;
+            case "everett":
+                scoreText.text = highScoreEv.ToString();
+                break;
+            default:
+                highScoreB = -1;
+                scoreText.text = highScoreB.ToString();
                 break;
         }
     }

@@ -46,7 +46,7 @@ public class GameManager : MonoBehaviour, ISaveManager
     public Dictionary<int, UpgradeInfo> upgrades3 = new Dictionary<int, UpgradeInfo>();
     public Dictionary<int, UpgradeInfo> upgrades4 = new Dictionary<int, UpgradeInfo>();
     public Dictionary<int, UpgradeInfo> upgrades5 = new Dictionary<int, UpgradeInfo>();
-    private HashSet<Tuple<int, int>> disallowedUpgrades = new HashSet<Tuple<int, int>>(); //add in format index
+    private HashSet<Tuple<int, int>> disallowedUpgrades = new HashSet<Tuple<int, int>>(); //add in format upgrade dictionary, index
     private static HashSet<Tuple<int, int>> permanentDisallowedUpgrades = new HashSet<Tuple<int, int>>();
     //end upgrades stuff
 
@@ -56,7 +56,6 @@ public class GameManager : MonoBehaviour, ISaveManager
 
     public Action OnMapSize10; //not invoked but in tilemapper there is an if statement
 
-    private GameObject highScoreObj;
     private ErrorHandler errorHandler;
 
     private static string difficulty = "basic";

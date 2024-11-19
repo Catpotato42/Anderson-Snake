@@ -28,7 +28,7 @@ public class Player : MonoBehaviour, ISaveManager
     private Queue<KeyCode> inputQueue = new Queue<KeyCode>();
 
     public event Action<int> OnScoreChanged;
-    public event Action<bool> OnEverettUnlock;
+    public event Action<string> OnDiffUnlock;
     public event Action<bool> OnUpgrade;
     public event Action OnReset;
 
@@ -82,6 +82,8 @@ public class Player : MonoBehaviour, ISaveManager
     private Vector2 lastSegmentDirection;
 
     private bool hasEverett;
+    private bool hasMedium;
+    private bool hasHard;
     private int highScore;
     public int HighScore {
         get => highScore;
@@ -134,11 +136,15 @@ public class Player : MonoBehaviour, ISaveManager
 
     public void LoadData (GameData data) {
         extraHealth = data.extraHealth;
+        hasMedium = data.hasMedium;
+        hasHard = data.hasHard;
         hasEverett = data.hasEverett;
         extraSegments = data.extraSegments;
     }
     public void SaveData(GameData data) {
-        data.extraHealth = extraHealth;
+        data.hasMedium = hasMedium;
+        data.hasHard = hasHard;
+        data.hasEverett = hasEverett;
     }
 
     void Awake () {
@@ -241,7 +247,7 @@ public class Player : MonoBehaviour, ISaveManager
         segments.Add(gameObject); //adds head (pause)
 
         //puts initial segments after head
-        for (int i = 0; i < extraSegments + 1; i++) { //TODO: REPLACE, REMOVE, FIX, BAD
+        for (int i = 0; i < extraSegments + 1; i++) {
             Grow();
         }
         localTimeScale = .1f;
@@ -510,6 +516,8 @@ public class Player : MonoBehaviour, ISaveManager
             //Debug.Log(snakeScore+" snakeScore higher than "+PlayerPrefs.GetInt("highScore"));
             highScore = snakeScore;
             highScoreScript.UpdateHighScore(difficultyScale, highScore);
+        } else {
+            highScoreScript.UpdateHighScore(difficultyScale);
         }
     }
 
@@ -535,8 +543,14 @@ public class Player : MonoBehaviour, ISaveManager
         } else if (collide.CompareTag("Food")) {
             AddScore(1);
             UpdateHighScore();
-            if (snakeScore == 10 && !hasEverett) {
-                OnEverettUnlock.Invoke(true);
+            if (snakeScore == 50 && !hasMedium) {
+                OnDiffUnlock.Invoke("MEDIUM");
+                hasEverett = true;
+            } else if (snakeScore == 100 && !hasHard) {
+                OnDiffUnlock.Invoke("HARD");
+                hasEverett = true;
+            } else if (snakeScore == 200 && !hasEverett) {
+                OnDiffUnlock.Invoke("EVERETT");
                 hasEverett = true;
             }
             if (snakeScore == growThreshold[upgradeNumber]) {
