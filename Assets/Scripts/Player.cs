@@ -8,6 +8,15 @@ using System.Collections;
 public class Player : MonoBehaviour
 {
 
+    //TODO:
+    //implement health and reverse and a short pause (red screen?) if you hit something and you have health left.
+    //change food sprite. pixel art!
+    //Timer that provides a reason to play the game finally, highscore will mean something (TIMEMANAGER SINGLETON STUFF)
+    //upgrades for timer that make it longer so you balance utility with a longer time. 
+    //BUGS:
+    //If you input a direction you are already going, then another one right after that, it takes one segment move for it to update.
+    //DDSA, see Input Handling.
+
     public static Player instance;
     Vector2 direction;
 
@@ -51,10 +60,18 @@ public class Player : MonoBehaviour
     private int dashAmount = 3;
     private int dashAmountTracker = 3;
     private bool canDash = false;
-    private float dashCooldown = 1f;
+    private float dashCooldown = 2f;
+    public float DashCooldown {
+        get =>dashCooldown; 
+        set{dashCooldown = value;}
+    }
     private float dashCooldownTracker = 0f;
     private float dashSpeed = .5f;
     private float tempDashTime;
+
+    private bool canReverse;
+    private float reverseCooldown = .3f;
+    private float reverseCooldownTracker = 0;
 
     private Vector2 lastSegmentDirection;
 
@@ -63,9 +80,7 @@ public class Player : MonoBehaviour
 
     public float FireCooldown {
         get => fireCooldown;
-        set {
-            fireCooldown = value;
-        }
+        set {fireCooldown = value;}
     }
 
     public float DifficultyTime {
@@ -75,16 +90,12 @@ public class Player : MonoBehaviour
 
     public float LocalTimeScale {
         get => localTimeScale;
-        set {
-            localTimeScale = value;
-        }
+        set {localTimeScale = value;}
     }
 
     public int UpgradeNumber {
         get => upgradeNumber;
-        set {
-            upgradeNumber = value;
-        }
+        set {upgradeNumber = value;}
 
     }
 
@@ -125,7 +136,7 @@ public class Player : MonoBehaviour
         growThreshold.Add(5);
         for (int i = 1; i < 5; i++) {
             growThreshold.Add(growThreshold[i - 1] + 5);
-        } for (int i = 5; i < 15; i++) {
+        } for (int i = 5; i < 10; i++) {
             growThreshold.Add(growThreshold[i - 1] + 10);
         } for (int i = 10; i < 15; i++) {
             growThreshold.Add(growThreshold[i - 1] + 20);
@@ -133,7 +144,7 @@ public class Player : MonoBehaviour
             growThreshold.Add(growThreshold[i - 1] + 30);
         }
         string printThresholdVals = "";
-        for (int i = 0; i < 30; i++) {
+        for (int i = 0; i < growThreshold.Count; i++) {
             printThresholdVals += growThreshold[i]+", ";
         }
         Debug.Log("Threshold vals = "+printThresholdVals);
@@ -181,6 +192,8 @@ public class Player : MonoBehaviour
     public void ResetSnake () {
         //isDead = false;
         canDash = false;
+        canShoot = false;
+        canReverse = false;
         upgradeNumber = 0;
         GameManager.instance.MapSize = PlayerPrefs.GetInt("mapSize") + 6;
         TileMapper.instance.RefreshTileMap();
@@ -281,6 +294,10 @@ public class Player : MonoBehaviour
         if (dashCooldownTracker > dashCooldown && !canDash) {
             canDash = true;
         }
+        reverseCooldownTracker += Time.deltaTime;
+        if (reverseCooldownTracker > reverseCooldown && !canReverse) {
+            canReverse = true;
+        }
         GetUserInput();
         if (canChangeDirection) {
             ProcessInputQueue();
@@ -292,13 +309,18 @@ public class Player : MonoBehaviour
         timeSinceLastUpdate += Time.fixedDeltaTime;
         //if timesincelast > .02 (normal amount for fixed update) / localtime (.1 or something, so it takes 10x longer to perform an action.)
         if (timeSinceLastUpdate >= customFixedInterval/localTimeScale) {
-            PerformCustomFixedUpdateLogic();
-
+            DoFixedUpdateStuff();
             timeSinceLastUpdate = 0f;
         }
     }
 
-    void PerformCustomFixedUpdateLogic() {
+    void DoFixedUpdateStuff() {
+        DecreaseDashAmount();
+        MoveSegments();
+        MoveSnake();
+    }
+
+    private void DecreaseDashAmount () {
         if (dashing) {
             dashAmountTracker--;
         } if (dashAmountTracker <= 0) {
@@ -307,8 +329,7 @@ public class Player : MonoBehaviour
             localTimeScale = tempDashTime;
             tempDashTime = 0; //unnecessary
         }
-        MoveSegments();
-        MoveSnake();
+
     }
 
     private void GetUserInput () {
@@ -340,11 +361,11 @@ public class Player : MonoBehaviour
             canDash = false;
             tempDashTime = localTimeScale;
             localTimeScale = dashSpeed;
-        } else if (Input.GetKeyDown(KeyCode.Mouse0) && !isChoosing && !isDead && canShoot) {
+        } else if (Input.GetKeyDown(KeyCode.Mouse0) && !isChoosing && canShoot) {
             Fire();
             fireCooldownTracker = 0f; //needs to be before canShoot or maybe canShoot would set itself to true again?
             canShoot = false;
-        } else if (Input.GetKeyDown(KeyCode.F)) {
+        } else if (Input.GetKeyDown(KeyCode.F) && canReverse) {
             inputQueue.Clear();
             QueueInput(KeyCode.F);
         }
@@ -366,37 +387,52 @@ public class Player : MonoBehaviour
     }
 
     void HandleInput(KeyCode input) {
-
-        switch (input)
-        {
+        //DDSA BUG: You can trick the game into for example thinking you pressed S and 
+        //moved one square down already if you hit ddsa really fast.
+        //How to fix: maybe track actual movement? then I would be able to stop this,
+        //but it would require a complete overhaul of the input system. 
+        //Definitely something reserved for like actual post-Demo or even full release bugfixing.
+        //It's a big edge case and it will affect you at the start of the game if you hit dsa really fast because the first input is already
+        //set to "D", but it's also very easy to avoid and I don't think would really make anyone scared of inputting too fast.
+        //Currently LOW-priority.
+        switch (input) {
             case KeyCode.W:
-                if (lastInput == "S") break;
+                if (lastInput == "S") {
+                    break;
+                }
                 lastInput = "W";
                 direction = Vector2.up;
                 transform.rotation = Quaternion.Euler(0, 0, 0);
                 break;
             case KeyCode.A:
-                if (lastInput == "D") break;
+                if (lastInput == "D") {
+                    break;
+                }
                 lastInput = "A";
                 direction = Vector2.left;
                 transform.rotation = Quaternion.Euler(0, 0, 90);
                 break;
             case KeyCode.S:
-                if (lastInput == "W") break;
+                if (lastInput == "W") {
+                    break;
+                }
                 lastInput = "S";
                 direction = Vector2.down;
                 transform.rotation = Quaternion.Euler(0, 0, 180);
                 break;
             case KeyCode.D:
-                if (lastInput == "A") break;
+                if (lastInput == "A") {
+                    break;
+                }
                 lastInput = "D";
                 direction = Vector2.right;
                 transform.rotation = Quaternion.Euler(0, 0, -90);
                 break;
             case KeyCode.F:
                 StartCoroutine(ReverseSnake());
+                reverseCooldownTracker = 0;
+                canReverse = false;
                 break;
-
         }
         canChangeDirection = false;
     }
@@ -433,6 +469,7 @@ public class Player : MonoBehaviour
             float tempTime = Time.timeScale;
             Time.timeScale = 0f;
             segments[0].transform.position = segments[segments.Count - 1].transform.position;
+            segments.Reverse(1, segments.Count - 2);
             if (lastSegmentDirection == Vector2.up) {
                 direction = Vector2.down;
             } else if (lastSegmentDirection == Vector2.right) {
@@ -480,11 +517,12 @@ public class Player : MonoBehaviour
                 OnEverettUnlock.Invoke(true);
             }
             if (snakeScore == growThreshold[upgradeNumber]) {
-                Debug.Log("Hit threshold "+upgradeNumber+" at score "+snakeScore+", threshold was "+growThreshold[upgradeNumber]+" and next should be "+growThreshold[upgradeNumber+1]);
-                upgradeNumber++;
-                if (upgradeNumber == growThreshold.Count) {
-                    growThreshold.Add(growThreshold[upgradeNumber-1] + 50);
+                if (upgradeNumber == growThreshold.Count - 1) {
+                    growThreshold.Add(growThreshold[upgradeNumber] + 50);
+                    Debug.Log("Added " + growThreshold[growThreshold.Count - 1] + " to growThreshold at "+ (growThreshold.Count - 1));
                 }
+                Debug.Log("Hit threshold "+upgradeNumber+" at score "+snakeScore+", threshold was "+growThreshold[upgradeNumber]+" and next should be "+growThreshold[upgradeNumber+1]);
+                upgradeNumber++; //1 after first upgrade, growThreshold.Count after last.
                 isChoosing = true;
                 Time.timeScale = 0f;
                 OnUpgrade.Invoke(true);

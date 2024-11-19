@@ -81,7 +81,7 @@ public class LaserManager : MonoBehaviour
         float nextSpawnTime = 3;
         bool vertical = true; //set as these also for debugging purposes.
         if (laserWaveTracker < lt[0]) {
-            nextAmount = Random.Range(5,7); //max exclusive, change back to 1, 3
+            nextAmount = Random.Range(1,3); //max exclusive, change back to 1, 3
             nextWaveTime = Random.Range(10, 20);
             nextSpawnTime = 4;
             vertical = false;
@@ -133,7 +133,7 @@ public class LaserManager : MonoBehaviour
         yield return new WaitForSeconds(randomTime);
         //Debug.Log("Ever watched Oppenheimer that's what writing these debugs feels like. I'm also only writing to myself and this stupid ass code won't ");
         Vector3 location = CalculateLocation(currWave);
-        Debug.Log("location: "+location);
+        //Debug.Log("location: "+location);
         GameObject warningObject = Instantiate(laserWarning, location, Quaternion.identity);
         if (currWave.Vertical) {
             warningObject.transform.localScale = new Vector2(1, GameManager.instance.MapSize);
