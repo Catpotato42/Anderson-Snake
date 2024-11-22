@@ -6,8 +6,10 @@ using UnityEngine.UI;
 
 public class Countdown : MonoBehaviour
 {
-    // READY.(.)(.) GO
+    // READY... GO
     [SerializeField] Player player;
+    [SerializeField] HighScore highScore;
+
     void Awake () {
         player.OnReset += CountdownStart;
     }
@@ -20,7 +22,9 @@ public class Countdown : MonoBehaviour
         var Countdown = gameObject.GetComponent<TextMeshProUGUI>();
         Time.timeScale = 0f;
         Countdown.text = "Ready.";
-        yield return new WaitForSecondsRealtime(.2f);
+        yield return new WaitForSecondsRealtime(.02f);
+        highScore.UpdateHighScore(GameManager.instance.Difficulty); // put here so Start in SaveManager has time to run and update values
+        yield return new WaitForSecondsRealtime(.18f);
         Countdown.text = "Ready..";
         yield return new WaitForSecondsRealtime(.2f);
         Countdown.text = "Ready...";

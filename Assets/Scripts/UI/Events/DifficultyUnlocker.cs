@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class EverettUnlocker : MonoBehaviour
+public class DifficultyUnlocker : MonoBehaviour
 {
     [SerializeField] private GameObject player;
     void Start()

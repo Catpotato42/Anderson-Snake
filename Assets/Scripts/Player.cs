@@ -76,7 +76,7 @@ public class Player : MonoBehaviour, ISaveManager
     private int health = 1;
     public int Health {get => health; set => health = value;}
 
-    private int extraHealth = 0;
+    [SerializeField] private int extraHealth = 0;
     private int extraSegments;
 
     private Vector2 lastSegmentDirection;
@@ -222,7 +222,7 @@ public class Player : MonoBehaviour, ISaveManager
         GameManager.instance.MapSizeTemp = GameManager.instance.MapSize + 6;
         TileMapper.instance.RefreshTileMap();
         GameManager.instance.SetDictionaryValues(); //called in awake of gamemanager too, probably redundant.
-        UpdateHighScore();
+        UpdateHighScore(); //this is called in Countdown too
         //position , rotation, direction, time
         transform.position = new Vector2(0, 0);
         transform.rotation = Quaternion.Euler(0,0,-90);
@@ -370,6 +370,7 @@ public class Player : MonoBehaviour, ISaveManager
             ResetSnake();
         } else if (Input.GetKeyDown(KeyCode.Escape) && isDead) {
             //TODO: save game
+            SaveManager.instance.SaveGame();
             SceneManager.LoadScene(0);
         } else if (Input.GetKeyDown(KeyCode.Space) && canDash) { //pausing is only in for testing purposes! Dashing is the intended functionalty of space
             /*if (paused && !isChoosing && !isDead) {
@@ -545,10 +546,10 @@ public class Player : MonoBehaviour, ISaveManager
             UpdateHighScore();
             if (snakeScore == 50 && !hasMedium) {
                 OnDiffUnlock.Invoke("MEDIUM");
-                hasEverett = true;
+                hasMedium = true;
             } else if (snakeScore == 100 && !hasHard) {
                 OnDiffUnlock.Invoke("HARD");
-                hasEverett = true;
+                hasHard = true;
             } else if (snakeScore == 200 && !hasEverett) {
                 OnDiffUnlock.Invoke("EVERETT");
                 hasEverett = true;

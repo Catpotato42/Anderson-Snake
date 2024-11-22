@@ -47,7 +47,7 @@ public class GameManager : MonoBehaviour, ISaveManager
     public Dictionary<int, UpgradeInfo> upgrades4 = new Dictionary<int, UpgradeInfo>();
     public Dictionary<int, UpgradeInfo> upgrades5 = new Dictionary<int, UpgradeInfo>();
     private HashSet<Tuple<int, int>> disallowedUpgrades = new HashSet<Tuple<int, int>>(); //add in format upgrade dictionary, index
-    private static HashSet<Tuple<int, int>> permanentDisallowedUpgrades = new HashSet<Tuple<int, int>>();
+    private static SerializableHashSet<int, int> permanentDisallowedUpgrades = new SerializableHashSet<int, int>();
     //end upgrades stuff
 
     [SerializeField] private GameObject mainCamera;
@@ -85,10 +85,9 @@ public class GameManager : MonoBehaviour, ISaveManager
     public void LoadData (GameData data) {
         extraFood = data.extraFood;
         mapSize = data.mapSize;
+        permanentDisallowedUpgrades = data.permanentDisallowedUpgrades; //no need to save, these can be unlocked with meta currency in the main menu
     }
     public void SaveData(GameData data) {
-        data.extraFood = extraFood;
-        data.mapSize = mapSize;
     }
 
     void Awake () { //sets map size, makes new instance, maybe gets skin preference
@@ -108,7 +107,7 @@ public class GameManager : MonoBehaviour, ISaveManager
         } else {
             //anything that needs to be done in main menu
         }
-        //difficulty = ?
+        //difficulty = ? - not needed because it is static and set on the title screen
     }
 
     void Start () {
@@ -321,7 +320,7 @@ public class GameManager : MonoBehaviour, ISaveManager
 
     //boa upgrades
     private void BoaUpgrades (UpgradeInfo currentUpgrade) {
-        //playing with the idea that boa upgrades make the player not grow as an added benefit to all of them.
+        //maybe boa upgrades make the player not grow as an added benefit to all of them.
         player.DoneChoosing();
         switch (currentUpgrade.Name) {
             case "mapSizeTempAdd1":

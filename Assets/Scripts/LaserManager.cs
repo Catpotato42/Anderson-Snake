@@ -81,7 +81,7 @@ public class LaserManager : MonoBehaviour
         float nextSpawnTime = 3;
         bool vertical = true; //set as these also for debugging purposes.
         if (laserWaveTracker < lt[0]) {
-            nextAmount = Random.Range(1,3); //max exclusive, change back to 1, 3
+            nextAmount = Random.Range(1,3); //max exclusive
             nextWaveTime = Random.Range(10, 20);
             nextSpawnTime = 4;
             vertical = false;
@@ -118,8 +118,9 @@ public class LaserManager : MonoBehaviour
 
     private void WaveSpawning (LaserWaves currWave) {
         //Debug.Log("'Hacker voice': I'm in IEnumerator WaveSpawning");
-        if (currWave.Amount > GameManager.instance.MapSize - 2) {
-            currWave.Amount = GameManager.instance.MapSize - 2;
+        if (currWave.Amount > GameManager.instance.MapSizeTemp - 2) {
+            currWave.Amount = GameManager.instance.MapSizeTemp - 2;
+            //Debug.Log("subtracted amount of lasers, currWave.Amount now equals "+currWave.Amount);
         }
         for (int i = 0; i < currWave.Amount; i++) {
             StartCoroutine(LocationValues(currWave));
@@ -136,9 +137,9 @@ public class LaserManager : MonoBehaviour
         //Debug.Log("location: "+location);
         GameObject warningObject = Instantiate(laserWarning, location, Quaternion.identity);
         if (currWave.Vertical) {
-            warningObject.transform.localScale = new Vector2(1, GameManager.instance.MapSize);
+            warningObject.transform.localScale = new Vector2(1, GameManager.instance.MapSizeTemp);
         } else {
-            warningObject.transform.localScale = new Vector2(GameManager.instance.MapSize, 1);
+            warningObject.transform.localScale = new Vector2(GameManager.instance.MapSizeTemp, 1);
         }
         StartCoroutine(SpawnLaser(currWave, randomTime, location, warningObject));
     }
@@ -154,9 +155,9 @@ public class LaserManager : MonoBehaviour
         }
         GameObject laserRef  = Instantiate(laser, location, Quaternion.identity);
         if (currWave.Vertical) {
-            laserRef.transform.localScale = new Vector2(1, GameManager.instance.MapSize);
+            laserRef.transform.localScale = new Vector2(1, GameManager.instance.MapSizeTemp);
         } else {
-            laserRef.transform.localScale = new Vector2(GameManager.instance.MapSize, 1);
+            laserRef.transform.localScale = new Vector2(GameManager.instance.MapSizeTemp, 1);
         }
         //Debug.Log("laser location x= "+laserRef.transform.position.x+", laser location y = "+laserRef.transform.position.y);
         Destroy(warning);
@@ -168,16 +169,16 @@ public class LaserManager : MonoBehaviour
         float odd = CalculateOdd(); //calculate if the map size is odd, if it is returns 1 else .5, factors that into the center of location.
         Vector3 location;
         if (currWave.Vertical) {
-            location = new Vector3(Random.Range(-(GameManager.instance.MapSize / 2) + 1, GameManager.instance.MapSize / 2), odd - 1, 0);
+            location = new Vector3(Random.Range(-(GameManager.instance.MapSizeTemp / 2) + 1, GameManager.instance.MapSizeTemp / 2), odd - 1, 0);
         } else {
-            location = new Vector3(odd, Random.Range(-(GameManager.instance.MapSize / 2) + 1, GameManager.instance.MapSize / 2), 0);
+            location = new Vector3(odd, Random.Range(-(GameManager.instance.MapSizeTemp / 2) + 1, GameManager.instance.MapSizeTemp / 2), 0);
         }
         return location;
     }
 
     private float CalculateOdd () {
         float calcOdd;
-        if ((GameManager.instance.MapSize % 2) == 0) {
+        if ((GameManager.instance.MapSizeTemp % 2) == 0) {
             calcOdd = .5f;
         } else {
             calcOdd = 1;

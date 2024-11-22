@@ -6,10 +6,11 @@ using System.Linq;
 public class SaveManager : MonoBehaviour {
     //I did the saving through a tutorial, so it's generally a bit cleaner than the other code. Some things to note:
     //I want to be able to save while playing the actual game so that the current highScore and score + meta curr is not lost.
-    [Header("File Storage Config")]
+    [Header("File Storage Config (disabled)")]
     [SerializeField] private string fileName;
+    [SerializeField] private bool useEncryption;
     private GameData gameData;
-    public SaveManager instance {get; private set;}
+    public static SaveManager instance {get; private set;}
     private List<ISaveManager> saveManagerObjects;
     private FileDataHandler dataHandler;
 
@@ -19,10 +20,12 @@ public class SaveManager : MonoBehaviour {
         } else {
             Destroy(gameObject);
         }
+        fileName = "ASnakeData";
+        useEncryption = true;
     }
 
     void Start () {
-        this.dataHandler = new FileDataHandler(Application.persistentDataPath, fileName); //docs for Application.persistentDataPath
+        this.dataHandler = new FileDataHandler(Application.persistentDataPath, fileName, useEncryption); //docs for Application.persistentDataPath
         this.saveManagerObjects = FindAllSaveManagerObjects();
         LoadGame();
     }
@@ -47,7 +50,7 @@ public class SaveManager : MonoBehaviour {
         //Debug.Log("Loaded mapSize and health, "+gameData.mapSize+" and "+gameData.extraHealth+".");
     }
 
-    public void SaveGame () { //should be called when going back to the main menu as well
+    public void SaveGame () { //should be called when going back and forth from the main menu as well as in OnApplicationQuit
         //pass data to other scripts
         foreach (ISaveManager saveManagerObj in saveManagerObjects) {
             saveManagerObj.SaveData(gameData);

@@ -1006,7 +1006,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86db929efb1e290498c29582d2be28eb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 1582855268}
 --- !u!1 &629246662
 GameObject:
   m_ObjectHideFlags: 0
@@ -1155,6 +1154,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 1582855268}
+  highScore: {fileID: 794992420}
 --- !u!1 &680264052
 GameObject:
   m_ObjectHideFlags: 0
@@ -2524,7 +2524,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1731349863}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1469867901
 MonoBehaviour:
@@ -2575,6 +2575,7 @@ MonoBehaviour:
   segment: {fileID: 9068169385945953288, guid: 43beafb1f04890e419fa4504d41dab06, type: 3}
   deathCanvas: {fileID: 1081856114}
   bulletPrefab: {fileID: 4372357313877917362, guid: 7eac5cef44b3ea34f958d39338e35672, type: 3}
+  extraHealth: 0
 --- !u!50 &1582855269
 Rigidbody2D:
   serializedVersion: 4
@@ -3223,6 +3224,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fileName: ASnakeData
+  useEncryption: 1
 --- !u!4 &1709525298
 Transform:
   m_ObjectHideFlags: 0
@@ -3268,7 +3270,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 199291745}
-  - {fileID: 1469867900}
   - {fileID: 1709525298}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -3717,3 +3718,4 @@ SceneRoots:
   - {fileID: 863989983}
   - {fileID: 1067667758}
   - {fileID: 1731349863}
+  - {fileID: 1469867900}

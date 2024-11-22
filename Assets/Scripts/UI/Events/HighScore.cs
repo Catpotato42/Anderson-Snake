@@ -5,6 +5,9 @@ using UnityEngine;
 
 public class HighScore : MonoBehaviour, ISaveManager
 {
+    //It might be more efficient to store high score in game manager, 
+    //as it would be easier to have it loaded in the title screen and 
+    //put into a static variable so I don't have to update it in countdown visibly after the game starts.
     private int highScoreB = 0;
     private int highScoreM = 0;
     private int highScoreH = 0;

@@ -9,10 +9,8 @@ public class StartEverett : MonoBehaviour, IPointerClickHandler, ISaveManager
         this.hasEverett = data.hasEverett;
     }
     public void SaveData (GameData data) {
-        return;
     }
     void Start () {
-        //Debug.Log("hasEverett exists: "+PlayerPrefs.HasKey("hasEverett"));
         if (hasEverett) {
             gameObject.SetActive(true);
             //Debug.Log("active");
@@ -22,9 +20,8 @@ public class StartEverett : MonoBehaviour, IPointerClickHandler, ISaveManager
     }
     public void OnPointerClick (PointerEventData pointerEventData) {
         if (pointerEventData.button == PointerEventData.InputButton.Left) {
-            //Debug.Log("clicked");
             GameManager.instance.Difficulty = "everett";
-            //PlayerPrefs.SetInt("mapSize", 8); //placeholder till you can buy map size 
+            SaveManager.instance.SaveGame();
             SceneManager.LoadScene(1);
         }
     }
