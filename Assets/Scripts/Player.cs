@@ -65,7 +65,7 @@ public class Player : MonoBehaviour, ISaveManager
         get =>dashCooldown; 
         set{dashCooldown = value;}
     }
-    private float dashCooldownTracker = 0f;
+    private float dashCooldownTracker = 2f;
     private float dashSpeed = .5f;
     private float tempDashTime;
 
@@ -75,6 +75,8 @@ public class Player : MonoBehaviour, ISaveManager
 
     private int health = 1;
     public int Health {get => health; set => health = value;}
+    private static float invincTimer = .2f;
+    private float invincTracker = invincTimer;
 
     [SerializeField] private int extraHealth = 0;
     private int extraSegments;
@@ -218,6 +220,8 @@ public class Player : MonoBehaviour, ISaveManager
         canShoot = false;
         canReverse = false;
         upgradeNumber = 0;
+        dashCooldownTracker = 2f;
+        invincTracker = invincTimer;
         health = extraHealth + 1;
         GameManager.instance.MapSizeTemp = GameManager.instance.MapSize + 6;
         TileMapper.instance.RefreshTileMap();
@@ -247,7 +251,7 @@ public class Player : MonoBehaviour, ISaveManager
         segments.Add(gameObject); //adds head (pause)
 
         //puts initial segments after head
-        for (int i = 0; i < extraSegments + 1; i++) {
+        for (int i = 0; i < extraSegments + 3; i++) { //TODO: extraSegments + 1
             Grow();
         }
         localTimeScale = .1f;
@@ -256,7 +260,7 @@ public class Player : MonoBehaviour, ISaveManager
     public void Grow () {
         if (segments.Count == 1) {
             GameObject newSegment = Instantiate(segment);
-            newSegment.transform.position = transform.position - (Vector3)direction;;
+            newSegment.transform.position = transform.position - (Vector3)direction;
             segments.Add(newSegment);
         } else {
             GameObject newSegment = Instantiate(segment);
@@ -278,6 +282,18 @@ public class Player : MonoBehaviour, ISaveManager
         } else if (localTimeScale <= .25f && difficultyScale == null || difficultyScale == "") {
             Debug.Log("problem in grow function of player script, difficulty scale = "+ difficultyScale);
             localTimeScale += difficultyTime;
+        }
+    }
+
+    private void GrowNoTime () {
+        if (segments.Count == 1) {
+            GameObject newSegment = Instantiate(segment);
+            newSegment.transform.position = transform.position - (Vector3)direction;
+            segments.Add(newSegment);
+        } else {
+            GameObject newSegment = Instantiate(segment);
+            newSegment.transform.position = segments[segments.Count - 1].transform.position;
+            segments.Add(newSegment);
         }
     }
 
@@ -488,7 +504,7 @@ public class Player : MonoBehaviour, ISaveManager
         lastSegmentDirection = new Vector2(diffPosX, diffPosY);
     }
 
-    private IEnumerator ReverseSnake() {
+    private IEnumerator ConfuseSnake() { //used to be ReverseSnake but better would be reversing from head
         //switch head and tail
         yield return new WaitForEndOfFrame(); //so that all segments are moved
         if (Time.timeScale > 0f) {
@@ -511,6 +527,43 @@ public class Player : MonoBehaviour, ISaveManager
         canChangeDirection = true;
     }
 
+    private IEnumerator ReverseSnake() { //changes direction after storing how many segments there are and regrows the snake from the current head position. 
+        //it might be technically both more processing intensive (VERY negligable) and look a little weird, but it allows immediate reverses one after another
+        //AND it fits better
+        
+        //switch head and tail
+        yield return new WaitForEndOfFrame(); //so that all segments are moved
+        if (Time.timeScale > 0f) {
+            float tempTime = Time.timeScale;
+            Time.timeScale = 0f;
+            //segments[0].transform.position = segments[segments.Count - 1].transform.position;
+            //segments.Reverse(1, segments.Count - 2);
+            int currSegCount = segments.Count - 1;
+            //destroys segments
+            for (int i = 1; i < segments.Count; i++) {
+                Destroy(segments[i].gameObject);
+            }   
+            segments.Clear(); //removes segments
+            segments.Add(gameObject); //adds head (pause)
+            if (direction == Vector2.up) {
+                direction = Vector2.down;
+            } else if (direction == Vector2.right) {
+                direction = Vector2.left;
+            } else if (direction == Vector2.down) {
+                direction = Vector2.up;
+            } else if (direction == Vector2.left) {
+                direction = Vector2.right;
+            }
+            MoveSnake();
+            MoveSnake();
+            for (int i = 0; i < currSegCount; i++) {
+               GrowNoTime();
+            }
+            Time.timeScale = tempTime;
+        }
+        canChangeDirection = true;
+    }
+
     void UpdateHighScore () { //High score script handles the individual high scores and separates them for us.
         highScore = highScoreScript.GetHighScore(difficultyScale);
         if (highScore < snakeScore) {
@@ -522,51 +575,86 @@ public class Player : MonoBehaviour, ISaveManager
         }
     }
 
-    void OnHitLogic (Collider2D collide) {
+    public void OnPlayerHitLogic (string tag) {
         health--;
+        Debug.Log("health = "+health);
         if (health <= 0) {
-            Time.timeScale = 0f;
-            isDead = true;
-            Debug.Log("died with "+upgradeNumber+" upgrades");
-            deathScreen.Setup(snakeScore);
-            UpdateHighScore();
+            KillPlayer();
         } else {
-            if (!collide.CompareTag("Laser")) {
+            if (!(tag == "Laser")) {
                 StartCoroutine(ReverseSnake());
                 canChangeDirection = false;
             }
         }
     }
 
+    public void KillPlayer () { //yeah
+        Time.timeScale = 0f;
+        isDead = true;
+        //Debug.Log("died with "+upgradeNumber+" upgrades");
+        deathScreen.Setup(snakeScore);
+        UpdateHighScore();
+    }
+
+    void OnTriggerStay2D (Collider2D collide) { //for laser, increments and checks if the player is no longer invincible and if so calls OnPlayerHitLogic
+        if (!collide.CompareTag("Laser")) { //if the tag isn't laser leave the function NOW
+            return;
+        } else {
+            invincTracker += Time.deltaTime;
+            if (invincTracker >= invincTimer) {
+                invincTracker = 0;
+                OnPlayerHitLogic(collide.tag); //this should always be "Laser".
+            }
+        }
+
+    }
+
+    void OnTriggerExit2D (Collider2D collide) {
+        invincTracker = invincTimer;
+    }
+
     void OnTriggerEnter2D (Collider2D collide) {
-        if (collide.CompareTag("Obstacle") || collide.CompareTag("Walls") || collide.CompareTag("Laser")) {
-            OnHitLogic(collide);
+        if (collide.CompareTag("Obstacle") || collide.CompareTag("Walls")) {
+            OnPlayerHitLogic(collide.tag);
+        } else if (collide.CompareTag("Laser")) {
+            if (invincTracker >= invincTimer) {
+                invincTracker = 0;
+                OnPlayerHitLogic(collide.tag); //this should always be "Laser".
+            }
         } else if (collide.CompareTag("Food")) {
-            AddScore(1);
-            UpdateHighScore();
-            if (snakeScore == 50 && !hasMedium) {
-                OnDiffUnlock.Invoke("MEDIUM");
-                hasMedium = true;
-            } else if (snakeScore == 100 && !hasHard) {
-                OnDiffUnlock.Invoke("HARD");
-                hasHard = true;
-            } else if (snakeScore == 200 && !hasEverett) {
-                OnDiffUnlock.Invoke("EVERETT");
-                hasEverett = true;
-            }
-            if (snakeScore == growThreshold[upgradeNumber]) {
-                if (upgradeNumber == growThreshold.Count - 1) {
-                    growThreshold.Add(growThreshold[upgradeNumber] + 50);
-                    Debug.Log("Added " + growThreshold[growThreshold.Count - 1] + " to growThreshold at "+ (growThreshold.Count - 1));
-                }
-                Debug.Log("Hit threshold "+upgradeNumber+" at score "+snakeScore+", threshold was "+growThreshold[upgradeNumber]+" and next should be "+growThreshold[upgradeNumber+1]);
-                upgradeNumber++; //1 after first upgrade, growThreshold.Count after last.
-                isChoosing = true;
-                Time.timeScale = 0f;
-                OnUpgrade.Invoke(true);
-            }
-            //does multithreading mean that 2 of these methods can run at the same time? TODO look what multithreading is up
+            AteFood();
+            //does multithreading mean that 2 of these methods can run at the same time? TODO look what multithreading really is up
             //Debug.Log("Score = "+snakeScore);
+        }
+    }
+
+    private void AteFood () { //meant to just be called in OnTrigger, logic for post eating food
+        AddScore(1);
+        UpdateHighScore();
+        if (snakeScore == 50 && !hasMedium) {
+            OnDiffUnlock.Invoke("MEDIUM");
+            hasMedium = true;
+        } else if (snakeScore == 100 && !hasHard) {
+            OnDiffUnlock.Invoke("HARD");
+            hasHard = true;
+        } else if (snakeScore == 200 && !hasEverett) {
+            OnDiffUnlock.Invoke("EVERETT");
+            hasEverett = true;
+        }
+        UpgradePlayer();
+    }
+
+    private void UpgradePlayer () { //logic for checking if we should upgrade then upgrading player. Meant to just be called in AteFood.
+        if (snakeScore == growThreshold[upgradeNumber]) {
+            if (upgradeNumber == growThreshold.Count - 1) {
+                growThreshold.Add(growThreshold[upgradeNumber] + 50);
+                Debug.Log("Added " + growThreshold[growThreshold.Count - 1] + " to growThreshold at "+ (growThreshold.Count - 1));
+            }
+            Debug.Log("Hit threshold "+upgradeNumber+" at score "+snakeScore+", threshold was "+growThreshold[upgradeNumber]+" and next should be "+growThreshold[upgradeNumber+1]);
+            upgradeNumber++; //1 after first upgrade, growThreshold.Count after last.
+            isChoosing = true;
+            Time.timeScale = 0f;
+            OnUpgrade.Invoke(true);
         }
     }
 }

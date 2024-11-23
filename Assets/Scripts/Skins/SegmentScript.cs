@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SkinHandler : MonoBehaviour
+public class SegmentScript : MonoBehaviour
 {
     void Awake () {
         SpriteRenderer skin = gameObject.GetComponent<SpriteRenderer>();

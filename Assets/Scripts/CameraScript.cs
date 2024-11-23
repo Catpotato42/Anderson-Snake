@@ -3,7 +3,7 @@ using UnityEngine;
 public class CameraScript : MonoBehaviour
 {
     private bool cameraDetached = false;
-    private float smoothSpeed = 0.125f;
+    [SerializeField] private float smoothSpeed = 0.15f;
     [SerializeField] private Player player;
     void Start() {
         cameraDetached = false;

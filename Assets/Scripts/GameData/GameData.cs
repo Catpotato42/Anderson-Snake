@@ -6,6 +6,7 @@ public class GameData
 {
     public int extraHealth;
     public int mapSize;
+    public float runTime;
     public bool hasMedium;
     public bool hasHard;
     public bool hasEverett;
@@ -21,11 +22,12 @@ public class GameData
     //add: skin preference
     //add: meta currency amount, make sure it is equal to currency + current score and if no current score is found just currency
     public GameData () {
-        this.extraHealth = 0;
-        extraChoices = 0;
-        extraSegments = 0;
+        this.extraHealth = 0; //is "this." needed?
+        this.extraChoices = 0;
+        this.extraSegments = 0;
         mapSize = 0;
-        hasMedium = true;
+        runTime = 70;
+        hasMedium = false;
         hasHard = false;
         hasEverett = false;
         highScoreB = 0;

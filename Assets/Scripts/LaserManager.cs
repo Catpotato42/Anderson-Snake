@@ -49,7 +49,7 @@ public class LaserManager : MonoBehaviour
         StopAllCoroutines();
         timeTracker = 0;
         laserWaveTracker = 0;
-        laserWave = new LaserWaves(1, 15, 3, true);
+        laserWave = new LaserWaves(1, 10, 3, true);
         foreach (GameObject temp in GameObject.FindGameObjectsWithTag("Laser")) {
             Destroy(temp);
         }
@@ -83,33 +83,33 @@ public class LaserManager : MonoBehaviour
         if (laserWaveTracker < lt[0]) {
             nextAmount = Random.Range(1,3); //max exclusive
             nextWaveTime = Random.Range(10, 20);
-            nextSpawnTime = 4;
+            nextSpawnTime = 2.5f;
             vertical = false;
         } else if (laserWaveTracker >= lt[0] && laserWaveTracker < lt[1]) {
             nextAmount = Random.Range(2,5); //max exclusive
             nextWaveTime = Random.Range(10, 20);
-            nextSpawnTime = 4;
+            nextSpawnTime = 2.5f;
             vertical = System.Convert.ToBoolean(Random.Range(0,2));
         } else if (laserWaveTracker >= lt[1] && laserWaveTracker < lt[2]) {
             nextAmount = Random.Range(4,7); //max exclusive
             nextWaveTime = Random.Range(8, 18);
-            nextSpawnTime = 3f;
+            nextSpawnTime = 2f;
             vertical = System.Convert.ToBoolean(Random.Range(0,2));
         } else if (laserWaveTracker >= lt[2] && laserWaveTracker < lt[3]) {
             nextAmount = Random.Range(6,11); //max exclusive
             nextWaveTime = Random.Range(8, 18);
-            nextSpawnTime = 3f;
+            nextSpawnTime = 2f;
             vertical = System.Convert.ToBoolean(Random.Range(0,2));
         } else if (laserWaveTracker >= lt[3]){
             nextAmount = Random.Range(10,15); //max exclusive
             nextWaveTime = Random.Range(6, 16);
-            nextSpawnTime = 2f;
+            nextSpawnTime = 1.75f;
             vertical = System.Convert.ToBoolean(Random.Range(0,2));
         }
-        if (laserWaveTracker >= lt[3] && (GameManager.instance.Difficulty == "hard" || GameManager.instance.Difficulty == "everett")) {
+        if (laserWaveTracker >= lt[3] + 10 && (GameManager.instance.Difficulty == "hard" || GameManager.instance.Difficulty == "everett")) {
             nextAmount = Random.Range(12,17); //max exclusive
             nextWaveTime = Random.Range(4, 16);
-            nextSpawnTime = 2f;
+            nextSpawnTime = 1.5f;
             vertical = System.Convert.ToBoolean(Random.Range(0,2));
         }
         //then set laserWave to a new Tuple containing these.

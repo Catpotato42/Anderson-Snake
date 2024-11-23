@@ -16,10 +16,10 @@ public class DeathScreen : MonoBehaviour
     private string[] deathMessages1 = {"mmmmmmm", "getting along now", "gears turning, tongue hissing", "doin it", "alright", "common garter snake", "peasant snake"};
     private string[] deathMessages2 = {"ok!", "Bonk","great!", "not not great", "be a snake, be happy", "pixelated snake, real feelings", "worker snake"};
     private string[] deathMessages3 = {"cookin", "slithered fr", "ssssss", "your name starts with an s", "above average snake", "viper", "skilled laborer snake"};
-    private string[] deathMessages4 = {"i'm just ssstraight up impressed", "91% of statissstics are made up", "you have free will go make a cardboard cutout of somebody", "snakes aren't just scaly worms. they have eyes and they also probably have more hearts than worms do unconfirmed", "fantastic mr snake", "noble snake"};
+    private string[] deathMessages4 = {"i'm just ssstraight up impressed", "91% of statissstics are made up", "go make a cardboard cutout of somebody", "snakes aren't just scaly worms. they have eyes and they also probably have more hearts than worms do", "fantastic mr snake", "noble snake"};
     private string[] deathMessages5 = {"the reptile government wants to hire you", "can I get a sssselfie?", "this would go viral on snake social media", "you're like if in metamorphosis the guy turned into a snake instead and everybody loved him too", "you should dress up as a snake next halloween (subliminal messaging)", "you're like that solid guy from metal gear i forgot his name", "imperator snake"};
     private string[] deathMessages6 = {"◪_◪"};
-    private string[] deathMessages7 = {"less than 1.91415% of snakes make it here", "turn on the ac cause that was some heat", "mute this music and put on some clifford brown. you deserve it.","monarch snake"};
+    private string[] deathMessages7 = {"less than 1.91415% of snakes make it here", "turn on the ac cause that was some heat", "monarch snake"};
     private string[] deathMessages8 = {"if the beatles were beetles and arctic monkey were actual arctic monkeys you would start the pythons and win 30 million grammys", "mice faint just at the sight of you", "hyper-lethal killer", "potentate of the snakes", "it's lonely at the top"};
 
     public void Setup (int score) {
