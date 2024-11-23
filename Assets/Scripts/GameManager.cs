@@ -7,7 +7,7 @@ using System;
 using UnityEngine.UIElements;
 using UnityEngine.Tilemaps;
 
-public class GameManager : MonoBehaviour
+public class GameManager : MonoBehaviour, ISaveManager
 {
     public static GameManager instance;
 
@@ -46,8 +46,8 @@ public class GameManager : MonoBehaviour
     public Dictionary<int, UpgradeInfo> upgrades3 = new Dictionary<int, UpgradeInfo>();
     public Dictionary<int, UpgradeInfo> upgrades4 = new Dictionary<int, UpgradeInfo>();
     public Dictionary<int, UpgradeInfo> upgrades5 = new Dictionary<int, UpgradeInfo>();
-    private HashSet<Tuple<int, int>> disallowedUpgrades = new HashSet<Tuple<int, int>>(); //add in format index
-    private static HashSet<Tuple<int, int>> permanentDisallowedUpgrades = new HashSet<Tuple<int, int>>();
+    private HashSet<Tuple<int, int>> disallowedUpgrades = new HashSet<Tuple<int, int>>(); //add in format upgrade dictionary, index
+    private static SerializableHashSet<int, int> permanentDisallowedUpgrades = new SerializableHashSet<int, int>();
     //end upgrades stuff
 
     [SerializeField] private GameObject mainCamera;
@@ -56,19 +56,38 @@ public class GameManager : MonoBehaviour
 
     public Action OnMapSize10; //not invoked but in tilemapper there is an if statement
 
-    private GameObject highScoreObj;
     private ErrorHandler errorHandler;
 
     private static string difficulty = "basic";
+    public static string skinPref = "normal";
+    private int extraFood;
+
+    public string SkinPref {
+        get => skinPref;
+        set => skinPref = value;
+    }
     public string Difficulty {
         get => difficulty;
         set => difficulty = value;
     }
-    private static int mapSize; //doesn't matter that it's static, I change when the real game starts not in main menu.
-
-    public int MapSize { //this is really 6 + playerprefs mapSize, is changed on GM awake and player reset.
+    private static int mapSize;
+    public int MapSize {
         get => mapSize;
         set => mapSize = value;
+    }
+
+    private int mapSizeTemp;
+    public int MapSizeTemp { //this is really 6 + MapSize, is changed on GM awake and player reset.
+        get => mapSizeTemp;
+        set => mapSizeTemp = value;
+    }
+
+    public void LoadData (GameData data) {
+        extraFood = data.extraFood;
+        mapSize = data.mapSize;
+        permanentDisallowedUpgrades = data.permanentDisallowedUpgrades; //no need to save, these can be unlocked with meta currency in the main menu
+    }
+    public void SaveData(GameData data) {
     }
 
     void Awake () { //sets map size, makes new instance, maybe gets skin preference
@@ -77,40 +96,23 @@ public class GameManager : MonoBehaviour
         } else {
             Destroy(gameObject);
         }
-        mapSize = PlayerPrefs.GetInt("mapSize") + 6;
         if (SceneManager.GetActiveScene().buildIndex != 0) { //if not on the title screen
             if (errorPanel != null) {
                 errorHandler = errorPanel.GetComponent<ErrorHandler>();
             }
-            for (int i = 0; i <= PlayerPrefs.GetInt("extraFood"); i++) {
+            for (int i = 0; i <= extraFood; i++) {
                 Instantiate(Resources.Load("Prefabs/Food"));
             }
+            mapSizeTemp = mapSize + 6;
         } else {
-            PlayerPrefs.SetInt("extraSegments", 1); //remove all the playerpref stuff later
-            //reset all playerprefs here to what default values should be
+            //anything that needs to be done in main menu
         }
-        //difficulty = ?
+        //difficulty = ? - not needed because it is static and set on the title screen
     }
 
     void Start () {
         if (SceneManager.GetActiveScene().buildIndex != 0) {
-            SetHighScore();
-        }
-    }
-
-    void SetHighScore () { //sets high score if object with tag high score is found
-        if (GameObject.FindGameObjectWithTag("HighScore") != null) {
-            highScoreObj = GameObject.FindGameObjectWithTag("HighScore");
-            HighScore highScore = highScoreObj.GetComponent<HighScore>();
-            if (difficulty == "everett") {
-                highScore.updateHighScore("eHighScore");
-            } else if (difficulty == "basic") {
-                highScore.updateHighScore("HighScore");
-            } else if (difficulty == "medium") {
-                highScore.updateHighScore("mHighScore");
-            } else if (difficulty == "hard") {
-                highScore.updateHighScore("hHighScore");
-            }
+            //nothing so far
         }
     }
 
@@ -122,7 +124,7 @@ public class GameManager : MonoBehaviour
         upgrades4.Clear(); // to in order to access the UpgradeInfo values? is the way to group them without needing to go through that layer related to pointers?
         upgrades5.Clear();
         int i = 0; //garter \/
-        upgrades0.Add(i, new UpgradeInfo("mapSizeAdd1", 0, 0)); i++; //MAKE SURE YOU DO NOT MISS AN INDEX OR START BELOW OR ABOVE 0
+        upgrades0.Add(i, new UpgradeInfo("mapSizeTempAdd1", 0, 0)); i++; //MAKE SURE YOU DO NOT MISS AN INDEX OR START BELOW OR ABOVE 0
         upgrades0.Add(i, new UpgradeInfo("speedSlow", 0, 0)); i++;   //I could fix that by doing .Keys.ElementAt(index); but that still would require index to be a valid key so actually I couldn't that's just how dictionaries work this whole comment is stupid
         upgrades0.Add(i, new UpgradeInfo("damageAdd", 0, 0)); i++;
         upgrades0.Add(i, new UpgradeInfo("removeSegment", 0, 0)); i++; //index 4
@@ -130,7 +132,7 @@ public class GameManager : MonoBehaviour
         upgrades1.Add(i, new UpgradeInfo("xpMore", 0, 1)); i++;
         upgrades1.Add(i, new UpgradeInfo("damagePercentAdd", 0, 1)); i++;
         upgrades1.Add(i, new UpgradeInfo("speedPercentSlow", 0, 1)); i++;
-        upgrades1.Add(i, new UpgradeInfo("mapSizeAdd2", 0, 1)); i++; //index 3
+        upgrades1.Add(i, new UpgradeInfo("mapSizeTempAdd2", 0, 1)); i++; //index 3
         i = 0; //rattlesnake \/
         upgrades2.Add(i, new UpgradeInfo("removeSegment3", 0, 2)); i++;
         upgrades2.Add(i, new UpgradeInfo("foodAdd", 0, 2)); i++;
@@ -213,7 +215,7 @@ public class GameManager : MonoBehaviour
         } else {
             Debug.Log("Rarity mismatch, rarity = "+currentUpgrade.Rarity);
         }
-        if (mapSize >= 10) {
+        if (mapSizeTemp >= 10) {
             OnMapSize10.Invoke();
         }
         //Debug.Log(currentUpgrade.Name+" increased to "+currentUpgrade.Level);
@@ -231,8 +233,8 @@ public class GameManager : MonoBehaviour
     private void GarterUpgrades (UpgradeInfo currentUpgrade) { //class isn't passed by reference, the reference to the class is passed by value. Ask stratton about primitive types -> pointers to a location in memory, classes when given to methods are references to a class outside which values can be modified inside the method.
         player.Grow();
         switch (currentUpgrade.Name) {
-            case "mapSizeAdd1":
-                mapSize++;
+            case "mapSizeTempAdd1":
+                mapSizeTemp++;
                 TileMapper.instance.RefreshTileMap();
                 break;
             case "speedSlow":
@@ -240,10 +242,10 @@ public class GameManager : MonoBehaviour
                 for (int i = 0; i < 2; i++) {
                     if (player.LocalTimeScale > .08f + player.DifficultyTime) {
                         player.LocalTimeScale -= player.DifficultyTime;
-                        Debug.Log("subtracted "+player.DifficultyTime+ " from player localTimeScale.");
+                        //Debug.Log("subtracted "+player.DifficultyTime+ " from player localTimeScale.");
                     }
                 }
-                Debug.Log("Player time scale = "+player.LocalTimeScale);
+                //Debug.Log("Player time scale = "+player.LocalTimeScale);
                 break;
             case "removeSegment":
                 player.RemoveSegment();
@@ -260,12 +262,12 @@ public class GameManager : MonoBehaviour
     private void PythonUpgrades (UpgradeInfo currentUpgrade) {
         player.Grow();
         switch (currentUpgrade.Name) {
-            case "mapSizeAdd2":
-                mapSize += 2;
+            case "mapSizeTempAdd2":
+                mapSizeTemp += 2;
                 TileMapper.instance.RefreshTileMap();
                 break;
             default:
-                Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
+                //Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
                 break;
         }
     }
@@ -283,7 +285,7 @@ public class GameManager : MonoBehaviour
                 }
                 break;
             default:
-                Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
+                //Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
                 break;
         }
     }
@@ -292,8 +294,8 @@ public class GameManager : MonoBehaviour
     private void ViperUpgrades (UpgradeInfo currentUpgrade) {
         player.Grow();
         switch (currentUpgrade.Name) {
-            case "mapSizeAdd1":
-                mapSize++;
+            case "mapSizeTempAdd1":
+                mapSizeTemp++;
                 TileMapper.instance.RefreshTileMap();
                 break;
             default:
@@ -306,27 +308,27 @@ public class GameManager : MonoBehaviour
     private void CobraUpgrades (UpgradeInfo currentUpgrade) {
         player.Grow();
         switch (currentUpgrade.Name) {
-            case "mapSizeAdd1":
-                mapSize++;
+            case "mapSizeTempAdd1":
+                mapSizeTemp++;
                 TileMapper.instance.RefreshTileMap();
                 break;
             default:
-                Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
+                //Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
                 break;
         }
     }
 
     //boa upgrades
     private void BoaUpgrades (UpgradeInfo currentUpgrade) {
-        //playing with the idea that boa upgrades make the player not grow as an added benefit to all of them.
+        //maybe boa upgrades make the player not grow as an added benefit to all of them.
         player.DoneChoosing();
         switch (currentUpgrade.Name) {
-            case "mapSizeAdd1":
-                mapSize++;
+            case "mapSizeTempAdd1":
+                mapSizeTemp++;
                 TileMapper.instance.RefreshTileMap();
                 break;
             default:
-                Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
+                //Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
                 break;
         }
     }

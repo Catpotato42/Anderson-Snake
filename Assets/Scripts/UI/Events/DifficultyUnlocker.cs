@@ -2,37 +2,35 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Rendering.RendererUtils;
 using UnityEngine.UI;
 
-public class EverettUnlocker : MonoBehaviour
+public class DifficultyUnlocker : MonoBehaviour
 {
     [SerializeField] private GameObject player;
-
-    // Start is called before the first frame update
     void Start()
     {
-        EverettChangeState(false);
+        UnlockerChangeState(false, "nothing");
         Player playerScript = player.GetComponent<Player>();
-        playerScript.OnEverettUnlock += RunEverettUnlock;
+        Player.instance.OnDiffUnlock += RunDiffUnlock;
     }
 
-    private void EverettChangeState (bool stateChange) {
+    private void UnlockerChangeState (bool stateChange, string diff) {
         TextMeshProUGUI textrenderer = gameObject.GetComponentInChildren<TextMeshProUGUI>();
         Image renderer = gameObject.GetComponent<Image>();
+        textrenderer.text = diff + " MODE UNLOCKED!!!";
         textrenderer.enabled = stateChange;
         renderer.enabled = stateChange;
     }
 
-    private void RunEverettUnlock (bool unlocked) {
-        StartCoroutine(EverettUnlocked());
+    private void RunDiffUnlock (string diff) {
+        StartCoroutine(DiffUnlocked(diff));
     }
 
-    private IEnumerator EverettUnlocked () {
+    private IEnumerator DiffUnlocked (string diff) {
         for (int i = 0; i < 6; i++) {
-            EverettChangeState(true);
+            UnlockerChangeState(true, diff);
             yield return new WaitForSecondsRealtime(.3f);
-            EverettChangeState(false);
+            UnlockerChangeState(false, diff);
             yield return new WaitForSecondsRealtime(.3f);
         }
     }

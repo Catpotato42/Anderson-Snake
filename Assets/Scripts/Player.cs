@@ -2,12 +2,19 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 using UnityEngine.SceneManagement;
-using Unity.VisualScripting.Dependencies.Sqlite;
-using UnityEditor.MPE;
-using Unity.VisualScripting;
+using System.Collections;
 
-public class Player : MonoBehaviour
+public class Player : MonoBehaviour, ISaveManager
 {
+
+    //TODO:
+    //implement health and reverse and a short pause (red screen?) if you hit something and you have health left.
+    //change food sprite. pixel art!
+    //Timer that provides a reason to play the game finally, highscore will mean something (TIMEMANAGER SINGLETON STUFF)
+    //upgrades for timer that make it longer so you balance utility with a longer time. 
+    //BUGS:
+    //If you input a direction you are already going, then another one right after that, it takes one segment move for it to update.
+    //DDSA, see Input Handling.
 
     public static Player instance;
     Vector2 direction;
@@ -16,11 +23,12 @@ public class Player : MonoBehaviour
     List<GameObject> segments = new List<GameObject>();
 
     private GameObject highScoreObj;
+    private HighScore highScoreScript;
 
     private Queue<KeyCode> inputQueue = new Queue<KeyCode>();
 
     public event Action<int> OnScoreChanged;
-    public event Action<bool> OnEverettUnlock;
+    public event Action<string> OnDiffUnlock;
     public event Action<bool> OnUpgrade;
     public event Action OnReset;
 
@@ -52,19 +60,42 @@ public class Player : MonoBehaviour
     private int dashAmount = 3;
     private int dashAmountTracker = 3;
     private bool canDash = false;
-    private float dashCooldown = 1f;
-    private float dashCooldownTracker = 0f;
+    private float dashCooldown = 2f;
+    public float DashCooldown {
+        get =>dashCooldown; 
+        set{dashCooldown = value;}
+    }
+    private float dashCooldownTracker = 2f;
     private float dashSpeed = .5f;
     private float tempDashTime;
 
+    private bool canReverse;
+    private float reverseCooldown = .3f;
+    private float reverseCooldownTracker = 0;
+
+    private int health = 1;
+    public int Health {get => health; set => health = value;}
+    private static float invincTimer = .2f;
+    private float invincTracker = invincTimer;
+
+    [SerializeField] private int extraHealth = 0;
+    private int extraSegments;
+
+    private Vector2 lastSegmentDirection;
+
+    private bool hasEverett;
+    private bool hasMedium;
+    private bool hasHard;
+    private int highScore;
+    public int HighScore {
+        get => highScore;
+    }
 
     private bool canChangeDirection = true;
 
     public float FireCooldown {
         get => fireCooldown;
-        set {
-            fireCooldown = value;
-        }
+        set {fireCooldown = value;}
     }
 
     public float DifficultyTime {
@@ -74,16 +105,12 @@ public class Player : MonoBehaviour
 
     public float LocalTimeScale {
         get => localTimeScale;
-        set {
-            localTimeScale = value;
-        }
+        set {localTimeScale = value;}
     }
 
     public int UpgradeNumber {
         get => upgradeNumber;
-        set {
-            upgradeNumber = value;
-        }
+        set {upgradeNumber = value;}
 
     }
 
@@ -97,6 +124,30 @@ public class Player : MonoBehaviour
             }
         }
     }
+    private void SetScore (int newScore) {
+        SnakeScore = newScore;
+    }
+
+    private void AddScore (int newScore) {
+        SnakeScore += newScore;
+    }
+
+    private void SubtractScore (int newScore) {
+        SnakeScore -= newScore;
+    }
+
+    public void LoadData (GameData data) {
+        extraHealth = data.extraHealth;
+        hasMedium = data.hasMedium;
+        hasHard = data.hasHard;
+        hasEverett = data.hasEverett;
+        extraSegments = data.extraSegments;
+    }
+    public void SaveData(GameData data) {
+        data.hasMedium = hasMedium;
+        data.hasHard = hasHard;
+        data.hasEverett = hasEverett;
+    }
 
     void Awake () {
         if (instance == null) {
@@ -104,14 +155,16 @@ public class Player : MonoBehaviour
         } else {
             Destroy(gameObject);
         }
+        //game should load and set health, amount of segments, ...
         highScoreObj = GameObject.FindGameObjectWithTag("HighScore");
+        highScoreScript = highScoreObj.GetComponent<HighScore>();
         TileMapper.instance.RefreshTileMap(); //needs to be done in awake so that the food doesn't spawn wrong
         if (deathCanvas != null) {
             deathScreen = deathCanvas.GetComponent<DeathScreen>();
         }
         //change skin, segments has its own script for this.
         SpriteRenderer skin = gameObject.GetComponent<SpriteRenderer>();
-        if (GameManager.instance.Difficulty == "everett") {
+        if (GameManager.instance.SkinPref == "everett") {
             skin.sprite = Resources.Load<Sprite>("Skins/EverettHead");
         } else {
             skin.sprite = Resources.Load<Sprite>("Skins/Square");
@@ -124,7 +177,7 @@ public class Player : MonoBehaviour
         growThreshold.Add(5);
         for (int i = 1; i < 5; i++) {
             growThreshold.Add(growThreshold[i - 1] + 5);
-        } for (int i = 5; i < 15; i++) {
+        } for (int i = 5; i < 10; i++) {
             growThreshold.Add(growThreshold[i - 1] + 10);
         } for (int i = 10; i < 15; i++) {
             growThreshold.Add(growThreshold[i - 1] + 20);
@@ -132,7 +185,7 @@ public class Player : MonoBehaviour
             growThreshold.Add(growThreshold[i - 1] + 30);
         }
         string printThresholdVals = "";
-        for (int i = 0; i < 30; i++) {
+        for (int i = 0; i < growThreshold.Count; i++) {
             printThresholdVals += growThreshold[i]+", ";
         }
         Debug.Log("Threshold vals = "+printThresholdVals);
@@ -140,11 +193,7 @@ public class Player : MonoBehaviour
     
     // Start is called before the first frame update
     void Start()
-    {
-        //Debug.Log("Extra segments: "+PlayerPrefs.GetInt("extraSegments"));
-        //Debug.Log("High score: "+PlayerPrefs.GetInt("highScore"));
-        //Debug.Log("Unlocked Everett: "+PlayerPrefs.GetInt("scoreEverett"));
-        //Debug.Log("Everett high score: "+PlayerPrefs.GetInt("eHighScore"));    
+    {   
         if (difficultyScale == "everett") {
             difficultyTime = .015f;
             Debug.Log("Difficulty = everett");
@@ -165,25 +214,19 @@ public class Player : MonoBehaviour
         ResetSnake();
     }
 
-    private void SetScore (int newScore) {
-        SnakeScore = newScore;
-    }
-
-    private void AddScore (int newScore) {
-        SnakeScore += newScore;
-    }
-
-    private void SubtractScore (int newScore) {
-        SnakeScore -= newScore;
-    }
-
     public void ResetSnake () {
         //isDead = false;
         canDash = false;
+        canShoot = false;
+        canReverse = false;
         upgradeNumber = 0;
-        GameManager.instance.MapSize = PlayerPrefs.GetInt("mapSize") + 6;
+        dashCooldownTracker = 2f;
+        invincTracker = invincTimer;
+        health = extraHealth + 1;
+        GameManager.instance.MapSizeTemp = GameManager.instance.MapSize + 6;
         TileMapper.instance.RefreshTileMap();
         GameManager.instance.SetDictionaryValues(); //called in awake of gamemanager too, probably redundant.
+        UpdateHighScore(); //this is called in Countdown too
         //position , rotation, direction, time
         transform.position = new Vector2(0, 0);
         transform.rotation = Quaternion.Euler(0,0,-90);
@@ -208,7 +251,7 @@ public class Player : MonoBehaviour
         segments.Add(gameObject); //adds head (pause)
 
         //puts initial segments after head
-        for (int i = 0; i < PlayerPrefs.GetInt("extraSegments") + 1; i++) {
+        for (int i = 0; i < extraSegments + 3; i++) { //TODO: extraSegments + 1
             Grow();
         }
         localTimeScale = .1f;
@@ -217,7 +260,7 @@ public class Player : MonoBehaviour
     public void Grow () {
         if (segments.Count == 1) {
             GameObject newSegment = Instantiate(segment);
-            newSegment.transform.position = transform.position - (Vector3)direction;;
+            newSegment.transform.position = transform.position - (Vector3)direction;
             segments.Add(newSegment);
         } else {
             GameObject newSegment = Instantiate(segment);
@@ -242,6 +285,18 @@ public class Player : MonoBehaviour
         }
     }
 
+    private void GrowNoTime () {
+        if (segments.Count == 1) {
+            GameObject newSegment = Instantiate(segment);
+            newSegment.transform.position = transform.position - (Vector3)direction;
+            segments.Add(newSegment);
+        } else {
+            GameObject newSegment = Instantiate(segment);
+            newSegment.transform.position = segments[segments.Count - 1].transform.position;
+            segments.Add(newSegment);
+        }
+    }
+
     public void DoneChoosing () { //allows rainbowboa upgrades to unpause the game without growing the player
         if(Time.timeScale == 0) {
             Time.timeScale = 1f;
@@ -254,8 +309,8 @@ public class Player : MonoBehaviour
             return;
         } else if (segments.Count > 2) {
             GameObject segmentToRemove = segments[segments.Count - 1];
-            segments.RemoveAt(segments.Count - 1); //I'm not sure but this might be able to be implemented with segments.Remove(segments.FindLastIndex(segment));
-            Destroy(segmentToRemove); //This needs to be after removal from the list or else the RemoveAt is dereferencing a null pointer.
+            segments.RemoveAt(segments.Count - 1); //I'm not sure but this might be able to be implemented with segments.Remove(segments.FindLastIndex(segment)); no point in doing that but just I should prolly know
+            Destroy(segmentToRemove); //This needs to be after removal from the list or else the RemoveAt index is null.
         } else {
             Debug.Log("Error: Tried to call RemoveSegment (Player.cs public void RemoveSegment()) but segment.Count < 1 (no head (huh??)). segments.Count = " + segments.Count);
         }
@@ -280,6 +335,10 @@ public class Player : MonoBehaviour
         if (dashCooldownTracker > dashCooldown && !canDash) {
             canDash = true;
         }
+        reverseCooldownTracker += Time.deltaTime;
+        if (reverseCooldownTracker > reverseCooldown && !canReverse) {
+            canReverse = true;
+        }
         GetUserInput();
         if (canChangeDirection) {
             ProcessInputQueue();
@@ -291,13 +350,18 @@ public class Player : MonoBehaviour
         timeSinceLastUpdate += Time.fixedDeltaTime;
         //if timesincelast > .02 (normal amount for fixed update) / localtime (.1 or something, so it takes 10x longer to perform an action.)
         if (timeSinceLastUpdate >= customFixedInterval/localTimeScale) {
-            PerformCustomFixedUpdateLogic();
-
+            DoFixedUpdateStuff();
             timeSinceLastUpdate = 0f;
         }
     }
 
-    void PerformCustomFixedUpdateLogic() {
+    void DoFixedUpdateStuff() {
+        DecreaseDashAmount();
+        MoveSegments();
+        MoveSnake();
+    }
+
+    private void DecreaseDashAmount () {
         if (dashing) {
             dashAmountTracker--;
         } if (dashAmountTracker <= 0) {
@@ -306,8 +370,7 @@ public class Player : MonoBehaviour
             localTimeScale = tempDashTime;
             tempDashTime = 0; //unnecessary
         }
-        MoveSegments();
-        MoveSnake();
+
     }
 
     private void GetUserInput () {
@@ -322,8 +385,9 @@ public class Player : MonoBehaviour
         } else if (Input.GetKeyDown(KeyCode.R) && isDead || Input.GetKeyDown(KeyCode.Space) && isDead) {
             ResetSnake();
         } else if (Input.GetKeyDown(KeyCode.Escape) && isDead) {
+            //TODO: save game
+            SaveManager.instance.SaveGame();
             SceneManager.LoadScene(0);
-            PlayerPrefs.SetInt("mapSize", 0);
         } else if (Input.GetKeyDown(KeyCode.Space) && canDash) { //pausing is only in for testing purposes! Dashing is the intended functionalty of space
             /*if (paused && !isChoosing && !isDead) {
                 Time.timeScale = 1f;
@@ -339,10 +403,13 @@ public class Player : MonoBehaviour
             canDash = false;
             tempDashTime = localTimeScale;
             localTimeScale = dashSpeed;
-        } else if (Input.GetKeyDown(KeyCode.Mouse0) && !isChoosing && !isDead && canShoot) {
+        } else if (Input.GetKeyDown(KeyCode.Mouse0) && !isChoosing && canShoot) {
             Fire();
             fireCooldownTracker = 0f; //needs to be before canShoot or maybe canShoot would set itself to true again?
             canShoot = false;
+        } else if (Input.GetKeyDown(KeyCode.F) && canReverse) {
+            inputQueue.Clear();
+            QueueInput(KeyCode.F);
         }
     }
 
@@ -362,93 +429,232 @@ public class Player : MonoBehaviour
     }
 
     void HandleInput(KeyCode input) {
-
-        switch (input)
-        {
+        //DDSA BUG: You can trick the game into for example thinking you pressed S and 
+        //moved one square down already if you hit ddsa really fast.
+        //How to fix: maybe track actual movement? then I would be able to stop this,
+        //but it would require a complete overhaul of the input system. 
+        //Definitely something reserved for like actual post-Demo or even full release bugfixing.
+        //It's a big edge case and it will affect you at the start of the game if you hit dsa really fast because the first input is already
+        //set to "D", but it's also very easy to avoid and I don't think would really make anyone scared of inputting too fast.
+        //Currently LOW-priority.
+        switch (input) {
             case KeyCode.W:
-                if (lastInput == "S") break;
+                if (lastInput == "S") {
+                    break;
+                }
                 lastInput = "W";
                 direction = Vector2.up;
                 transform.rotation = Quaternion.Euler(0, 0, 0);
                 break;
             case KeyCode.A:
-                if (lastInput == "D") break;
+                if (lastInput == "D") {
+                    break;
+                }
                 lastInput = "A";
                 direction = Vector2.left;
                 transform.rotation = Quaternion.Euler(0, 0, 90);
                 break;
             case KeyCode.S:
-                if (lastInput == "W") break;
+                if (lastInput == "W") {
+                    break;
+                }
                 lastInput = "S";
                 direction = Vector2.down;
                 transform.rotation = Quaternion.Euler(0, 0, 180);
                 break;
             case KeyCode.D:
-                if (lastInput == "A") break;
+                if (lastInput == "A") {
+                    break;
+                }
                 lastInput = "D";
                 direction = Vector2.right;
                 transform.rotation = Quaternion.Euler(0, 0, -90);
                 break;
+            case KeyCode.F:
+                StartCoroutine(ReverseSnake());
+                reverseCooldownTracker = 0;
+                canReverse = false;
+                break;
         }
         canChangeDirection = false;
     }
-    void MoveSnake () {
+    private void MoveSnake () {
         float x = transform.position.x + direction.x;
         float y = transform.position.y + direction.y;
         transform.position = new Vector2 (x, y);
         canChangeDirection = true;
     }
 
-    void MoveSegments () {
+    private void MoveSegments () {
         //put on top of one in front
-        for (int i = segments.Count - 1; i > 0; i--) {
+        for (int i = segments.Count - 2; i > 0; i--) {
             segments[i].transform.position = segments[i - 1].transform.position;
+        }
+        Vector3 oldPosLast = segments[segments.Count - 1].transform.position; //getting the direction 
+        segments[segments.Count - 1].transform.position = segments[segments.Count - 2].transform.position;
+        Vector3 newPosLast = segments[segments.Count - 1].transform.position;
+        float diffPosX = newPosLast.x - oldPosLast.x;
+        float diffPosY = newPosLast.y - oldPosLast.y;
+        if (diffPosX != 0) {
+            diffPosX = diffPosX/MathF.Abs(diffPosX);
+        }
+        if (diffPosY != 0) {
+            diffPosY = diffPosY/MathF.Abs(diffPosY);
+        }
+        lastSegmentDirection = new Vector2(diffPosX, diffPosY);
+    }
+
+    private IEnumerator ConfuseSnake() { //used to be ReverseSnake but better would be reversing from head
+        //switch head and tail
+        yield return new WaitForEndOfFrame(); //so that all segments are moved
+        if (Time.timeScale > 0f) {
+            float tempTime = Time.timeScale;
+            Time.timeScale = 0f;
+            segments[0].transform.position = segments[segments.Count - 1].transform.position;
+            segments.Reverse(1, segments.Count - 2);
+            if (lastSegmentDirection == Vector2.up) {
+                direction = Vector2.down;
+            } else if (lastSegmentDirection == Vector2.right) {
+                direction = Vector2.left;
+            } else if (lastSegmentDirection == Vector2.down) {
+                direction = Vector2.up;
+            } else if (lastSegmentDirection == Vector2.left) {
+                direction = Vector2.right;
+            }
+            MoveSnake();
+            Time.timeScale = tempTime;
+        }
+        canChangeDirection = true;
+    }
+
+    private IEnumerator ReverseSnake() { //changes direction after storing how many segments there are and regrows the snake from the current head position. 
+        //it might be technically both more processing intensive (VERY negligable) and look a little weird, but it allows immediate reverses one after another
+        //AND it fits better
+        
+        //switch head and tail
+        yield return new WaitForEndOfFrame(); //so that all segments are moved
+        if (Time.timeScale > 0f) {
+            float tempTime = Time.timeScale;
+            Time.timeScale = 0f;
+            //segments[0].transform.position = segments[segments.Count - 1].transform.position;
+            //segments.Reverse(1, segments.Count - 2);
+            int currSegCount = segments.Count - 1;
+            //destroys segments
+            for (int i = 1; i < segments.Count; i++) {
+                Destroy(segments[i].gameObject);
+            }   
+            segments.Clear(); //removes segments
+            segments.Add(gameObject); //adds head (pause)
+            if (direction == Vector2.up) {
+                direction = Vector2.down;
+            } else if (direction == Vector2.right) {
+                direction = Vector2.left;
+            } else if (direction == Vector2.down) {
+                direction = Vector2.up;
+            } else if (direction == Vector2.left) {
+                direction = Vector2.right;
+            }
+            MoveSnake();
+            MoveSnake();
+            for (int i = 0; i < currSegCount; i++) {
+               GrowNoTime();
+            }
+            Time.timeScale = tempTime;
+        }
+        canChangeDirection = true;
+    }
+
+    void UpdateHighScore () { //High score script handles the individual high scores and separates them for us.
+        highScore = highScoreScript.GetHighScore(difficultyScale);
+        if (highScore < snakeScore) {
+            //Debug.Log(snakeScore+" snakeScore higher than "+PlayerPrefs.GetInt("highScore"));
+            highScore = snakeScore;
+            highScoreScript.UpdateHighScore(difficultyScale, highScore);
+        } else {
+            highScoreScript.UpdateHighScore(difficultyScale);
         }
     }
 
-    void updateHighScore () {
-        string tempHighScore;
-        if (difficultyScale == "everett") {
-            tempHighScore = "eHighScore";
-        } else if (difficultyScale == "basic") {
-            tempHighScore = "HighScore";
+    public void OnPlayerHitLogic (string tag) {
+        health--;
+        Debug.Log("health = "+health);
+        if (health <= 0) {
+            KillPlayer();
         } else {
-            tempHighScore = null;
+            if (!(tag == "Laser")) {
+                StartCoroutine(ReverseSnake());
+                canChangeDirection = false;
+            }
         }
-        if (PlayerPrefs.GetInt(tempHighScore) < snakeScore) {
-            //Debug.Log(snakeScore+" snakeScore higher than "+PlayerPrefs.GetInt("highScore"));
-            PlayerPrefs.SetInt(tempHighScore, snakeScore);
-            HighScore highScore = highScoreObj.GetComponent<HighScore>();
-            highScore.updateHighScore(tempHighScore);
+    }
+
+    public void KillPlayer () { //yeah
+        Time.timeScale = 0f;
+        isDead = true;
+        //Debug.Log("died with "+upgradeNumber+" upgrades");
+        deathScreen.Setup(snakeScore);
+        UpdateHighScore();
+    }
+
+    void OnTriggerStay2D (Collider2D collide) { //for laser, increments and checks if the player is no longer invincible and if so calls OnPlayerHitLogic
+        if (!collide.CompareTag("Laser")) { //if the tag isn't laser leave the function NOW
+            return;
+        } else {
+            invincTracker += Time.deltaTime;
+            if (invincTracker >= invincTimer) {
+                invincTracker = 0;
+                OnPlayerHitLogic(collide.tag); //this should always be "Laser".
+            }
         }
+
+    }
+
+    void OnTriggerExit2D (Collider2D collide) {
+        invincTracker = invincTimer;
     }
 
     void OnTriggerEnter2D (Collider2D collide) {
-        if (collide.CompareTag("Obstacle") || collide.CompareTag("Walls") || collide.CompareTag("Laser")) {
-            Time.timeScale = 0f;
-            isDead = true;
-            Debug.Log("died with "+upgradeNumber+" upgrades");
-            deathScreen.Setup(snakeScore);
-            updateHighScore();
+        if (collide.CompareTag("Obstacle") || collide.CompareTag("Walls")) {
+            OnPlayerHitLogic(collide.tag);
+        } else if (collide.CompareTag("Laser")) {
+            if (invincTracker >= invincTimer) {
+                invincTracker = 0;
+                OnPlayerHitLogic(collide.tag); //this should always be "Laser".
+            }
         } else if (collide.CompareTag("Food")) {
-            AddScore(1);
-            updateHighScore();
-            if (snakeScore == 10 && PlayerPrefs.GetInt("hasEverett") != 1) {
-                PlayerPrefs.SetInt("hasEverett", 1);
-                OnEverettUnlock.Invoke(true);
-            }
-            if (snakeScore == growThreshold[upgradeNumber]) {
-                Debug.Log("Hit threshold "+upgradeNumber+" at score "+snakeScore+", threshold was "+growThreshold[upgradeNumber]+" and next should be "+growThreshold[upgradeNumber+1]);
-                upgradeNumber++;
-                if (upgradeNumber == growThreshold.Count) {
-                    growThreshold.Add(growThreshold[upgradeNumber-1] + 50);
-                }
-                isChoosing = true;
-                Time.timeScale = 0f;
-                OnUpgrade.Invoke(true);
-            }
-            //does multithreading mean that 2 of these methods can run at the same time? TODO look what multithreading is up
+            AteFood();
+            //does multithreading mean that 2 of these methods can run at the same time? TODO look what multithreading really is up
             //Debug.Log("Score = "+snakeScore);
+        }
+    }
+
+    private void AteFood () { //meant to just be called in OnTrigger, logic for post eating food
+        AddScore(1);
+        UpdateHighScore();
+        if (snakeScore == 50 && !hasMedium) {
+            OnDiffUnlock.Invoke("MEDIUM");
+            hasMedium = true;
+        } else if (snakeScore == 100 && !hasHard) {
+            OnDiffUnlock.Invoke("HARD");
+            hasHard = true;
+        } else if (snakeScore == 200 && !hasEverett) {
+            OnDiffUnlock.Invoke("EVERETT");
+            hasEverett = true;
+        }
+        UpgradePlayer();
+    }
+
+    private void UpgradePlayer () { //logic for checking if we should upgrade then upgrading player. Meant to just be called in AteFood.
+        if (snakeScore == growThreshold[upgradeNumber]) {
+            if (upgradeNumber == growThreshold.Count - 1) {
+                growThreshold.Add(growThreshold[upgradeNumber] + 50);
+                Debug.Log("Added " + growThreshold[growThreshold.Count - 1] + " to growThreshold at "+ (growThreshold.Count - 1));
+            }
+            Debug.Log("Hit threshold "+upgradeNumber+" at score "+snakeScore+", threshold was "+growThreshold[upgradeNumber]+" and next should be "+growThreshold[upgradeNumber+1]);
+            upgradeNumber++; //1 after first upgrade, growThreshold.Count after last.
+            isChoosing = true;
+            Time.timeScale = 0f;
+            OnUpgrade.Invoke(true);
         }
     }
 }
