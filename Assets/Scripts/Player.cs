@@ -8,9 +8,7 @@ public class Player : MonoBehaviour, ISaveManager
 {
 
     //TODO:
-    //implement health and reverse and a short pause (red screen?) if you hit something and you have health left.
-    //change food sprite. pixel art!
-    //Timer that provides a reason to play the game finally, highscore will mean something (TIMEMANAGER SINGLETON STUFF)
+    //implement a red screen if you hit something and you have health left.
     //upgrades for timer that make it longer so you balance utility with a longer time. 
     //BUGS:
     //If you input a direction you are already going, then another one right after that, it takes one segment move for it to update.
@@ -51,10 +49,16 @@ public class Player : MonoBehaviour, ISaveManager
     private bool isChoosing = false;
 
     [SerializeField] private GameObject bulletPrefab;
+    private bool shootingEnabled = false;
     private float fireForce = 10f;
     private float fireCooldown = 2f;
     private float fireCooldownTracker = 0f;
     private bool canShoot = false;
+
+    private bool hasReverse;
+
+    private bool hasDash;
+    private bool hasDashInvincibility;
 
     private bool dashing = false;
     private int dashAmount = 3;
@@ -73,12 +77,12 @@ public class Player : MonoBehaviour, ISaveManager
     private float reverseCooldown = .3f;
     private float reverseCooldownTracker = 0;
 
-    private int health = 1;
-    public int Health {get => health; set => health = value;}
+    private float health = 50f; //set on reset
+    public float Health {get => health; set => health = value;}
     private static float invincTimer = .2f;
     private float invincTracker = invincTimer;
 
-    [SerializeField] private int extraHealth = 0;
+    private float extraHealth = 0;
     private int extraSegments;
 
     private Vector2 lastSegmentDirection;
@@ -142,6 +146,9 @@ public class Player : MonoBehaviour, ISaveManager
         hasHard = data.hasHard;
         hasEverett = data.hasEverett;
         extraSegments = data.extraSegments;
+        hasDash = data.hasDash;
+        hasDashInvincibility = data.hasDashInvincibility;
+        hasReverse = data.hasReverse;
     }
     public void SaveData(GameData data) {
         data.hasMedium = hasMedium;
@@ -222,7 +229,7 @@ public class Player : MonoBehaviour, ISaveManager
         upgradeNumber = 0;
         dashCooldownTracker = 2f;
         invincTracker = invincTimer;
-        health = extraHealth + 1;
+        health = extraHealth + 50f;
         GameManager.instance.MapSizeTemp = GameManager.instance.MapSize + 6;
         TileMapper.instance.RefreshTileMap();
         GameManager.instance.SetDictionaryValues(); //called in awake of gamemanager too, probably redundant.
@@ -251,7 +258,7 @@ public class Player : MonoBehaviour, ISaveManager
         segments.Add(gameObject); //adds head (pause)
 
         //puts initial segments after head
-        for (int i = 0; i < extraSegments + 3; i++) { //TODO: extraSegments + 1
+        for (int i = 0; i < extraSegments + 10; i++) { //extraSegments + 2 for 1 segment
             Grow();
         }
         localTimeScale = .1f;
@@ -263,6 +270,36 @@ public class Player : MonoBehaviour, ISaveManager
             newSegment.transform.position = transform.position - (Vector3)direction;
             segments.Add(newSegment);
         } else {
+            GameObject newSegment = Instantiate(segment);
+            newSegment.transform.position = segments[segments.Count - 1].transform.position;
+            segments.Add(newSegment);
+        }
+        if(Time.timeScale == 0) {
+            Time.timeScale = 1f;
+            isChoosing = false;
+        }
+        if (difficultyScale == "everett" && localTimeScale <= .4f) {
+            localTimeScale += difficultyTime;
+        } else if (difficultyScale == "basic" && localTimeScale <= .25f){
+            localTimeScale += difficultyTime;
+        } else if (difficultyScale == "medium" && localTimeScale <= .28f){
+            localTimeScale += difficultyTime;
+        } else if (difficultyScale == "hard" && localTimeScale <= .33f){
+            localTimeScale += difficultyTime;
+        } else if (localTimeScale <= .25f && difficultyScale == null || difficultyScale == "") {
+            Debug.Log("problem in grow function of player script, difficulty scale = "+ difficultyScale);
+            localTimeScale += difficultyTime;
+        }
+    }
+
+    public void Grow (int segmentsToGrow) {
+        if (segments.Count == 1) { //first segment, segmentsToGrow-- so growing the first segment counts as one
+            GameObject newSegment = Instantiate(segment);
+            newSegment.transform.position = transform.position - (Vector3)direction;
+            segments.Add(newSegment);
+            segmentsToGrow--;
+        }
+        for (int i = 0; i < segmentsToGrow; i++) { //
             GameObject newSegment = Instantiate(segment);
             newSegment.transform.position = segments[segments.Count - 1].transform.position;
             segments.Add(newSegment);
@@ -385,10 +422,9 @@ public class Player : MonoBehaviour, ISaveManager
         } else if (Input.GetKeyDown(KeyCode.R) && isDead || Input.GetKeyDown(KeyCode.Space) && isDead) {
             ResetSnake();
         } else if (Input.GetKeyDown(KeyCode.Escape) && isDead) {
-            //TODO: save game
             SaveManager.instance.SaveGame();
             SceneManager.LoadScene(0);
-        } else if (Input.GetKeyDown(KeyCode.Space) && canDash) { //pausing is only in for testing purposes! Dashing is the intended functionalty of space
+        } else if (Input.GetKeyDown(KeyCode.Space) && canDash && hasDash) { //pausing is only in for testing purposes! Dashing is the intended functionalty of space
             /*if (paused && !isChoosing && !isDead) {
                 Time.timeScale = 1f;
                 paused = false;
@@ -403,11 +439,11 @@ public class Player : MonoBehaviour, ISaveManager
             canDash = false;
             tempDashTime = localTimeScale;
             localTimeScale = dashSpeed;
-        } else if (Input.GetKeyDown(KeyCode.Mouse0) && !isChoosing && canShoot) {
+        } else if (Input.GetKeyDown(KeyCode.Mouse0) && !isChoosing && canShoot && shootingEnabled) {
             Fire();
             fireCooldownTracker = 0f; //needs to be before canShoot or maybe canShoot would set itself to true again?
             canShoot = false;
-        } else if (Input.GetKeyDown(KeyCode.F) && canReverse) {
+        } else if (Input.GetKeyDown(KeyCode.F) && canReverse && hasReverse) {
             inputQueue.Clear();
             QueueInput(KeyCode.F);
         }
@@ -547,14 +583,17 @@ public class Player : MonoBehaviour, ISaveManager
             segments.Add(gameObject); //adds head (pause)
             if (direction == Vector2.up) {
                 direction = Vector2.down;
+                lastInput = "S";
             } else if (direction == Vector2.right) {
                 direction = Vector2.left;
+                lastInput = "A";
             } else if (direction == Vector2.down) {
                 direction = Vector2.up;
+                lastInput = "W";
             } else if (direction == Vector2.left) {
                 direction = Vector2.right;
+                lastInput = "D";
             }
-            MoveSnake();
             MoveSnake();
             for (int i = 0; i < currSegCount; i++) {
                GrowNoTime();
@@ -576,7 +615,14 @@ public class Player : MonoBehaviour, ISaveManager
     }
 
     public void OnPlayerHitLogic (string tag) {
-        health--;
+        if ((tag == "Laser" || tag == "Obstacle") && hasDashInvincibility && dashing) {
+            return;
+        } else if (tag == "Walls" && hasDashInvincibility && dashing) {
+            StartCoroutine(ConfuseSnake());
+            canChangeDirection = false;
+            return;
+        }
+        health -= 50;
         Debug.Log("health = "+health);
         if (health <= 0) {
             KillPlayer();
@@ -624,7 +670,6 @@ public class Player : MonoBehaviour, ISaveManager
         } else if (collide.CompareTag("Food")) {
             AteFood();
             //does multithreading mean that 2 of these methods can run at the same time? TODO look what multithreading really is up
-            //Debug.Log("Score = "+snakeScore);
         }
     }
 
@@ -650,7 +695,7 @@ public class Player : MonoBehaviour, ISaveManager
                 growThreshold.Add(growThreshold[upgradeNumber] + 50);
                 Debug.Log("Added " + growThreshold[growThreshold.Count - 1] + " to growThreshold at "+ (growThreshold.Count - 1));
             }
-            Debug.Log("Hit threshold "+upgradeNumber+" at score "+snakeScore+", threshold was "+growThreshold[upgradeNumber]+" and next should be "+growThreshold[upgradeNumber+1]);
+            //Debug.Log("Hit threshold "+upgradeNumber+" at score "+snakeScore+", threshold was "+growThreshold[upgradeNumber]+" and next should be "+growThreshold[upgradeNumber+1]);
             upgradeNumber++; //1 after first upgrade, growThreshold.Count after last.
             isChoosing = true;
             Time.timeScale = 0f;

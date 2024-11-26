@@ -4,15 +4,22 @@ using System.Collections.Generic;
 [System.Serializable]
 public class GameData
 {
-    public int extraHealth;
+    //Upgradables
+    public float extraHealth;
     public int mapSize;
     public float runTime;
+    public int extraSegments;
+    public int extraFood;
+    public int segmentsPerGrow;
+    public int extraChoices;
+    public bool hasDash;
+    public bool hasReverse; //separate value for if it is bought
+    public bool hasTimeSlow;
+    public bool hasDashInvincibility;
+    //Trackers
     public bool hasMedium;
     public bool hasHard;
     public bool hasEverett;
-    public int extraSegments;
-    public int extraFood;
-    public int extraChoices;
     public int highScoreB;
     public int highScoreM;
     public int highScoreH;
@@ -25,8 +32,13 @@ public class GameData
         this.extraHealth = 0; //is "this." needed?
         this.extraChoices = 0;
         this.extraSegments = 0;
+        segmentsPerGrow = 3; //higher is worse
         mapSize = 0;
         runTime = 70;
+        hasDash = false; //
+        hasReverse = false;
+        hasTimeSlow = false;
+        hasDashInvincibility = false; //
         hasMedium = false;
         hasHard = false;
         hasEverett = false;

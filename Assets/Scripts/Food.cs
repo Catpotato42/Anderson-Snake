@@ -19,7 +19,7 @@ public class Food : MonoBehaviour
     }
 
     void OnTriggerEnter2D (Collider2D collider) {
-        if (!collider.CompareTag("Player") && !collider.CompareTag("Enemy")) {
+        if (!collider.CompareTag("Player") && !collider.CompareTag("Enemy") && !collider.CompareTag("Obstacle")) {
             return;
         } else {
             RandomPosition();

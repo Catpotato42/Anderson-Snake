@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 
 public class RunTimer : MonoBehaviour, ISaveManager
 {
@@ -13,6 +14,7 @@ public class RunTimer : MonoBehaviour, ISaveManager
     public void LoadData (GameData data) {
         runTime = data.runTime;
     }
+    
     void Awake()
     {
         timerText = gameObject.GetComponent<TextMeshProUGUI>();
@@ -27,8 +29,9 @@ public class RunTimer : MonoBehaviour, ISaveManager
         DecrementTimer();
     }
 
-    private void ResetTimer () { //ask stratton about better way to put a 0 in front of seconds if dingle digits
+    private void ResetTimer () { //ask stratton about better way to put a 0 in front of seconds if single digits
         runTimeTracker = runTime;
+        timerText.alignment = TextAlignmentOptions.Center;
         SetSeconds();
     }
 
@@ -50,7 +53,10 @@ public class RunTimer : MonoBehaviour, ISaveManager
         } else if (runTimeTracker < 60f && runTimeTracker > 10f){
             timerText.text = "0:"+ (int)(runTimeTracker);
         } else {
-            timerText.text = "" + tenSecs.ToString("0000");
+            if (timerText.alignment != TextAlignmentOptions.Left) {
+                timerText.alignment = TextAlignmentOptions.Left;
+            }
+            timerText.text = "" + Mathf.Round(runTimeTracker*100f)/100f; //TODO: fix the fucking formatting with single digits ಠ﹏ಠ
         }
     }
 }

@@ -11,7 +11,7 @@ public class CameraScript : MonoBehaviour
         if (GameManager.instance.MapSizeTemp >= 10) { //if MapSize + GameManager MapSizeTemp >= 16
             DetachCamera();
         }
-        GameManager.instance.OnMapSize10 += DetachCamera; //this could probably be changed to just set cameraDetached to true, maybe todo but it's fine as is.
+        GameManager.instance.OnMapSize10 += DetachCamera;
         player.OnReset += AttachCamera;
     }
 

@@ -61,6 +61,7 @@ public class GameManager : MonoBehaviour, ISaveManager
     private static string difficulty = "basic";
     public static string skinPref = "normal";
     private int extraFood;
+    private int segmentsPerGrow; //controlled in GameManager because player needs to use grow for other stuff as well
 
     public string SkinPref {
         get => skinPref;
@@ -83,6 +84,7 @@ public class GameManager : MonoBehaviour, ISaveManager
     }
 
     public void LoadData (GameData data) {
+        segmentsPerGrow = data.segmentsPerGrow;
         extraFood = data.extraFood;
         mapSize = data.mapSize;
         permanentDisallowedUpgrades = data.permanentDisallowedUpgrades; //no need to save, these can be unlocked with meta currency in the main menu
@@ -231,7 +233,7 @@ public class GameManager : MonoBehaviour, ISaveManager
 
     //garter upgrades
     private void GarterUpgrades (UpgradeInfo currentUpgrade) { //class isn't passed by reference, the reference to the class is passed by value. Ask stratton about primitive types -> pointers to a location in memory, classes when given to methods are references to a class outside which values can be modified inside the method.
-        player.Grow();
+        player.Grow(segmentsPerGrow);
         switch (currentUpgrade.Name) {
             case "mapSizeTempAdd1":
                 mapSizeTemp++;
@@ -252,7 +254,7 @@ public class GameManager : MonoBehaviour, ISaveManager
                 player.RemoveSegment();
                 break;
             default:
-                Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
+                //Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
                 break;
 
         }
@@ -260,7 +262,7 @@ public class GameManager : MonoBehaviour, ISaveManager
 
     //python upgrades
     private void PythonUpgrades (UpgradeInfo currentUpgrade) {
-        player.Grow();
+        player.Grow(segmentsPerGrow);
         switch (currentUpgrade.Name) {
             case "mapSizeTempAdd2":
                 mapSizeTemp += 2;
@@ -274,7 +276,7 @@ public class GameManager : MonoBehaviour, ISaveManager
 
     //rattlesnake upgrades
     private void RattlesnakeUpgrades (UpgradeInfo currentUpgrade) {
-        player.Grow();
+        player.Grow(segmentsPerGrow);
         switch (currentUpgrade.Name) {
             case "foodAdd":
                 Instantiate(Resources.Load("Prefabs/TempFood"));
@@ -292,21 +294,21 @@ public class GameManager : MonoBehaviour, ISaveManager
 
     //viper upgrades
     private void ViperUpgrades (UpgradeInfo currentUpgrade) {
-        player.Grow();
+        player.Grow(segmentsPerGrow);
         switch (currentUpgrade.Name) {
             case "mapSizeTempAdd1":
                 mapSizeTemp++;
                 TileMapper.instance.RefreshTileMap();
                 break;
             default:
-                Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
+                //Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
                 break;
         }
     }
 
     //cobra upgrades
     private void CobraUpgrades (UpgradeInfo currentUpgrade) {
-        player.Grow();
+        player.Grow(segmentsPerGrow);
         switch (currentUpgrade.Name) {
             case "mapSizeTempAdd1":
                 mapSizeTemp++;
@@ -321,6 +323,7 @@ public class GameManager : MonoBehaviour, ISaveManager
     //boa upgrades
     private void BoaUpgrades (UpgradeInfo currentUpgrade) {
         //maybe boa upgrades make the player not grow as an added benefit to all of them.
+        //either this or they only grow, don't speed up... Many thoughts ¯\_(ツ)_/¯
         player.DoneChoosing();
         switch (currentUpgrade.Name) {
             case "mapSizeTempAdd1":
