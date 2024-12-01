@@ -29,12 +29,18 @@ public class Player : MonoBehaviour, ISaveManager
     public event Action<string> OnDiffUnlock;
     public event Action<bool> OnUpgrade;
     public event Action OnReset;
+    [SerializeField] private HealthFlash healthFlash;
+    public event Action OnXPIncrease;
 
     private string lastInput = "D";
 
     private int snakeScore = 0;
-    private List<int> growThreshold = new List<int>();
+    public List<int> growThreshold = new List<int>();
     private int upgradeNumber = 0;
+
+    private float xpScore = 0;
+    private float xpMulti = 0;
+    private float xpMultiTemp = 0;
 
     [SerializeField] private GameObject deathCanvas;
     private bool isDead = false;
@@ -118,6 +124,16 @@ public class Player : MonoBehaviour, ISaveManager
 
     }
 
+    public float XpScore {
+        get => xpScore;
+        set {xpScore = value;}
+    }
+
+    public float XpMultiTemp {
+        get =>xpMultiTemp;
+        set {xpMultiTemp = value;}
+    }
+
     public int SnakeScore {
         get => snakeScore; 
         set {
@@ -140,7 +156,7 @@ public class Player : MonoBehaviour, ISaveManager
         SnakeScore -= newScore;
     }
 
-    public void LoadData (GameData data) {
+    public void LoadData (GameData data) { //kinda like a constructor
         extraHealth = data.extraHealth;
         hasMedium = data.hasMedium;
         hasHard = data.hasHard;
@@ -149,6 +165,7 @@ public class Player : MonoBehaviour, ISaveManager
         hasDash = data.hasDash;
         hasDashInvincibility = data.hasDashInvincibility;
         hasReverse = data.hasReverse;
+        xpMulti = data.xpMulti;
     }
     public void SaveData(GameData data) {
         data.hasMedium = hasMedium;
@@ -181,6 +198,24 @@ public class Player : MonoBehaviour, ISaveManager
     }
 
     private void InitThresholdValues () {
+        growThreshold.Add(5);
+        for (int i = 1; i < 5; i++) {
+            growThreshold.Add(5);
+        } for (int i = 5; i < 10; i++) {
+            growThreshold.Add(10);
+        } for (int i = 10; i < 15; i++) {
+            growThreshold.Add(20);
+        } for (int i = 15; i < 30; i++) {
+            growThreshold.Add(30);
+        }
+        string printThresholdVals = "";
+        for (int i = 0; i < growThreshold.Count; i++) {
+            printThresholdVals += growThreshold[i]+", ";
+        }
+        Debug.Log("Threshold vals = "+printThresholdVals);
+    }
+
+    private void DeprecatedInitThresholdValues () {
         growThreshold.Add(5);
         for (int i = 1; i < 5; i++) {
             growThreshold.Add(growThreshold[i - 1] + 5);
@@ -242,6 +277,8 @@ public class Player : MonoBehaviour, ISaveManager
         Time.timeScale = 1f;
         deathCanvas.SetActive(false);
         SetScore(0);
+        xpScore = 0;
+        xpMultiTemp = xpMulti;
         ResetSegments();
         lastInput = "D";
         OnReset.Invoke(); //needs to be invoked AFTER RefreshTileMap and pos, rot... as player would see old tilemap and other stuff on countdown otherwise
@@ -258,7 +295,7 @@ public class Player : MonoBehaviour, ISaveManager
         segments.Add(gameObject); //adds head (pause)
 
         //puts initial segments after head
-        for (int i = 0; i < extraSegments + 10; i++) { //extraSegments + 2 for 1 segment
+        for (int i = 0; i < extraSegments + 2; i++) { //extraSegments + 2 for 1 segment
             Grow();
         }
         localTimeScale = .1f;
@@ -618,10 +655,13 @@ public class Player : MonoBehaviour, ISaveManager
         if ((tag == "Laser" || tag == "Obstacle") && hasDashInvincibility && dashing) {
             return;
         } else if (tag == "Walls" && hasDashInvincibility && dashing) {
+            //sound less harsh than a buzz to let the player know they were reversed on purpose 
             StartCoroutine(ConfuseSnake());
             canChangeDirection = false;
             return;
         }
+        //this part means you actually were hit ಠ﹏ಠ noob
+        StartCoroutine(healthFlash.DecreaseHealthFlash());
         health -= 50;
         Debug.Log("health = "+health);
         if (health <= 0) {
@@ -657,6 +697,7 @@ public class Player : MonoBehaviour, ISaveManager
 
     void OnTriggerExit2D (Collider2D collide) {
         invincTracker = invincTimer;
+        UpgradePlayer();
     }
 
     void OnTriggerEnter2D (Collider2D collide) {
@@ -676,6 +717,8 @@ public class Player : MonoBehaviour, ISaveManager
     private void AteFood () { //meant to just be called in OnTrigger, logic for post eating food
         AddScore(1);
         UpdateHighScore();
+        xpScore += 1 * xpMultiTemp;
+        OnXPIncrease.Invoke();
         if (snakeScore == 50 && !hasMedium) {
             OnDiffUnlock.Invoke("MEDIUM");
             hasMedium = true;
@@ -687,15 +730,19 @@ public class Player : MonoBehaviour, ISaveManager
             hasEverett = true;
         }
         UpgradePlayer();
+        OnXPIncrease.Invoke();
     }
 
     private void UpgradePlayer () { //logic for checking if we should upgrade then upgrading player. Meant to just be called in AteFood.
-        if (snakeScore == growThreshold[upgradeNumber]) {
+        if (xpScore >= growThreshold[upgradeNumber]) {
             if (upgradeNumber == growThreshold.Count - 1) {
-                growThreshold.Add(growThreshold[upgradeNumber] + 50);
+                growThreshold.Add(50);
                 Debug.Log("Added " + growThreshold[growThreshold.Count - 1] + " to growThreshold at "+ (growThreshold.Count - 1));
             }
+            Debug.Log("XP = "+xpScore);
             //Debug.Log("Hit threshold "+upgradeNumber+" at score "+snakeScore+", threshold was "+growThreshold[upgradeNumber]+" and next should be "+growThreshold[upgradeNumber+1]);
+            float spilloverScore = xpScore - growThreshold[upgradeNumber];
+            xpScore = spilloverScore;
             upgradeNumber++; //1 after first upgrade, growThreshold.Count after last.
             isChoosing = true;
             Time.timeScale = 0f;

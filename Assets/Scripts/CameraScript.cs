@@ -5,7 +5,7 @@ public class CameraScript : MonoBehaviour
     private bool cameraDetached = false;
     [SerializeField] private float smoothSpeed = 0.15f;
     [SerializeField] private Player player;
-    void Start() {
+    void Awake() {
         cameraDetached = false;
         gameObject.transform.position = new Vector3 (1, -.5f, -10); //maybe redundant because player calls OnReset but probably not as onreset is called in start also
         if (GameManager.instance.MapSizeTemp >= 10) { //if MapSize + GameManager MapSizeTemp >= 16

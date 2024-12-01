@@ -10,6 +10,7 @@ public class LaserManager : MonoBehaviour
     [SerializeField] private GameObject laser;
     private LaserWaves laserWave;
     private List<int> lt;
+    private float duration;
 
     private class LaserWaves {
         public int Amount;
@@ -35,12 +36,16 @@ public class LaserManager : MonoBehaviour
 
     private void SetLt (string difficulty) {
         if (difficulty == "basic") {
+            duration = 4f;
             lt = new List<int> {5, 12, 18, 30};
         } else if (difficulty == "medium") {
+            duration = 3f;
             lt = new List<int> {5, 9, 13, 20};
         } else if (difficulty == "hard") {
+            duration = 2f;
             lt = new List<int> {3, 8, 10, 15};
         } else if (difficulty == "everett") {
+            duration = 1.5f;
             lt = new List<int> {1, 3, 5, 10};
         }
     }
@@ -81,59 +86,61 @@ public class LaserManager : MonoBehaviour
         float nextSpawnTime = 3;
         bool vertical = true; //set as these also for debugging purposes.
         if (laserWaveTracker < lt[0]) {
-            if (GameManager.instance.MapSizeTemp - 3 > 1) {
-                nextAmount = Random.Range(1,GameManager.instance.MapSizeTemp - 3); //max exclusive
-            } else { //this first else is true for map size > 5
-                nextAmount = GameManager.instance.MapSizeTemp - 4; //-4 because the random is max exclusive so this is really what the max is.
+            if (GameManager.instance.MapSizeTemp - 5 > 1) { 
+                //ok this takes a little explaining. at map size 6 this means there will always be one laser,
+                //and even at map size 7 the same. so if you can stay at lower map sizes you get less lasers but have less space.
+                nextAmount = Random.Range(1,GameManager.instance.MapSizeTemp - 5); //max exclusive
+            } else { //this first else is true for temp map size > 5, so always true.
+                nextAmount = 1;
             }
             nextWaveTime = Random.Range(10, 20);
-            nextSpawnTime = 2.5f;
+            nextSpawnTime = duration;
             vertical = false;
         } else if (laserWaveTracker >= lt[0] && laserWaveTracker < lt[1]) {
-            if (GameManager.instance.MapSizeTemp - 2 > 2) {
-                nextAmount = Random.Range(2,GameManager.instance.MapSizeTemp - 2); //max exclusive
+            if (GameManager.instance.MapSizeTemp - 4 > 2) {
+                nextAmount = Random.Range(2,GameManager.instance.MapSizeTemp - 4); //max exclusive
             } else {
-                nextAmount = GameManager.instance.MapSizeTemp - 3;
+                nextAmount = GameManager.instance.MapSizeTemp - 5;
             }
             nextWaveTime = Random.Range(10, 20);
-            nextSpawnTime = 2.5f;
+            nextSpawnTime = duration;
             vertical = System.Convert.ToBoolean(Random.Range(0,2));
         } else if (laserWaveTracker >= lt[1] && laserWaveTracker < lt[2]) {
-            if (GameManager.instance.MapSizeTemp - 2 > 4) {
-                nextAmount = Random.Range(4,GameManager.instance.MapSizeTemp - 2); //max exclusive
+            if (GameManager.instance.MapSizeTemp - 3 > 4) {
+                nextAmount = Random.Range(4,GameManager.instance.MapSizeTemp - 3); //max exclusive
+            } else {
+                nextAmount = GameManager.instance.MapSizeTemp - 4;
+            }
+            nextWaveTime = Random.Range(8, 18);
+            nextSpawnTime = duration;
+            vertical = System.Convert.ToBoolean(Random.Range(0,2));
+        } else if (laserWaveTracker >= lt[2] && laserWaveTracker < lt[3]) {
+            if (GameManager.instance.MapSizeTemp - 2 > 6) {
+                nextAmount = Random.Range(6,GameManager.instance.MapSizeTemp - 2); //max exclusive
             } else {
                 nextAmount = GameManager.instance.MapSizeTemp - 3;
             }
             nextWaveTime = Random.Range(8, 18);
-            nextSpawnTime = 2f;
-            vertical = System.Convert.ToBoolean(Random.Range(0,2));
-        } else if (laserWaveTracker >= lt[2] && laserWaveTracker < lt[3]) {
-            if (GameManager.instance.MapSizeTemp - 1 > 6) {
-                nextAmount = Random.Range(6,GameManager.instance.MapSizeTemp - 1); //max exclusive
-            } else {
-                nextAmount = GameManager.instance.MapSizeTemp - 2;
-            }
-            nextWaveTime = Random.Range(8, 18);
-            nextSpawnTime = 2f;
+            nextSpawnTime = duration;
             vertical = System.Convert.ToBoolean(Random.Range(0,2));
         } else if (laserWaveTracker >= lt[3]){
-            if (GameManager.instance.MapSizeTemp - 1 > 10) {
-                nextAmount = Random.Range(10,GameManager.instance.MapSizeTemp - 1); //max exclusive
+            if (GameManager.instance.MapSizeTemp - 2 > 10) {
+                nextAmount = Random.Range(10,GameManager.instance.MapSizeTemp - 2); //max exclusive
             } else {
-                nextAmount = GameManager.instance.MapSizeTemp - 2;
+                nextAmount = GameManager.instance.MapSizeTemp - 3;
             }
             nextWaveTime = Random.Range(6, 16);
-            nextSpawnTime = 1.75f;
+            nextSpawnTime = duration;
             vertical = System.Convert.ToBoolean(Random.Range(0,2));
         }
         if (laserWaveTracker >= lt[3] + 10 && (GameManager.instance.Difficulty == "hard" || GameManager.instance.Difficulty == "everett")) {
             if (GameManager.instance.MapSizeTemp > 12) {
-                nextAmount = Random.Range(12,GameManager.instance.MapSizeTemp); //max exclusive
+                nextAmount = Random.Range(12,GameManager.instance.MapSizeTemp - 1); //max exclusive
             } else {
-                nextAmount = GameManager.instance.MapSizeTemp - 1;
+                nextAmount = GameManager.instance.MapSizeTemp - 2;
             }
             nextWaveTime = Random.Range(4, 16);
-            nextSpawnTime = 1.5f;
+            nextSpawnTime = 1f;
             vertical = System.Convert.ToBoolean(Random.Range(0,2));
         }
         //then set laserWave to a new Tuple containing these.

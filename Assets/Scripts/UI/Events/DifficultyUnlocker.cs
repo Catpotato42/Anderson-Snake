@@ -6,11 +6,9 @@ using UnityEngine.UI;
 
 public class DifficultyUnlocker : MonoBehaviour
 {
-    [SerializeField] private GameObject player;
     void Start()
     {
         UnlockerChangeState(false, "nothing");
-        Player playerScript = player.GetComponent<Player>();
         Player.instance.OnDiffUnlock += RunDiffUnlock;
     }
 
