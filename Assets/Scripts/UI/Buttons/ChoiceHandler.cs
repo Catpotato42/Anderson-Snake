@@ -10,7 +10,7 @@ public class ChoiceHandler : MonoBehaviour, ISaveManager
     }
     [SerializeField] private GameObject choice;
     void Start()
-    { //TODO: set amount of choice
+    {
         Instantiate(choice, this.transform);
         Instantiate(choice, this.transform);
         Instantiate(choice, this.transform);

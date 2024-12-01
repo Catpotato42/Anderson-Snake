@@ -9,7 +9,7 @@ public class UpgradeMapSize : MonoBehaviour, IPointerClickHandler, ISaveManager
 {
     int mapSize;
     public void SaveData (GameData data) {
-        Debug.Log("Saving... (UpgradeMapSize), mapSize = "+mapSize);
+        //Debug.Log("Saving... (UpgradeMapSize), mapSize = "+mapSize);
         data.mapSize = this.mapSize;
     }
     public void LoadData (GameData data) {

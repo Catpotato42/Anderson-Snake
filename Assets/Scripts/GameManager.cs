@@ -6,6 +6,7 @@ using System.Linq;
 using System;
 using UnityEngine.UIElements;
 using UnityEngine.Tilemaps;
+using System.Collections;
 
 public class GameManager : MonoBehaviour, ISaveManager
 {
@@ -61,6 +62,7 @@ public class GameManager : MonoBehaviour, ISaveManager
     private static string difficulty = "basic";
     public static string skinPref = "normal";
     private int extraFood;
+    private int segmentsPerGrow; //controlled in GameManager because player needs to use grow for other stuff as well
 
     public string SkinPref {
         get => skinPref;
@@ -83,9 +85,11 @@ public class GameManager : MonoBehaviour, ISaveManager
     }
 
     public void LoadData (GameData data) {
+        segmentsPerGrow = data.segmentsPerGrow;
         extraFood = data.extraFood;
         mapSize = data.mapSize;
         permanentDisallowedUpgrades = data.permanentDisallowedUpgrades; //no need to save, these can be unlocked with meta currency in the main menu
+        mapSizeTemp = mapSize + 6;
     }
     public void SaveData(GameData data) {
     }
@@ -103,7 +107,6 @@ public class GameManager : MonoBehaviour, ISaveManager
             for (int i = 0; i <= extraFood; i++) {
                 Instantiate(Resources.Load("Prefabs/Food"));
             }
-            mapSizeTemp = mapSize + 6;
         } else {
             //anything that needs to be done in main menu
         }
@@ -112,7 +115,21 @@ public class GameManager : MonoBehaviour, ISaveManager
 
     void Start () {
         if (SceneManager.GetActiveScene().buildIndex != 0) {
-            //nothing so far
+            Player.instance.OnReset += CheckMapSize;
+            StartCoroutine(PostStart());
+        }
+    }
+
+    private IEnumerator PostStart () {
+        yield return new WaitForSecondsRealtime(.2f);
+        Debug.Log("mapsize "+mapSize);
+        mapSizeTemp = mapSize + 6;
+        CheckMapSize();        
+    }
+
+    private void CheckMapSize() {
+        if (mapSizeTemp >= 10) {
+            OnMapSize10.Invoke();
         }
     }
 
@@ -124,26 +141,21 @@ public class GameManager : MonoBehaviour, ISaveManager
         upgrades4.Clear(); // to in order to access the UpgradeInfo values? is the way to group them without needing to go through that layer related to pointers?
         upgrades5.Clear();
         int i = 0; //garter \/
-        upgrades0.Add(i, new UpgradeInfo("mapSizeTempAdd1", 0, 0)); i++; //MAKE SURE YOU DO NOT MISS AN INDEX OR START BELOW OR ABOVE 0
-        upgrades0.Add(i, new UpgradeInfo("speedSlow", 0, 0)); i++;   //I could fix that by doing .Keys.ElementAt(index); but that still would require index to be a valid key so actually I couldn't that's just how dictionaries work this whole comment is stupid
-        upgrades0.Add(i, new UpgradeInfo("damageAdd", 0, 0)); i++;
-        upgrades0.Add(i, new UpgradeInfo("removeSegment", 0, 0)); i++; //index 4
+        upgrades0.Add(i, new UpgradeInfo("+1 Map Size", 0, 0)); i++; //MAKE SURE YOU DO NOT MISS AN INDEX OR START BELOW OR ABOVE 0
+        upgrades0.Add(i, new UpgradeInfo("Slow Speed", 0, 0)); i++;   //I could fix that by doing .Keys.ElementAt(index); but that still would require index to be a valid key so actually I couldn't that's just how dictionaries work this whole comment is stupid
+        upgrades0.Add(i, new UpgradeInfo("Remove 1 Segment", 0, 0)); i++; //index 4
         i = 0; //python \/
-        upgrades1.Add(i, new UpgradeInfo("xpMore", 0, 1)); i++;
-        upgrades1.Add(i, new UpgradeInfo("damagePercentAdd", 0, 1)); i++;
-        upgrades1.Add(i, new UpgradeInfo("speedPercentSlow", 0, 1)); i++;
-        upgrades1.Add(i, new UpgradeInfo("mapSizeTempAdd2", 0, 1)); i++; //index 3
+        upgrades1.Add(i, new UpgradeInfo("+10% XP", 0, 1)); i++;
+        upgrades1.Add(i, new UpgradeInfo("+2 Map Size", 0, 1)); i++; //index 3
         i = 0; //rattlesnake \/
-        upgrades2.Add(i, new UpgradeInfo("removeSegment3", 0, 2)); i++;
-        upgrades2.Add(i, new UpgradeInfo("foodAdd", 0, 2)); i++;
+        upgrades2.Add(i, new UpgradeInfo("Remove 3 Segments", 0, 2)); i++;
+        upgrades2.Add(i, new UpgradeInfo("+1 Food", 0, 2)); i++;
         i = 0;//viper \/
-        upgrades3.Add(i, new UpgradeInfo("fireSpeedAdd", 0, 3)); i++; //index 0, this should be a lot of fireSpeed to make the rarity mean something
-        upgrades3.Add(i, new UpgradeInfo("viperPlaceHolder", 0, 3)); i++; //so the non percent upgrades of higher rarities are still worth it long run
+        upgrades3.Add(i, new UpgradeInfo("+30 Seconds", 0, 3)); i++;
         i = 0;//cobra \/
-        upgrades4.Add(i, new UpgradeInfo("projectileAdd1", 0, 4)); i++;
-        upgrades4.Add(i, new UpgradeInfo("KingCobraPlaceholder", 0, 4)); i++; //index 1
+        upgrades4.Add(i, new UpgradeInfo("Placeholder KC", 0, 4)); i++;
         i = 0;//boa \/
-        upgrades5.Add(i, new UpgradeInfo("RainBowBoaPlaceholder", 0, 5)); i++; //index 0
+        upgrades5.Add(i, new UpgradeInfo("+3 Food", 0, 5)); i++; //index 0
     }
 
     private Dictionary<int, UpgradeInfo> GetUpgradeDictionaryByRarity(int rarity) {
@@ -231,13 +243,13 @@ public class GameManager : MonoBehaviour, ISaveManager
 
     //garter upgrades
     private void GarterUpgrades (UpgradeInfo currentUpgrade) { //class isn't passed by reference, the reference to the class is passed by value. Ask stratton about primitive types -> pointers to a location in memory, classes when given to methods are references to a class outside which values can be modified inside the method.
-        player.Grow();
+        player.Grow(segmentsPerGrow);
         switch (currentUpgrade.Name) {
-            case "mapSizeTempAdd1":
+            case "+1 Map Size":
                 mapSizeTemp++;
                 TileMapper.instance.RefreshTileMap();
                 break;
-            case "speedSlow":
+            case "Slow Speed":
                 //remove 2 player.DifficultyTime units from player time if that doesn't take player time below a little below .1f.
                 for (int i = 0; i < 2; i++) {
                     if (player.LocalTimeScale > .08f + player.DifficultyTime) {
@@ -247,12 +259,12 @@ public class GameManager : MonoBehaviour, ISaveManager
                 }
                 //Debug.Log("Player time scale = "+player.LocalTimeScale);
                 break;
-            case "removeSegment":
+            case "Remove 1 Segment":
                 player.RemoveSegment();
                 player.RemoveSegment();
                 break;
             default:
-                Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
+                //Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
                 break;
 
         }
@@ -260,11 +272,16 @@ public class GameManager : MonoBehaviour, ISaveManager
 
     //python upgrades
     private void PythonUpgrades (UpgradeInfo currentUpgrade) {
-        player.Grow();
+        player.Grow(segmentsPerGrow);
         switch (currentUpgrade.Name) {
-            case "mapSizeTempAdd2":
+            case "+2 Map Size":
                 mapSizeTemp += 2;
                 TileMapper.instance.RefreshTileMap();
+                break;
+            case "+10% XP":
+                Debug.Log("player xp multi was "+Player.instance.XpMultiTemp);
+                Player.instance.XpMultiTemp += .1f;
+                Debug.Log("player xp multi now "+Player.instance.XpMultiTemp);
                 break;
             default:
                 //Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
@@ -274,12 +291,12 @@ public class GameManager : MonoBehaviour, ISaveManager
 
     //rattlesnake upgrades
     private void RattlesnakeUpgrades (UpgradeInfo currentUpgrade) {
-        player.Grow();
+        player.Grow(segmentsPerGrow);
         switch (currentUpgrade.Name) {
-            case "foodAdd":
+            case "+1 Food":
                 Instantiate(Resources.Load("Prefabs/TempFood"));
                 break;
-            case "removeSegment3":
+            case "Remove 3 Segments":
                 for (int i = 0; i < 4; i++) {
                     player.RemoveSegment();
                 }
@@ -292,23 +309,22 @@ public class GameManager : MonoBehaviour, ISaveManager
 
     //viper upgrades
     private void ViperUpgrades (UpgradeInfo currentUpgrade) {
-        player.Grow();
+        player.Grow(segmentsPerGrow);
         switch (currentUpgrade.Name) {
-            case "mapSizeTempAdd1":
-                mapSizeTemp++;
-                TileMapper.instance.RefreshTileMap();
+            case "+30 Seconds":
+                RunTimer.instance.AddRunTime(30);
                 break;
             default:
-                Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
+                //Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
                 break;
         }
     }
 
     //cobra upgrades
     private void CobraUpgrades (UpgradeInfo currentUpgrade) {
-        player.Grow();
+        player.Grow(segmentsPerGrow);
         switch (currentUpgrade.Name) {
-            case "mapSizeTempAdd1":
+            case "+1 Map Size":
                 mapSizeTemp++;
                 TileMapper.instance.RefreshTileMap();
                 break;
@@ -321,11 +337,13 @@ public class GameManager : MonoBehaviour, ISaveManager
     //boa upgrades
     private void BoaUpgrades (UpgradeInfo currentUpgrade) {
         //maybe boa upgrades make the player not grow as an added benefit to all of them.
+        //either this or they only grow, don't speed up... Many thoughts ¯\_(ツ)_/¯
         player.DoneChoosing();
         switch (currentUpgrade.Name) {
-            case "mapSizeTempAdd1":
-                mapSizeTemp++;
-                TileMapper.instance.RefreshTileMap();
+            case "+3 Food":
+                Instantiate(Resources.Load("Prefabs/TempFood"));
+                Instantiate(Resources.Load("Prefabs/TempFood"));
+                Instantiate(Resources.Load("Prefabs/TempFood"));
                 break;
             default:
                 //Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");

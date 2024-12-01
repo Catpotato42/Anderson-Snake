@@ -8,9 +8,7 @@ public class Player : MonoBehaviour, ISaveManager
 {
 
     //TODO:
-    //implement health and reverse and a short pause (red screen?) if you hit something and you have health left.
-    //change food sprite. pixel art!
-    //Timer that provides a reason to play the game finally, highscore will mean something (TIMEMANAGER SINGLETON STUFF)
+    //implement a red screen if you hit something and you have health left.
     //upgrades for timer that make it longer so you balance utility with a longer time. 
     //BUGS:
     //If you input a direction you are already going, then another one right after that, it takes one segment move for it to update.
@@ -31,12 +29,18 @@ public class Player : MonoBehaviour, ISaveManager
     public event Action<string> OnDiffUnlock;
     public event Action<bool> OnUpgrade;
     public event Action OnReset;
+    [SerializeField] private HealthFlash healthFlash;
+    public event Action OnXPIncrease;
 
     private string lastInput = "D";
 
     private int snakeScore = 0;
-    private List<int> growThreshold = new List<int>();
+    public List<int> growThreshold = new List<int>();
     private int upgradeNumber = 0;
+
+    private float xpScore = 0;
+    private float xpMulti = 0;
+    private float xpMultiTemp = 0;
 
     [SerializeField] private GameObject deathCanvas;
     private bool isDead = false;
@@ -51,10 +55,16 @@ public class Player : MonoBehaviour, ISaveManager
     private bool isChoosing = false;
 
     [SerializeField] private GameObject bulletPrefab;
+    private bool shootingEnabled = false;
     private float fireForce = 10f;
     private float fireCooldown = 2f;
     private float fireCooldownTracker = 0f;
     private bool canShoot = false;
+
+    private bool hasReverse;
+
+    private bool hasDash;
+    private bool hasDashInvincibility;
 
     private bool dashing = false;
     private int dashAmount = 3;
@@ -73,12 +83,12 @@ public class Player : MonoBehaviour, ISaveManager
     private float reverseCooldown = .3f;
     private float reverseCooldownTracker = 0;
 
-    private int health = 1;
-    public int Health {get => health; set => health = value;}
+    private float health = 50f; //set on reset
+    public float Health {get => health; set => health = value;}
     private static float invincTimer = .2f;
     private float invincTracker = invincTimer;
 
-    [SerializeField] private int extraHealth = 0;
+    private float extraHealth = 0;
     private int extraSegments;
 
     private Vector2 lastSegmentDirection;
@@ -114,6 +124,16 @@ public class Player : MonoBehaviour, ISaveManager
 
     }
 
+    public float XpScore {
+        get => xpScore;
+        set {xpScore = value;}
+    }
+
+    public float XpMultiTemp {
+        get =>xpMultiTemp;
+        set {xpMultiTemp = value;}
+    }
+
     public int SnakeScore {
         get => snakeScore; 
         set {
@@ -136,12 +156,16 @@ public class Player : MonoBehaviour, ISaveManager
         SnakeScore -= newScore;
     }
 
-    public void LoadData (GameData data) {
+    public void LoadData (GameData data) { //kinda like a constructor
         extraHealth = data.extraHealth;
         hasMedium = data.hasMedium;
         hasHard = data.hasHard;
         hasEverett = data.hasEverett;
         extraSegments = data.extraSegments;
+        hasDash = data.hasDash;
+        hasDashInvincibility = data.hasDashInvincibility;
+        hasReverse = data.hasReverse;
+        xpMulti = data.xpMulti;
     }
     public void SaveData(GameData data) {
         data.hasMedium = hasMedium;
@@ -174,6 +198,24 @@ public class Player : MonoBehaviour, ISaveManager
     }
 
     private void InitThresholdValues () {
+        growThreshold.Add(5);
+        for (int i = 1; i < 5; i++) {
+            growThreshold.Add(5);
+        } for (int i = 5; i < 10; i++) {
+            growThreshold.Add(10);
+        } for (int i = 10; i < 15; i++) {
+            growThreshold.Add(20);
+        } for (int i = 15; i < 30; i++) {
+            growThreshold.Add(30);
+        }
+        string printThresholdVals = "";
+        for (int i = 0; i < growThreshold.Count; i++) {
+            printThresholdVals += growThreshold[i]+", ";
+        }
+        Debug.Log("Threshold vals = "+printThresholdVals);
+    }
+
+    private void DeprecatedInitThresholdValues () {
         growThreshold.Add(5);
         for (int i = 1; i < 5; i++) {
             growThreshold.Add(growThreshold[i - 1] + 5);
@@ -222,7 +264,7 @@ public class Player : MonoBehaviour, ISaveManager
         upgradeNumber = 0;
         dashCooldownTracker = 2f;
         invincTracker = invincTimer;
-        health = extraHealth + 1;
+        health = extraHealth + 50f;
         GameManager.instance.MapSizeTemp = GameManager.instance.MapSize + 6;
         TileMapper.instance.RefreshTileMap();
         GameManager.instance.SetDictionaryValues(); //called in awake of gamemanager too, probably redundant.
@@ -235,6 +277,8 @@ public class Player : MonoBehaviour, ISaveManager
         Time.timeScale = 1f;
         deathCanvas.SetActive(false);
         SetScore(0);
+        xpScore = 0;
+        xpMultiTemp = xpMulti;
         ResetSegments();
         lastInput = "D";
         OnReset.Invoke(); //needs to be invoked AFTER RefreshTileMap and pos, rot... as player would see old tilemap and other stuff on countdown otherwise
@@ -251,7 +295,7 @@ public class Player : MonoBehaviour, ISaveManager
         segments.Add(gameObject); //adds head (pause)
 
         //puts initial segments after head
-        for (int i = 0; i < extraSegments + 3; i++) { //TODO: extraSegments + 1
+        for (int i = 0; i < extraSegments + 2; i++) { //extraSegments + 2 for 1 segment
             Grow();
         }
         localTimeScale = .1f;
@@ -263,6 +307,36 @@ public class Player : MonoBehaviour, ISaveManager
             newSegment.transform.position = transform.position - (Vector3)direction;
             segments.Add(newSegment);
         } else {
+            GameObject newSegment = Instantiate(segment);
+            newSegment.transform.position = segments[segments.Count - 1].transform.position;
+            segments.Add(newSegment);
+        }
+        if(Time.timeScale == 0) {
+            Time.timeScale = 1f;
+            isChoosing = false;
+        }
+        if (difficultyScale == "everett" && localTimeScale <= .4f) {
+            localTimeScale += difficultyTime;
+        } else if (difficultyScale == "basic" && localTimeScale <= .25f){
+            localTimeScale += difficultyTime;
+        } else if (difficultyScale == "medium" && localTimeScale <= .28f){
+            localTimeScale += difficultyTime;
+        } else if (difficultyScale == "hard" && localTimeScale <= .33f){
+            localTimeScale += difficultyTime;
+        } else if (localTimeScale <= .25f && difficultyScale == null || difficultyScale == "") {
+            Debug.Log("problem in grow function of player script, difficulty scale = "+ difficultyScale);
+            localTimeScale += difficultyTime;
+        }
+    }
+
+    public void Grow (int segmentsToGrow) {
+        if (segments.Count == 1) { //first segment, segmentsToGrow-- so growing the first segment counts as one
+            GameObject newSegment = Instantiate(segment);
+            newSegment.transform.position = transform.position - (Vector3)direction;
+            segments.Add(newSegment);
+            segmentsToGrow--;
+        }
+        for (int i = 0; i < segmentsToGrow; i++) { //
             GameObject newSegment = Instantiate(segment);
             newSegment.transform.position = segments[segments.Count - 1].transform.position;
             segments.Add(newSegment);
@@ -385,10 +459,9 @@ public class Player : MonoBehaviour, ISaveManager
         } else if (Input.GetKeyDown(KeyCode.R) && isDead || Input.GetKeyDown(KeyCode.Space) && isDead) {
             ResetSnake();
         } else if (Input.GetKeyDown(KeyCode.Escape) && isDead) {
-            //TODO: save game
             SaveManager.instance.SaveGame();
             SceneManager.LoadScene(0);
-        } else if (Input.GetKeyDown(KeyCode.Space) && canDash) { //pausing is only in for testing purposes! Dashing is the intended functionalty of space
+        } else if (Input.GetKeyDown(KeyCode.Space) && canDash && hasDash) { //pausing is only in for testing purposes! Dashing is the intended functionalty of space
             /*if (paused && !isChoosing && !isDead) {
                 Time.timeScale = 1f;
                 paused = false;
@@ -403,11 +476,11 @@ public class Player : MonoBehaviour, ISaveManager
             canDash = false;
             tempDashTime = localTimeScale;
             localTimeScale = dashSpeed;
-        } else if (Input.GetKeyDown(KeyCode.Mouse0) && !isChoosing && canShoot) {
+        } else if (Input.GetKeyDown(KeyCode.Mouse0) && !isChoosing && canShoot && shootingEnabled) {
             Fire();
             fireCooldownTracker = 0f; //needs to be before canShoot or maybe canShoot would set itself to true again?
             canShoot = false;
-        } else if (Input.GetKeyDown(KeyCode.F) && canReverse) {
+        } else if (Input.GetKeyDown(KeyCode.F) && canReverse && hasReverse) {
             inputQueue.Clear();
             QueueInput(KeyCode.F);
         }
@@ -547,14 +620,17 @@ public class Player : MonoBehaviour, ISaveManager
             segments.Add(gameObject); //adds head (pause)
             if (direction == Vector2.up) {
                 direction = Vector2.down;
+                lastInput = "S";
             } else if (direction == Vector2.right) {
                 direction = Vector2.left;
+                lastInput = "A";
             } else if (direction == Vector2.down) {
                 direction = Vector2.up;
+                lastInput = "W";
             } else if (direction == Vector2.left) {
                 direction = Vector2.right;
+                lastInput = "D";
             }
-            MoveSnake();
             MoveSnake();
             for (int i = 0; i < currSegCount; i++) {
                GrowNoTime();
@@ -576,7 +652,17 @@ public class Player : MonoBehaviour, ISaveManager
     }
 
     public void OnPlayerHitLogic (string tag) {
-        health--;
+        if ((tag == "Laser" || tag == "Obstacle") && hasDashInvincibility && dashing) {
+            return;
+        } else if (tag == "Walls" && hasDashInvincibility && dashing) {
+            //sound less harsh than a buzz to let the player know they were reversed on purpose 
+            StartCoroutine(ConfuseSnake());
+            canChangeDirection = false;
+            return;
+        }
+        //this part means you actually were hit ಠ﹏ಠ noob
+        StartCoroutine(healthFlash.DecreaseHealthFlash());
+        health -= 50;
         Debug.Log("health = "+health);
         if (health <= 0) {
             KillPlayer();
@@ -611,6 +697,7 @@ public class Player : MonoBehaviour, ISaveManager
 
     void OnTriggerExit2D (Collider2D collide) {
         invincTracker = invincTimer;
+        UpgradePlayer();
     }
 
     void OnTriggerEnter2D (Collider2D collide) {
@@ -624,13 +711,14 @@ public class Player : MonoBehaviour, ISaveManager
         } else if (collide.CompareTag("Food")) {
             AteFood();
             //does multithreading mean that 2 of these methods can run at the same time? TODO look what multithreading really is up
-            //Debug.Log("Score = "+snakeScore);
         }
     }
 
     private void AteFood () { //meant to just be called in OnTrigger, logic for post eating food
         AddScore(1);
         UpdateHighScore();
+        xpScore += 1 * xpMultiTemp;
+        OnXPIncrease.Invoke();
         if (snakeScore == 50 && !hasMedium) {
             OnDiffUnlock.Invoke("MEDIUM");
             hasMedium = true;
@@ -642,15 +730,19 @@ public class Player : MonoBehaviour, ISaveManager
             hasEverett = true;
         }
         UpgradePlayer();
+        OnXPIncrease.Invoke();
     }
 
     private void UpgradePlayer () { //logic for checking if we should upgrade then upgrading player. Meant to just be called in AteFood.
-        if (snakeScore == growThreshold[upgradeNumber]) {
+        if (xpScore >= growThreshold[upgradeNumber]) {
             if (upgradeNumber == growThreshold.Count - 1) {
-                growThreshold.Add(growThreshold[upgradeNumber] + 50);
+                growThreshold.Add(50);
                 Debug.Log("Added " + growThreshold[growThreshold.Count - 1] + " to growThreshold at "+ (growThreshold.Count - 1));
             }
-            Debug.Log("Hit threshold "+upgradeNumber+" at score "+snakeScore+", threshold was "+growThreshold[upgradeNumber]+" and next should be "+growThreshold[upgradeNumber+1]);
+            Debug.Log("XP = "+xpScore);
+            //Debug.Log("Hit threshold "+upgradeNumber+" at score "+snakeScore+", threshold was "+growThreshold[upgradeNumber]+" and next should be "+growThreshold[upgradeNumber+1]);
+            float spilloverScore = xpScore - growThreshold[upgradeNumber];
+            xpScore = spilloverScore;
             upgradeNumber++; //1 after first upgrade, growThreshold.Count after last.
             isChoosing = true;
             Time.timeScale = 0f;

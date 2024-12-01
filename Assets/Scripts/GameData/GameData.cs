@@ -4,15 +4,23 @@ using System.Collections.Generic;
 [System.Serializable]
 public class GameData
 {
-    public int extraHealth;
+    //Upgradables
+    public float extraHealth;
     public int mapSize;
     public float runTime;
+    public int extraSegments;
+    public int extraFood;
+    public int segmentsPerGrow;
+    public int extraChoices;
+    public bool hasDash;
+    public bool hasReverse; //separate value for if it is bought
+    public bool hasTimeSlow;
+    public bool hasDashInvincibility;
+    public float xpMulti;
+    //Trackers
     public bool hasMedium;
     public bool hasHard;
     public bool hasEverett;
-    public int extraSegments;
-    public int extraFood;
-    public int extraChoices;
     public int highScoreB;
     public int highScoreM;
     public int highScoreH;
@@ -22,11 +30,17 @@ public class GameData
     //add: skin preference
     //add: meta currency amount, make sure it is equal to currency + current score and if no current score is found just currency
     public GameData () {
-        this.extraHealth = 0; //is "this." needed?
+        this.extraHealth = 250; //is "this." needed?
         this.extraChoices = 0;
         this.extraSegments = 0;
+        segmentsPerGrow = 2; //higher is worse
+        xpMulti = 1;
         mapSize = 0;
-        runTime = 70;
+        runTime = 30;
+        hasDash = true; //
+        hasReverse = true;
+        hasTimeSlow = false;
+        hasDashInvincibility = true; //
         hasMedium = false;
         hasHard = false;
         hasEverett = false;
@@ -36,9 +50,7 @@ public class GameData
         highScoreEv = 0;
         permanentDisallowedUpgrades = new SerializableHashSet<int, int>
         {
-            new Tuple<int, int>(5, 0),
-            new Tuple<int, int>(4, 1),
-            new Tuple<int, int>(3, 1),
+
         };
     }
 }
