@@ -25,6 +25,7 @@ public class GameData
     public int highScoreM;
     public int highScoreH;
     public int highScoreEv;
+    public int coins;
     public SerializableHashSet<int, int> permanentDisallowedUpgrades;
     //add: segment amount
     //add: skin preference
@@ -48,6 +49,7 @@ public class GameData
         highScoreM = 0;
         highScoreH = 0;
         highScoreEv = 0;
+        coins = 0;
         permanentDisallowedUpgrades = new SerializableHashSet<int, int>
         {
 

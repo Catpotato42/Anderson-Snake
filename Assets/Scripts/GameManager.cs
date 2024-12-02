@@ -100,7 +100,7 @@ public class GameManager : MonoBehaviour, ISaveManager
         } else {
             Destroy(gameObject);
         }
-        if (SceneManager.GetActiveScene().buildIndex != 0) { //if not on the title screen
+        if (SceneManager.GetActiveScene().buildIndex == 1) { //if not on the title screen
             if (errorPanel != null) {
                 errorHandler = errorPanel.GetComponent<ErrorHandler>();
             }
@@ -114,7 +114,7 @@ public class GameManager : MonoBehaviour, ISaveManager
     }
 
     void Start () {
-        if (SceneManager.GetActiveScene().buildIndex != 0) {
+        if (SceneManager.GetActiveScene().buildIndex == 1) {
             Player.instance.OnReset += CheckMapSize;
             StartCoroutine(PostStart());
         }

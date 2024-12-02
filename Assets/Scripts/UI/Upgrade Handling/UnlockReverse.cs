@@ -5,34 +5,38 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 
-public class UpgradeMapSize : MonoBehaviour, IPointerClickHandler, ISaveManager
+public class UnlockReverse : MonoBehaviour, IPointerClickHandler, ISaveManager
 {
-    private int mapSize;
-    private TextMeshProUGUI mapSizeText;
+    private bool hasReverse;
+    private TextMeshProUGUI hasReverseText;
     public void SaveData (GameData data) {
-        //Debug.Log("Saving... (UpgradeMapSize), mapSize = "+mapSize);
-        data.mapSize = mapSize;
+        //Debug.Log("Saving... (UpgradeMapSize), hasReverse = "+hasReverse);
+        data.hasReverse = hasReverse;
     }
     public void LoadData (GameData data) {
-        mapSize = data.mapSize;
+        hasReverse = data.hasReverse;
     }
     void Start () {
         TextMeshProUGUI[] textSet = gameObject.GetComponentsInChildren<TextMeshProUGUI>();
         for (int i = 0; i < transform.childCount; i++) {
             if (textSet[i].text == "") {
-                mapSizeText = textSet[i];
+                hasReverseText = textSet[i];
             }
         }
-        Debug.Log("mapSize = "+mapSize);
-        mapSizeText.text = ""+mapSize;
+        Debug.Log("hasReverse = "+hasReverse);
+        hasReverseText.text = ""+hasReverse;
     }
     public void OnPointerClick (PointerEventData pointerEventData) {
         if (pointerEventData.button == PointerEventData.InputButton.Left) {
-            mapSize++;
-            mapSizeText.text = ""+mapSize;
+            if (hasReverse == false) { 
+                hasReverse = true;
+            } else {
+                //TODO: play sound
+            }
+            hasReverseText.text = ""+hasReverse;
         } else if (pointerEventData.button == PointerEventData.InputButton.Right) {
-            mapSize = 0;
-            mapSizeText.text = ""+mapSize;
+            hasReverse = false;
+            hasReverseText.text = ""+hasReverse;
         }
     }
 }

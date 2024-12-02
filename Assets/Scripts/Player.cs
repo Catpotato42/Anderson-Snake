@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using Unity.VisualScripting;
 
 public class Player : MonoBehaviour, ISaveManager
 {
@@ -93,10 +94,12 @@ public class Player : MonoBehaviour, ISaveManager
 
     private Vector2 lastSegmentDirection;
 
+    //Trackers
     private bool hasEverett;
     private bool hasMedium;
     private bool hasHard;
     private int highScore;
+    private int coins;
     public int HighScore {
         get => highScore;
     }
@@ -166,11 +169,13 @@ public class Player : MonoBehaviour, ISaveManager
         hasDashInvincibility = data.hasDashInvincibility;
         hasReverse = data.hasReverse;
         xpMulti = data.xpMulti;
+        coins = data.coins;
     }
     public void SaveData(GameData data) {
         data.hasMedium = hasMedium;
         data.hasHard = hasHard;
         data.hasEverett = hasEverett;
+        data.coins = coins;
     }
 
     void Awake () {
@@ -655,8 +660,8 @@ public class Player : MonoBehaviour, ISaveManager
         if ((tag == "Laser" || tag == "Obstacle") && hasDashInvincibility && dashing) {
             return;
         } else if (tag == "Walls" && hasDashInvincibility && dashing) {
-            //sound less harsh than a buzz to let the player know they were reversed on purpose 
-            StartCoroutine(ConfuseSnake());
+            //TODO: sound less harsh than a buzz to let the player know they were reversed on purpose 
+            StartCoroutine(ReverseSnake());
             canChangeDirection = false;
             return;
         }
@@ -678,6 +683,7 @@ public class Player : MonoBehaviour, ISaveManager
         Time.timeScale = 0f;
         isDead = true;
         //Debug.Log("died with "+upgradeNumber+" upgrades");
+        coins += snakeScore; //should watch out for being able to somehow die twice (Walter Tye reference)
         deathScreen.Setup(snakeScore);
         UpdateHighScore();
     }

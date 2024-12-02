@@ -21,7 +21,7 @@ public class SaveManager : MonoBehaviour {
             Destroy(gameObject);
         }
         fileName = "ASnakeData";
-        useEncryption = true;
+        useEncryption = false;
     }
 
     void Start () {

@@ -30,7 +30,7 @@ public class XPBar : MonoBehaviour
     }
 
     void Update () {
-        elapsedTime += Time.deltaTime;
+        elapsedTime += Time.unscaledDeltaTime;
         float percentComplete = elapsedTime/duration;
         barVal = Vector3.Lerp(xpFirst, xpValue, percentComplete);
         if (percentComplete > .95f) {

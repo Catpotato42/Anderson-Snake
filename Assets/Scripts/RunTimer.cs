@@ -58,18 +58,18 @@ public class RunTimer : MonoBehaviour, ISaveManager
     private void SetSeconds () {
         int minutes = (int)runTimeTracker / 60;
         int seconds = (int)runTimeTracker % 60;
-        float tenSecs = Mathf.Round(runTimeTracker*100f)/100f;
         if (runTimeTracker >= 60f) { //if more than a minute on the runTimeTracker
             timerText.text = minutes + ":" + seconds.ToString("00");
         } else if (runTimeTracker < 60f && runTimeTracker > 10f){
             timerText.text = "0:"+ (int)(runTimeTracker);
-        } else {
+        } else if (runTimeTracker < 10f) {
             if (timerText.alignment != TextAlignmentOptions.Left) {
                 timerText.alignment = TextAlignmentOptions.Left;
             }
-            timerText.text = "" + Mathf.Round(runTimeTracker*100f)/100f; //TODO: fix the fucking formatting with single digits ಠ﹏ಠ
+            timerText.text = "" + Mathf.Round(runTimeTracker*100f)/100f; //fixed the fucking formatting with single digits ಠ﹏ಠ
             if ((int)runTimeTracker % 2 != 0) { //odd numbers are red 
                 timerText.color = darkRed;
+                //play a sound?
             } else {
                 timerText.color = Color.white;
             }
