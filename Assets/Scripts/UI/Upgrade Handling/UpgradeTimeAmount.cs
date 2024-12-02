@@ -5,34 +5,34 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 
-public class UpgradeMapSize : MonoBehaviour, IPointerClickHandler, ISaveManager
+public class UpgradeTimeAmount : MonoBehaviour, IPointerClickHandler, ISaveManager
 {
-    private int mapSize;
-    private TextMeshProUGUI mapSizeText;
+    private float runTime;
+    private TextMeshProUGUI timeAmountText;
     public void SaveData (GameData data) {
-        //Debug.Log("Saving... (UpgradeMapSize), mapSize = "+mapSize);
-        data.mapSize = mapSize;
+        //Debug.Log("Saving... (UpgradeTimeAmount), runTime = "+runTime);
+        data.runTime = runTime;
     }
     public void LoadData (GameData data) {
-        mapSize = data.mapSize;
+        runTime = data.runTime;
     }
     void Start () {
         TextMeshProUGUI[] textSet = gameObject.GetComponentsInChildren<TextMeshProUGUI>();
         for (int i = 0; i < transform.childCount; i++) {
             if (textSet[i].text == "") {
-                mapSizeText = textSet[i];
+                timeAmountText = textSet[i];
             }
         }
-        Debug.Log("mapSize = "+mapSize);
-        mapSizeText.text = ""+mapSize;
+        Debug.Log("runTime = "+runTime);
+        timeAmountText.text = ""+runTime;
     }
     public void OnPointerClick (PointerEventData pointerEventData) {
         if (pointerEventData.button == PointerEventData.InputButton.Left) {
-            mapSize++;
-            mapSizeText.text = ""+mapSize;
+            runTime++;
+            timeAmountText.text = ""+runTime;
         } else if (pointerEventData.button == PointerEventData.InputButton.Right) {
-            mapSize = 0;
-            mapSizeText.text = ""+mapSize;
+            runTime = 20;
+            timeAmountText.text = ""+runTime;
         }
     }
 }
