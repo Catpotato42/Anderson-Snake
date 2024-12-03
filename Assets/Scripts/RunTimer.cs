@@ -39,6 +39,7 @@ public class RunTimer : MonoBehaviour, ISaveManager
     private void ResetTimer () { //ask stratton about better way to put a 0 in front of seconds if single digits
         runTimeTracker = runTime;
         timerText.alignment = TextAlignmentOptions.Center;
+        timerText.color = Color.white;
         SetSeconds();
     }
 

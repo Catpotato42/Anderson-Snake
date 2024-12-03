@@ -88,6 +88,7 @@ public class GameManager : MonoBehaviour, ISaveManager
         segmentsPerGrow = data.segmentsPerGrow;
         extraFood = data.extraFood;
         mapSize = data.mapSize;
+        skinPref = data.skinPref;
         permanentDisallowedUpgrades = data.permanentDisallowedUpgrades; //no need to save, these can be unlocked with meta currency in the main menu
         mapSizeTemp = mapSize + 6;
     }

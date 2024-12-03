@@ -27,6 +27,8 @@ public class GameData
     public int highScoreEv;
     public int coins;
     public SerializableHashSet<int, int> permanentDisallowedUpgrades;
+    //Options
+    public string skinPref;
     //add: segment amount
     //add: skin preference
     //add: meta currency amount, make sure it is equal to currency + current score and if no current score is found just currency
@@ -50,6 +52,7 @@ public class GameData
         highScoreH = 0;
         highScoreEv = 0;
         coins = 0;
+        skinPref = "normal";
         permanentDisallowedUpgrades = new SerializableHashSet<int, int>
         {
 

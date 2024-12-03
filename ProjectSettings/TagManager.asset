@@ -13,6 +13,7 @@ TagManager:
   - Enemy
   - Warning
   - Laser
+  - CoinLeader
   layers:
   - Default
   - TransparentFX

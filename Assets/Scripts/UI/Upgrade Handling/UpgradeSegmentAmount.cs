@@ -4,16 +4,22 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 public class UpgradeSegmentAmount : MonoBehaviour, IPointerClickHandler, ISaveManager
 {
     private int extraSegments;
     private TextMeshProUGUI extraSegmentsText;
+    private int coins;
+    public event Action<int> coinUpdate;
+    private int[] costs = new int[]{
+        100
+    };
     public void SaveData (GameData data) {
-        //Debug.Log("Saving... (UpgradeMapSize), extraSegments = "+extraSegments);
         data.extraSegments = extraSegments;
     }
     public void LoadData (GameData data) {
+        coins = data.coins;
         extraSegments = data.extraSegments;
     }
     void Start () {

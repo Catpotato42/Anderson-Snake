@@ -4,16 +4,22 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 public class UpgradeTimeAmount : MonoBehaviour, IPointerClickHandler, ISaveManager
 {
     private float runTime;
     private TextMeshProUGUI timeAmountText;
+    private int coins;
+    public event Action<int> coinUpdate;
+    private int[] costs = new int[]{
+        100
+    };
     public void SaveData (GameData data) {
-        //Debug.Log("Saving... (UpgradeTimeAmount), runTime = "+runTime);
         data.runTime = runTime;
     }
     public void LoadData (GameData data) {
+        coins = data.coins;
         runTime = data.runTime;
     }
     void Start () {
