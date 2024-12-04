@@ -20,5 +20,17 @@ public class HealthFlash : MonoBehaviour
         gameObject.SetActive(false);
     }
 
+    public IEnumerator Flash (Color color) {
+        gameObject.SetActive(true);
+        Image image = gameObject.GetComponent<Image>();
+        image.color = color;
+        for (float i = .5f; i > .01f; i -= .01f) {
+            yield return new WaitForSecondsRealtime(.01f);
+            color.a = i;
+            image.color = color;
+        }
+        gameObject.SetActive(false);
+    }
+
     //public IEnumerator IncreaseHealthFlash
 }

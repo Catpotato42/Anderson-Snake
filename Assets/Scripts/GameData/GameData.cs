@@ -17,6 +17,7 @@ public class GameData
     public bool hasTimeSlow;
     public bool hasDashInvincibility;
     public float xpMulti;
+    public float tsLength; //time slow length
     //Trackers
     public bool hasMedium;
     public bool hasHard;
@@ -27,17 +28,20 @@ public class GameData
     public int highScoreEv;
     public int coins;
     public SerializableHashSet<int, int> permanentDisallowedUpgrades;
+    //Options
+    public string skinPref;
     //add: segment amount
     //add: skin preference
     //add: meta currency amount, make sure it is equal to currency + current score and if no current score is found just currency
     public GameData () {
-        this.extraHealth = 250; //is "this." needed?
+        this.extraHealth = 0; //is "this." needed?
         this.extraChoices = 0;
-        this.extraSegments = 0;
-        segmentsPerGrow = 2; //higher is worse
+        this.extraSegments = 5;
+        segmentsPerGrow = 3; //higher is worse
         xpMulti = 1;
         mapSize = 0;
         runTime = 30;
+        tsLength = 2f;
         hasDash = true; //
         hasReverse = true;
         hasTimeSlow = false;
@@ -50,6 +54,7 @@ public class GameData
         highScoreH = 0;
         highScoreEv = 0;
         coins = 0;
+        skinPref = "normal";
         permanentDisallowedUpgrades = new SerializableHashSet<int, int>
         {
 

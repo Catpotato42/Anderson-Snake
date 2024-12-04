@@ -4,16 +4,22 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 public class UpgradeGrowAmount : MonoBehaviour, IPointerClickHandler, ISaveManager
 {
     private int segmentsPerGrow;
     private TextMeshProUGUI segmentsPerGrowText;
+    private int coins;
+    public event Action<int> coinUpdate;
+    private int[] costs = new int[]{
+        100
+    };
     public void SaveData (GameData data) {
-        //Debug.Log("Saving... (UpgradeMapSize), segmentsPerGrow = "+segmentsPerGrow);
         data.segmentsPerGrow = segmentsPerGrow;
     }
     public void LoadData (GameData data) {
+        coins = data.coins;
         segmentsPerGrow = data.segmentsPerGrow;
     }
     void Start () {
