@@ -24,7 +24,7 @@ public class TileMapper : MonoBehaviour
 
     public void RefreshTileMap() { //makes the whole map
         Scene activeScene = SceneManager.GetActiveScene();
-        if (activeScene.name == "TitleScreen") {
+        if (activeScene.buildIndex != 1) {
             return;
         }
         floorMap.ClearAllTiles();

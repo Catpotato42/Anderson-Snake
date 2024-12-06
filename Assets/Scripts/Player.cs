@@ -43,6 +43,9 @@ public class Player : MonoBehaviour, ISaveManager
     private float xpMulti = 0;
     private float xpMultiTemp = 0;
 
+    private float coinMulti = 0;
+    private float coinMultiTemp = 0; //currently unused
+
     [SerializeField] private GameObject deathCanvas;
     private bool isDead = false;
     private DeathScreen deathScreen;
@@ -98,6 +101,7 @@ public class Player : MonoBehaviour, ISaveManager
     private bool hasEverett;
     private bool hasMedium;
     private bool hasHard;
+    private bool hasEverettSkin;
     private int highScore;
     private int coins;
     public int HighScore {
@@ -137,6 +141,11 @@ public class Player : MonoBehaviour, ISaveManager
         set {xpMultiTemp = value;}
     }
 
+    public float CoinMultiTemp {
+        get => coinMultiTemp;
+        set => coinMultiTemp = value;
+    }
+
     public int SnakeScore {
         get => snakeScore; 
         set {
@@ -169,7 +178,10 @@ public class Player : MonoBehaviour, ISaveManager
         hasDashInvincibility = data.hasDashInvincibility;
         hasReverse = data.hasReverse;
         xpMulti = data.xpMulti;
+        coinMulti = data.coinMulti;
+        dashCooldown = data.dashCD;
         coins = data.coins;
+        hasEverettSkin = data.hasEverettSkin;
     }
     public void SaveData(GameData data) {
         data.hasMedium = hasMedium;
@@ -284,6 +296,7 @@ public class Player : MonoBehaviour, ISaveManager
         SetScore(0);
         xpScore = 0;
         xpMultiTemp = xpMulti;
+        SetCoinMulti();
         ResetSegments();
         lastInput = "D";
         OnReset.Invoke(); //needs to be invoked AFTER RefreshTileMap and pos, rot... as player would see old tilemap and other stuff on countdown otherwise
@@ -291,7 +304,27 @@ public class Player : MonoBehaviour, ISaveManager
         isDead = false;
     }
 
-    void ResetSegments () {
+    private void SetCoinMulti () {
+        switch (difficultyScale) {
+            case "basic":
+                coinMultiTemp = coinMulti;
+                break;
+            case "medium":
+                coinMultiTemp = coinMulti + 1f;
+                break;
+            case "hard":
+                coinMultiTemp = coinMulti + 2f;
+                break;
+            case "everett":
+                coinMultiTemp = coinMulti + 3f;
+                break;
+            default:
+                Debug.Log("difficultyScale (Player) error in SetCoinMulti, difficulty = "+difficultyScale);
+                break;
+        }
+    }
+
+    private void ResetSegments () {
         //destroys segments
         for (int i = 1; i < segments.Count; i++) {
             Destroy(segments[i].gameObject);
@@ -683,8 +716,9 @@ public class Player : MonoBehaviour, ISaveManager
         Time.timeScale = 0f;
         isDead = true;
         //Debug.Log("died with "+upgradeNumber+" upgrades");
-        coins += snakeScore; //should watch out for being able to somehow die twice (Walter Tye reference)
-        deathScreen.Setup(snakeScore);
+        int onDeathCoins = (int)Mathf.Round((snakeScore + (int)((RunTimer.instance.publicRunTime - RunTimer.instance.runTimeTracker)/3)) * coinMultiTemp);
+        coins += onDeathCoins; //should watch out for being able to somehow die twice (Walter Tye reference)
+        deathScreen.Setup(snakeScore, onDeathCoins);
         UpdateHighScore();
     }
 
@@ -726,14 +760,18 @@ public class Player : MonoBehaviour, ISaveManager
         xpScore += 1 * xpMultiTemp;
         OnXPIncrease.Invoke();
         if (snakeScore == 50 && !hasMedium) {
-            OnDiffUnlock.Invoke("MEDIUM");
+            OnDiffUnlock.Invoke("MEDIUM MODE UNLOCKED!!!");
             hasMedium = true;
-        } else if (snakeScore == 100 && !hasHard) {
-            OnDiffUnlock.Invoke("HARD");
+        } else if (snakeScore == 60 && !hasHard && difficultyScale == "medium") {
+            OnDiffUnlock.Invoke("HARD MODE UNLOCKED!!!");
             hasHard = true;
-        } else if (snakeScore == 200 && !hasEverett) {
-            OnDiffUnlock.Invoke("EVERETT");
+        } else if (snakeScore == 70 && !hasEverett && difficultyScale == "hard") {
+            OnDiffUnlock.Invoke("EVERETT MODE UNLOCKED!!!");
             hasEverett = true;
+        } else if (snakeScore == 80 && difficultyScale == "everett") {
+            OnDiffUnlock.Invoke("EVERETT SKIN UNLOCKED!");
+            hasEverettSkin = true;
+            //stop run timer
         }
         UpgradePlayer();
         OnXPIncrease.Invoke();

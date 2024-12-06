@@ -104,25 +104,32 @@ public class RunUpgrades : MonoBehaviour, IPointerClickHandler
         switch(upgradeInfo.Rarity) {
             case 0:
                 buttonSprite.color = new Color(.5f, .5f, .5f, 1);
+                titleUpgrade.color = Color.black;
                 break;
             case 1:
                 buttonSprite.color = new Color(50/255f, 138/255f, 73/255f, 1);
+                titleUpgrade.color = Color.black;
                 break;
             case 2:
                 buttonSprite.color = new Color(45/255, 85/255f, 227/255f, 1);
+                titleUpgrade.color = Color.black;
                 break;
             case 3:
                 buttonSprite.color = new Color(64/255f, 4/255f, 148/255f, 1);
+                titleUpgrade.color = Color.white;
                 break;
             case 4:
                 buttonSprite.color = new Color(199/255f, 14/255f, 14/255f, 1);
+                titleUpgrade.color = Color.black;
                 break;
             case 5:
                 buttonSprite.color = new Color(14/255f, 165/255f, 199/255f, 1);
+                titleUpgrade.color = Color.black;
                 break;
             default:
                 Debug.Log("RunUpgrades line 105, couldn't get the correct value for upgradeInfo.Rarity, returned "+upgradeInfo.Rarity+" instead.");
                 buttonSprite.color = new Color(.05f, .05f, .05f, 1);
+                titleUpgrade.color = Color.black;
                 break;
         }
     }

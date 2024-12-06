@@ -15,7 +15,7 @@ public class DifficultyUnlocker : MonoBehaviour
     private void UnlockerChangeState (bool stateChange, string diff) {
         TextMeshProUGUI textrenderer = gameObject.GetComponentInChildren<TextMeshProUGUI>();
         Image renderer = gameObject.GetComponent<Image>();
-        textrenderer.text = diff + " MODE UNLOCKED!!!";
+        textrenderer.text = diff;
         textrenderer.enabled = stateChange;
         renderer.enabled = stateChange;
     }
