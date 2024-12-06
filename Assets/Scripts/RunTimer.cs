@@ -7,9 +7,10 @@ using UnityEngine.UI;
 public class RunTimer : MonoBehaviour, ISaveManager
 {
     public static RunTimer instance;
-    private TextMeshProUGUI timerText;
+    public TextMeshProUGUI timerText;
     private float runTime;
-    private float runTimeTracker;
+    public float publicRunTime;
+    public float runTimeTracker;
     private Color darkRed = new Color(0.6176f, 0, 0);
     public void SaveData (GameData data) {
     }
@@ -38,6 +39,7 @@ public class RunTimer : MonoBehaviour, ISaveManager
 
     private void ResetTimer () { //ask stratton about better way to put a 0 in front of seconds if single digits
         runTimeTracker = runTime;
+        publicRunTime = runTime;
         timerText.alignment = TextAlignmentOptions.Center;
         timerText.color = Color.white;
         SetSeconds();
@@ -53,7 +55,8 @@ public class RunTimer : MonoBehaviour, ISaveManager
     }
 
     public void AddRunTime(float seconds) {
-        runTimeTracker+=seconds;
+        runTimeTracker += seconds;
+        publicRunTime += seconds;
     }
 
     private void SetSeconds () {

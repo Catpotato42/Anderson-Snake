@@ -101,7 +101,13 @@ public class GameManager : MonoBehaviour, ISaveManager
         } else {
             Destroy(gameObject);
         }
+        //difficulty = ? - not needed because it is static and set on the title screen
+    }
+
+    void Start () {
         if (SceneManager.GetActiveScene().buildIndex == 1) { //if not on the title screen
+            Player.instance.OnReset += CheckMapSize;
+            StartCoroutine(PostStart());
             if (errorPanel != null) {
                 errorHandler = errorPanel.GetComponent<ErrorHandler>();
             }
@@ -109,19 +115,12 @@ public class GameManager : MonoBehaviour, ISaveManager
                 Instantiate(Resources.Load("Prefabs/Food"));
             }
         } else {
+            Debug.Log("(GM) build index = "+SceneManager.GetActiveScene().buildIndex);
             //anything that needs to be done in main menu
         }
-        //difficulty = ? - not needed because it is static and set on the title screen
     }
 
-    void Start () {
-        if (SceneManager.GetActiveScene().buildIndex == 1) {
-            Player.instance.OnReset += CheckMapSize;
-            StartCoroutine(PostStart());
-        }
-    }
-
-    private IEnumerator PostStart () {
+    private IEnumerator PostStart () { //don't think i need this but if it works it works.
         yield return new WaitForSecondsRealtime(.2f);
         Debug.Log("mapsize "+mapSize);
         mapSizeTemp = mapSize + 6;
@@ -314,6 +313,7 @@ public class GameManager : MonoBehaviour, ISaveManager
         switch (currentUpgrade.Name) {
             case "+30 Seconds":
                 RunTimer.instance.AddRunTime(30);
+                RunTimer.instance.timerText.color = Color.white;
                 break;
             default:
                 //Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");

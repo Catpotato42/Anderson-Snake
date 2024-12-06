@@ -27,7 +27,6 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
 
     //These are needed for all upgrades:
     private int coins;
-    public event Action<int> coinUpdate;
     private int varType;
     private string unlockString {
         get {
@@ -49,8 +48,8 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     private float boundaryFloat;
     private bool increment; //if we increment or decrement, relevant for ints and floats
     private float incrementAmount; //basically for ints this is always 1 so we don't need to check
-    private int costTracker;
-    private List<int> cost;
+    private TextMeshProUGUI costTracker;
+    private int[] cost;
     int costSize;
     private TextMeshProUGUI amountText;
     [SerializeField] private string type;
@@ -94,9 +93,15 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
 
     //XP Multi
     private float xpMulti;
-    private float xpMultiMax = 6f;
+    private float xpMultiMax = 4f;
     private float defaultXpMulti = 1f;
     private float xpIncrement = .1f;
+
+    //Coin Multi
+    private float coinMulti;
+    private float maxCoinMulti = 4f;
+    private float defaultCoinMulti = 1f;
+    private float coinMultiIncrement = .1f;
 
     //Map Size
     private int mapSize;
@@ -119,10 +124,16 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     private float defaultTSLength = 2f;
     private float tsIncrement = .1f;
 
+    //Dash Cooldown
+    private float dashCD;
+    private float minDashCD = .7f;
+    private float defaultDashCD = 2f;
+    private float dashCDIncrement = .1f;
+
 
 
     public void SaveData (GameData data) {
-        SaveType(data); //this should be a reference, I think cause most stuff is auto passed as reference in C# it's fine
+        SaveType(ref data); //this should be a reference, I think cause most stuff is auto passed as reference in C# it's fine
     }
     public void LoadData (GameData data) {
         hasDash = data.hasDash;
@@ -134,13 +145,16 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
         extraFood = data.extraFood;
         runTime = data.runTime;
         xpMulti = data.xpMulti;
+        coinMulti = data.coinMulti;
         mapSize = data.mapSize;
         extraSegments = data.extraSegments;
         extraChoices = data.extraChoices;
-        tsLength = data.tsLength; //time slow
+        tsLength = data.tsLength; //time 
+        dashCD = data.dashCD;
+        ScriptType(); // ^_^
     }
 
-    private void SaveType (GameData data) {
+    private void SaveType (ref GameData data) {
         switch (type) {
             case "Dash":
                 data.hasDash = unlocked0;
@@ -169,6 +183,9 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
             case "XPMulti":
                 data.xpMulti = condFloat;
                 break;
+            case "CoinMulti":
+                data.coinMulti = condFloat;
+                break;
             case "MapSize":
                 data.mapSize = condInt;
                 break;
@@ -181,35 +198,38 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
             case "TimeSlowLength":
                 data.tsLength = condFloat;
                 break;
+            case "DashCD":
+                data.dashCD = condFloat;
+                break;
             default:
                 Debug.Log("Error in SaveType: name = "+name);
                 break;
         }
     }
 
-    private void ScriptType () { //could do this on load for efficiency but this makes it maybe a little more readable is what I'm telling myself (ﾟДﾟ)
+    private void ScriptType () { //could do this on data load for efficiency but this makes it maybe a little more readable is what I'm telling myself (ﾟДﾟ)
         switch (type) {
             case "Dash":
                 unlocked0 = hasDash; //I would do this whole bit with pointers and return the actual variable in c++ for readability,
                 // but c sharp doesn't like that.
-                cost = new List<int>{200}; //could use one of the unused int values but this is more consistent and readable.
+                cost = new int[]{200}; //could use one of the unused int values but this is more consistent and readable.
                 varType = 1;
                 break;
             case "DashInvincibility":
                 usingUnlock = true;
                 unlocked1 = hasDash; //condition
                 unlocked0 = hasDashInvincibility;
-                cost = new List<int>{120};
+                cost = new int[]{120};
                 varType = 1;
                 break;
             case "Reverse":
                 unlocked0 = hasReverse;
-                cost = new List<int>{200};
+                cost = new int[]{200};
                 varType = 1;
                 break;
             case "TimeSlow":
                 unlocked0 = hasTimeSlow;
-                cost = new List<int>{150};
+                cost = new int[]{150};
                 varType = 1;
                 break;
             case "DecreaseGrowAmount":
@@ -218,7 +238,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 defaultInt = defaultSegmentsPer;
                 boundaryInt = minSegmentsPer;
                 costSize = 2;
-                cost = new List<int>{50, 60}; //+3->+2, +2->+1, can't go past that
+                cost = new int[]{50, 60}; //+3->+2, +2->+1, can't go past that
                 varType = 2;
                 break;
             case "ExtraHealth":
@@ -228,13 +248,13 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 boundaryFloat = maxHealth;
                 defaultFloat = defaultHealth;
                 costSize = (int)((boundaryFloat - defaultFloat) / incrementAmount);
-                cost = new List<int>(costSize); //make sure this can always convert to an int
-                cost.Add(50);
-                for (int i = 1; i < cost.Count/2; i++) {
-                    cost.Add(cost[i-1] + 10);
+                cost = new int[costSize]; //make sure this can always convert to an int
+                cost[0] = 50;
+                for (int i = 1; i < cost.Length/2; i++) {
+                    cost[i] = cost[i-1] + 10;
                 }
-                for (int i = cost.Count / 2; i < cost.Count; i++) {
-                    cost.Add(cost[i-1] + 20);
+                for (int i = cost.Length / 2; i < cost.Length; i++) {
+                    cost[i] = cost[i-1] + 20;
                 }
                 varType = 3;
                 break;
@@ -244,13 +264,13 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 defaultInt = defaultFood;
                 boundaryInt = maxFood;
                 costSize = boundaryInt - defaultInt;
-                cost = new List<int>(costSize); //make sure this can always convert to an int
-                cost.Add(40);
-                for (int i = 1; i < cost.Count/2; i++) {
-                    cost.Add(cost[i-1] + 5);
+                cost = new int[costSize]; //make sure this can always convert to an int
+                cost[0] = 40;
+                for (int i = 1; i < cost.Length/2; i++) {
+                    cost[i] = cost[i-1] + 5;
                 }
-                for (int i = cost.Count / 2; i < cost.Count; i++) {
-                    cost.Add(cost[i-1] + 7);
+                for (int i = cost.Length / 2; i < cost.Length; i++) {
+                    cost[i] = cost[i-1] + 7;
                 }
                 varType = 2;
                 break;
@@ -261,13 +281,13 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 boundaryFloat = maxTime;
                 defaultFloat = defaultTime;
                 costSize = (int)((boundaryFloat - defaultFloat) / incrementAmount);
-                cost = new List<int>(costSize); //make sure this can always convert to an int
-                cost.Add(25);
-                for (int i = 1; i < cost.Count/2; i++) {
-                    cost.Add(cost[i-1] + 5);
+                cost = new int[costSize]; //make sure this can always convert to an int
+                cost[0] = 25;
+                for (int i = 1; i < cost.Length/2; i++) {
+                    cost[i] = cost[i-1] + 5;
                 }
-                for (int i = cost.Count / 2; i < cost.Count; i++) {
-                    cost.Add(cost[i-1] + 7);
+                for (int i = cost.Length / 2; i < cost.Length; i++) {
+                    cost[i] = cost[i-1] + 7;
                 }
                 varType = 3;
                 break;
@@ -277,14 +297,31 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 condFloat = xpMulti;
                 boundaryFloat = xpMultiMax;
                 defaultFloat = defaultXpMulti;
-                costSize = (int)(((boundaryFloat - defaultFloat) / incrementAmount) - defaultFloat);
-                cost = new List<int>(costSize); //make sure this can always convert to an int
-                cost.Add(15);
-                for (int i = 1; i < cost.Count/2; i++) {
-                    cost.Add(cost[i-1] + 3);
+                costSize = (int)((boundaryFloat - defaultFloat) / incrementAmount);
+                cost = new int[costSize]; //make sure this can always convert to an int
+                cost[0] = 15;
+                for (int i = 1; i < cost.Length/2; i++) {
+                    cost[i] = cost[i-1] + 3;
                 }
-                for (int i = cost.Count / 2; i < cost.Count; i++) {
-                    cost.Add(cost[i-1] + 5);
+                for (int i = cost.Length / 2; i < cost.Length; i++) {
+                    cost[i] = cost[i-1] + 5;
+                }
+                varType = 3;
+                break;
+            case "CoinMulti":
+                increment = true;
+                incrementAmount = coinMultiIncrement;
+                condFloat = coinMulti;
+                boundaryFloat = maxCoinMulti;
+                defaultFloat = defaultCoinMulti;
+                costSize = (int)((boundaryFloat - defaultFloat) / incrementAmount);
+                cost = new int[costSize]; //make sure this can always convert to an int
+                cost[0] = 30;
+                for (int i = 1; i < cost.Length/2; i++) {
+                    cost[i] = cost[i-1] + 4;
+                }
+                for (int i = cost.Length / 2; i < cost.Length; i++) {
+                    cost[i] = cost[i-1] + 6;
                 }
                 varType = 3;
                 break;
@@ -294,13 +331,13 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 defaultInt = defaultMapSize;
                 boundaryInt = maxMapSize;
                 costSize = boundaryInt - defaultInt;
-                cost = new List<int>(costSize); //make sure this can always convert to an int
-                cost.Add(10);
-                for (int i = 1; i < cost.Count/2; i++) {
-                    cost.Add(cost[i-1] + 3);
+                cost = new int[costSize]; //make sure this can always convert to an int
+                cost[0] = 10;
+                for (int i = 1; i < cost.Length/2; i++) {
+                    cost[i] = cost[i-1] + 3;
                 }
-                for (int i = cost.Count / 2; i < cost.Count; i++) {
-                    cost.Add(cost[i-1] + 6);
+                for (int i = cost.Length / 2; i < cost.Length; i++) {
+                    cost[i] = cost[i-1] + 6;
                 }
                 varType = 2;
                 break;
@@ -309,14 +346,14 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 condInt = extraSegments;
                 defaultInt = defaultExtraSegments;
                 boundaryInt = minExtraSegments;
-                costSize = boundaryInt - defaultInt;
-                cost = new List<int>(costSize); //make sure this can always convert to an int
-                cost.Add(25);
-                for (int i = 1; i < cost.Count/2; i++) {
-                    cost.Add(cost[i-1] + 10);
+                costSize = defaultInt - boundaryInt;
+                cost = new int[costSize]; //make sure this can always convert to an int
+                cost[0] = 25;
+                for (int i = 1; i < cost.Length/2; i++) {
+                    cost[i] = cost[i-1] + 10;
                 }
-                for (int i = cost.Count / 2; i < cost.Count; i++) {
-                    cost.Add(cost[i-1] + 15);
+                for (int i = cost.Length / 2; i < cost.Length; i++) {
+                    cost[i] = cost[i-1] + 15;
                 }
                 varType = 2;
                 break;
@@ -326,13 +363,13 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 defaultInt = defaultExtraChoices;
                 boundaryInt = maxExtraChoices;
                 costSize = boundaryInt - defaultInt;
-                cost = new List<int>(costSize); //make sure this can always convert to an int
-                cost.Add(100);
-                for (int i = 1; i < cost.Count/2; i++) {
-                    cost.Add(cost[i-1] + 100);
+                cost = new int[costSize]; //make sure this can always convert to an int
+                cost[0] = 100;
+                for (int i = 1; i < cost.Length/2; i++) {
+                    cost[i] = cost[i-1] + 100;
                 }
-                for (int i = cost.Count / 2; i < cost.Count; i++) {
-                    cost.Add(cost[i-1] + 200);
+                for (int i = cost.Length / 2; i < cost.Length; i++) {
+                    cost[i] = cost[i-1] + 200;
                 }
                 varType = 2;
                 break;
@@ -344,14 +381,33 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 condFloat = tsLength;
                 boundaryFloat = maxTSLength;
                 defaultFloat = defaultTSLength;
-                costSize = (int)(((boundaryFloat - defaultFloat) / incrementAmount) - defaultFloat);
-                cost = new List<int>(costSize); //make sure this can always convert to an int
-                cost.Add(15);
-                for (int i = 1; i < cost.Count/2; i++) {
-                    cost.Add(cost[i-1] + 3);
+                costSize = (int)((boundaryFloat - defaultFloat) / incrementAmount); // 3 - 2 = 1 / .1 = 10
+                cost = new int[costSize]; //make sure this can always convert to an int
+                cost[0] = 15;
+                for (int i = 1; i < cost.Length/2; i++) {
+                    cost[i] = cost[i-1] + 3;
                 }
-                for (int i = cost.Count / 2; i < cost.Count; i++) {
-                    cost.Add(cost[i-1] + 5);
+                for (int i = cost.Length / 2; i < cost.Length; i++) {
+                    cost[i] = cost[i-1] + 5;
+                }
+                varType = 3;
+                break;
+            case "DashCD":
+                increment = false;
+                usingUnlock = true;
+                unlocked1 = hasDash;
+                incrementAmount = dashCDIncrement;
+                condFloat = dashCD;
+                boundaryFloat = minDashCD;
+                defaultFloat = defaultDashCD;
+                costSize = (int)((defaultFloat - boundaryFloat) / incrementAmount); //2-.7f = 1.3f / .1f = 13
+                cost = new int[costSize]; //make sure this can always convert to an int, size 13
+                cost[0] = 15;
+                for (int i = 1; i < cost.Length/2; i++) {
+                    cost[i] = cost[i-1] + 3;
+                }
+                for (int i = cost.Length / 2; i < cost.Length; i++) {
+                    cost[i] = cost[i-1] + 5;
                 }
                 varType = 3;
                 break;
@@ -362,21 +418,40 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     }
 
     void Start () {
-        ScriptType();
         TextMeshProUGUI[] textSet = gameObject.GetComponentsInChildren<TextMeshProUGUI>();
         for (int i = 0; i < transform.childCount; i++) {
             if (textSet[i].text == "") {
                 amountText = textSet[i];
+            } else if (textSet[i].text == "cost") {
+                costTracker = textSet[i];
             }
         }
+        int onClickCostIndex = -1;
         switch (varType) {
             case 1:
+                if (!unlocked0) {
+                    costTracker.text = "Cost: " + cost[0];
+                } else {
+                    costTracker.text = "";
+                }
                 amountText.text = unlockString;
                 break;
             case 2:
+                DefineCostIndexInt(ref onClickCostIndex);
+                if (onClickCostIndex > costSize - 1) {
+                    costTracker.text = "MAX";
+                } else {
+                    costTracker.text = "Cost: " + cost[onClickCostIndex];
+                }
                 amountText.text = "" + condInt;
                 break;
             case 3:
+                DefineCostIndexFloat(ref onClickCostIndex);
+                if (onClickCostIndex > costSize - 1) {
+                    costTracker.text = "MAX";
+                } else {
+                    costTracker.text = "Cost: " + cost[onClickCostIndex];
+                }
                 amountText.text = "" + condFloat;
                 break;
             default:
@@ -427,36 +502,115 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
             CoinsDisplay.instance.coins -= cost[0];
             unlocked0 = true;
             amountText.text = unlockString;
+            costTracker.text = "";
+            if (type == "Dash" || type == "TimeSlow") {
+                SaveManager.instance.SaveGame();
+                SaveManager.instance.LoadGame();
+            }
         } else {
+            //play sound
             Debug.Log("Not enough money, cost = "+cost[0]);
         }
     }
 
-    private void UsingUnlockOnClick () {
-        
+    private void DefineCostIndexInt (ref int onClickCostIndex) {
+         if (increment) {
+            onClickCostIndex = condInt - defaultInt;
+        } else {
+            onClickCostIndex = defaultInt - condInt;
+        }
     }
 
-    private void OnClickInt () {
-        
+    private void OnClickInt () { //if increment, condInt - defaultInt
+        int onClickCostIndex = -1;
+        DefineCostIndexInt(ref onClickCostIndex);
+        if (onClickCostIndex > costSize - 1) {
+            return;
+        }
+        if (usingUnlock && !unlocked1) {
+            return;
+        }
+        if (coins >= cost[onClickCostIndex]) {
+            if (increment && condInt < boundaryInt) { //if incrementing and below the boundary
+                condInt++;
+            } else if (!increment && condInt > boundaryInt) { //if decrementing, above boundary
+                condInt--;
+            } else { //going above or below would be out of bounds
+                return;
+            }
+            CoinsDisplay.instance.coins -= cost[onClickCostIndex];
+            amountText.text = ""+condInt;
+            onClickCostIndex++;
+            if (onClickCostIndex > costSize - 1) {
+                costTracker.text = "MAX";
+            } else {
+                costTracker.text = "Cost: "+cost[onClickCostIndex];
+            }
+        } else {
+            //play sound
+            Debug.Log("Not enough money, cost = "+cost[onClickCostIndex]);
+        }
+    }
+
+    private void DefineCostIndexFloat (ref int onClickCostIndex) {
+        if (increment) {
+            onClickCostIndex = (int)((condFloat - defaultFloat) / incrementAmount);
+        } else {
+            onClickCostIndex = (int)((defaultFloat - condFloat) / incrementAmount);
+        }
     }
 
     private void OnClickFloat () {
-        
+        int onClickCostIndex = -1;
+        DefineCostIndexFloat(ref onClickCostIndex);
+        if (onClickCostIndex > costSize - 1) {
+            return;
+        }
+        if (usingUnlock && !unlocked1) {
+            return;
+        }
+        if (coins >= cost[onClickCostIndex]) {
+            if (increment && condFloat < boundaryFloat) { //if incrementing and below the boundary
+                condFloat += incrementAmount;
+            } else if (!increment && condFloat > boundaryFloat) { //if decrementing, above boundary
+                condFloat -= incrementAmount;
+            } else { //going above or below would be out of bounds
+                return;
+            }
+            CoinsDisplay.instance.coins -= cost[onClickCostIndex];
+            condFloat = (float)Math.Round(condFloat, 3);
+            amountText.text = ""+condFloat;
+            onClickCostIndex++;
+            if (onClickCostIndex > costSize - 1) {
+                costTracker.text = "MAX";
+            } else {
+                costTracker.text = "Cost: "+cost[onClickCostIndex];
+            }
+        } else {
+            //play sound
+            Debug.Log("Not enough money, cost = "+cost[onClickCostIndex]);
+        }
     }
 
     private void RightClickLogic () {
+        int onClickCostIndex = -1;
         switch(varType) {
             case 1:
                 unlocked0 = false;
                 amountText.text = unlockString;
+                costTracker.text = "Cost: "+cost[0];
                 break;
             case 2:
                 condInt = defaultInt;
                 amountText.text = condInt + "";
+                DefineCostIndexInt(ref onClickCostIndex); //should always be 0, just an extra fail point if things are wonky
+                costTracker.text = "Cost: " + cost[onClickCostIndex];
                 break;
             case 3:
                 condFloat = defaultFloat;
                 amountText.text = ""+condFloat;
+                DefineCostIndexFloat(ref onClickCostIndex); //should also always be 0
+                costTracker.text = "Cost: " + cost[onClickCostIndex];
                 break;
             default:
                 Debug.Log("error: varType, UpgradesScript RightClickLogic. varType: "+varType);

@@ -17,11 +17,14 @@ public class GameData
     public bool hasTimeSlow;
     public bool hasDashInvincibility;
     public float xpMulti;
+    public float coinMulti;
     public float tsLength; //time slow length
+    public float dashCD;
     //Trackers
     public bool hasMedium;
     public bool hasHard;
     public bool hasEverett;
+    public bool hasEverettSkin;
     public int highScoreB;
     public int highScoreM;
     public int highScoreH;
@@ -37,18 +40,22 @@ public class GameData
         this.extraHealth = 0; //is "this." needed?
         this.extraChoices = 0;
         this.extraSegments = 5;
+        extraFood = 0;
         segmentsPerGrow = 3; //higher is worse
         xpMulti = 1;
+        coinMulti = 1;
         mapSize = 0;
         runTime = 30;
         tsLength = 2f;
-        hasDash = true; //
-        hasReverse = true;
+        dashCD = 2f;
+        hasDash = false; //
+        hasReverse = false;
         hasTimeSlow = false;
-        hasDashInvincibility = true; //
+        hasDashInvincibility = false; //
         hasMedium = false;
         hasHard = false;
         hasEverett = false;
+        hasEverettSkin = false;
         highScoreB = 0;
         highScoreM = 0;
         highScoreH = 0;

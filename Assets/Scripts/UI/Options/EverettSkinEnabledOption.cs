@@ -9,12 +9,14 @@ public class EverettSkinEnabledOption : MonoBehaviour, IPointerClickHandler, ISa
     private Button button;
     private string skinPref;
     private int highScoreEv;
+    private bool hasEverettSkin;
     public void SaveData (GameData data) {
         data.skinPref = skinPref;
     }
     public void LoadData (GameData data) {
         skinPref = data.skinPref;
         highScoreEv = data.highScoreEv; //if high score everett is 50 or greater, you can use this skin.
+        hasEverettSkin = data.hasEverettSkin;
     }
     void Start()
     {
@@ -24,7 +26,7 @@ public class EverettSkinEnabledOption : MonoBehaviour, IPointerClickHandler, ISa
         } else {
             button.GetComponent<Image>().color = Color.red;
         }
-        if (highScoreEv < 50 && skinPref != "everett") {
+        if (!hasEverettSkin && skinPref != "everett") {
             button.GetComponent<Image>().color = Color.gray;
             gameObject.GetComponentInParent<TextMeshProUGUI>().text = "Git Gud";
         } else if (highScoreEv < 50 && skinPref == "everett") {
@@ -34,13 +36,13 @@ public class EverettSkinEnabledOption : MonoBehaviour, IPointerClickHandler, ISa
 
     public void OnPointerClick (PointerEventData pointerEventData) {
         if (pointerEventData.button == PointerEventData.InputButton.Left) {
-            if (skinPref == "normal" && highScoreEv >= 50) {
+            if (skinPref == "normal" && hasEverettSkin) {
                 skinPref = "everett";
                 button.GetComponent<Image>().color = Color.green;
             } else if (skinPref == "everett") {
                 skinPref = "normal";
                 button.GetComponent<Image>().color = Color.red;
-            } else if (skinPref == "normal" && highScoreEv < 50) {
+            } else if (skinPref == "normal" && !hasEverettSkin) {
                 //nothing happens
             } else {
                 Debug.Log("error: skinPref = "+skinPref);
