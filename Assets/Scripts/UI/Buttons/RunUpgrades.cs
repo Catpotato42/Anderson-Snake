@@ -17,14 +17,10 @@ public class RunUpgrades : MonoBehaviour, IPointerClickHandler
     private bool chosen = false;
     void Start()
     {
-        
-        //TODO FOR UPGRADES: 
-        //get meta upgrades
-        //Done with base structure!
         choiceParent = GameObject.FindGameObjectWithTag("UpgradeOptions");
         int k = 0;
-        while (k < choiceParent.transform.childCount) {
-            Transform tempChoice = choiceParent.transform.GetChild(k);
+        while (k < choiceParent.transform.childCount) { //this is for checking which child you are and destroying the other children in OnPointerClick if you are chosen
+            Transform tempChoice = choiceParent.transform.GetChild(k); //realized the previous line's comment was actually the best way to comment this and laughed out loud
             if (tempChoice.gameObject != gameObject){
                 choices.Add(tempChoice.gameObject);
             }
@@ -34,7 +30,7 @@ public class RunUpgrades : MonoBehaviour, IPointerClickHandler
             k++;
         }
         if (GameObject.FindGameObjectWithTag("Player") == null) {
-            Debug.Log("bro there's no player on this screen"); //shouldn't be possible anyways but idk I should add some of these to get faster at writing them and get in the habit
+            Debug.Log("There's no player on this screen (Start)(RunUpgrades)"); //shouldn't be possible anyways but idk I should add some of these to get in the habit
         }
         Player.instance.OnUpgrade += InitButton;
         gameObject.SetActive(false);
@@ -59,7 +55,7 @@ public class RunUpgrades : MonoBehaviour, IPointerClickHandler
             rarity = 5;
         } else {
             rarity = 0;
-            Debug.Log("error: rarity out of bounds");
+            Debug.Log("error: rarity out of bounds (InitButton)(RunUpgrades)");
         }
         int finalRarity = (int)rarity;
         upgradeInfo = GameManager.instance.ChooseRandomRunUpgrade(finalRarity, ref index);
@@ -97,33 +93,33 @@ public class RunUpgrades : MonoBehaviour, IPointerClickHandler
     }
 
     private void displayUpgrade () {
-        GameObject titleUpgradeObj = gameObject.transform.GetChild(0).gameObject; //there should be two textmeshpros as the child
+        GameObject titleUpgradeObj = gameObject.transform.GetChild(0).gameObject; //there should be two textmeshpros as the child, so this is the fir
         TextMeshProUGUI titleUpgrade = titleUpgradeObj.GetComponent<TextMeshProUGUI>(); //INSTEAD I SHOULD JUST INSTANTIATE A PREFAB
         titleUpgrade.text = upgradeInfo.Name+", Level "+upgradeInfo.Level; //also need color based on rarity, more text objects
         Image buttonSprite = gameObject.GetComponent<Image>();
         switch(upgradeInfo.Rarity) {
             case 0:
-                buttonSprite.color = new Color(.5f, .5f, .5f, 1);
+                buttonSprite.color = new Color(.5f, .5f, .5f, 1); //gray
                 titleUpgrade.color = Color.black;
                 break;
             case 1:
-                buttonSprite.color = new Color(50/255f, 138/255f, 73/255f, 1);
+                buttonSprite.color = new Color(50/255f, 138/255f, 73/255f, 1); //light greenish
                 titleUpgrade.color = Color.black;
                 break;
             case 2:
-                buttonSprite.color = new Color(45/255, 85/255f, 227/255f, 1);
+                buttonSprite.color = new Color(45/255, 85/255f, 227/255f, 1); //around a warm blue
                 titleUpgrade.color = Color.black;
                 break;
             case 3:
-                buttonSprite.color = new Color(64/255f, 4/255f, 148/255f, 1);
+                buttonSprite.color = new Color(64/255f, 4/255f, 148/255f, 1); //purple
                 titleUpgrade.color = Color.white;
                 break;
             case 4:
-                buttonSprite.color = new Color(199/255f, 14/255f, 14/255f, 1);
+                buttonSprite.color = new Color(199/255f, 14/255f, 14/255f, 1); //red
                 titleUpgrade.color = Color.black;
                 break;
             case 5:
-                buttonSprite.color = new Color(14/255f, 165/255f, 199/255f, 1);
+                buttonSprite.color = new Color(14/255f, 165/255f, 199/255f, 1); //aqua
                 titleUpgrade.color = Color.black;
                 break;
             default:

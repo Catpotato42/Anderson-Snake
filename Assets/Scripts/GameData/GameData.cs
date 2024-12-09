@@ -4,6 +4,7 @@ using System.Collections.Generic;
 [System.Serializable]
 public class GameData
 {
+    //TODO: Add some disallowed upgrades!
     //Upgradables
     public float extraHealth;
     public int mapSize;
@@ -19,8 +20,12 @@ public class GameData
     public float xpMulti;
     public float coinMulti;
     public float tsLength; //time slow length
+    public float tsSpeed;
+    public float tsCooldown;
     public float dashCD;
     //Trackers
+    public float speedrunTimer;
+    public bool timerDone;
     public bool hasMedium;
     public bool hasHard;
     public bool hasEverett;
@@ -33,25 +38,26 @@ public class GameData
     public SerializableHashSet<int, int> permanentDisallowedUpgrades;
     //Options
     public string skinPref;
-    //add: segment amount
-    //add: skin preference
-    //add: meta currency amount, make sure it is equal to currency + current score and if no current score is found just currency
-    public GameData () {
+    public GameData () { //constructor, flaw being that all changes to the values in here need to be echoed in UpgradesScript defaults.
         this.extraHealth = 0; //is "this." needed?
         this.extraChoices = 0;
-        this.extraSegments = 5;
+        this.extraSegments = 10;
         extraFood = 0;
-        segmentsPerGrow = 3; //higher is worse
+        segmentsPerGrow = 4; //higher is worse
         xpMulti = 1;
         coinMulti = 1;
         mapSize = 0;
         runTime = 30;
         tsLength = 2f;
+        tsSpeed = .5f; //
+        tsCooldown = 2f; //
         dashCD = 2f;
         hasDash = false; //
         hasReverse = false;
         hasTimeSlow = false;
         hasDashInvincibility = false; //
+        speedrunTimer = 0f;
+        timerDone = true;
         hasMedium = false;
         hasHard = false;
         hasEverett = false;

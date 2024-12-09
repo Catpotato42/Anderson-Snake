@@ -27,7 +27,7 @@ public class DifficultyUnlocker : MonoBehaviour
     private IEnumerator DiffUnlocked (string diff) {
         for (int i = 0; i < 6; i++) {
             UnlockerChangeState(true, diff);
-            yield return new WaitForSecondsRealtime(.3f);
+            yield return new WaitForSecondsRealtime(.7f);
             UnlockerChangeState(false, diff);
             yield return new WaitForSecondsRealtime(.3f);
         }

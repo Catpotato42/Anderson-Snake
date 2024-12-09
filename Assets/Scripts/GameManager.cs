@@ -143,17 +143,18 @@ public class GameManager : MonoBehaviour, ISaveManager
         int i = 0; //garter \/
         upgrades0.Add(i, new UpgradeInfo("+1 Map Size", 0, 0)); i++; //MAKE SURE YOU DO NOT MISS AN INDEX OR START BELOW OR ABOVE 0
         upgrades0.Add(i, new UpgradeInfo("Slow Speed", 0, 0)); i++;   //I could fix that by doing .Keys.ElementAt(index); but that still would require index to be a valid key so actually I couldn't that's just how dictionaries work this whole comment is stupid
-        upgrades0.Add(i, new UpgradeInfo("Remove 1 Segment", 0, 0)); i++; //index 4
+        upgrades0.Add(i, new UpgradeInfo("Remove 3 Segments", 0, 0)); i++;
         i = 0; //python \/
         upgrades1.Add(i, new UpgradeInfo("+10% XP", 0, 1)); i++;
-        upgrades1.Add(i, new UpgradeInfo("+2 Map Size", 0, 1)); i++; //index 3
+        upgrades1.Add(i, new UpgradeInfo("+5 Seconds", 0, 1)); i++;
         i = 0; //rattlesnake \/
-        upgrades2.Add(i, new UpgradeInfo("Remove 3 Segments", 0, 2)); i++;
+        upgrades2.Add(i, new UpgradeInfo("Remove 6 Segments", 0, 2)); i++;
         upgrades2.Add(i, new UpgradeInfo("+1 Food", 0, 2)); i++;
         i = 0;//viper \/
-        upgrades3.Add(i, new UpgradeInfo("+30 Seconds", 0, 3)); i++;
+        upgrades3.Add(i, new UpgradeInfo("+10 Seconds", 0, 3)); i++;
+        upgrades3.Add(i, new UpgradeInfo("+50% XP", 0, 3)); i++;
         i = 0;//cobra \/
-        upgrades4.Add(i, new UpgradeInfo("Placeholder KC", 0, 4)); i++;
+        upgrades4.Add(i, new UpgradeInfo("Remove All Segments", 0, 4)); i++;
         i = 0;//boa \/
         upgrades5.Add(i, new UpgradeInfo("+3 Food", 0, 5)); i++; //index 0
     }
@@ -259,9 +260,10 @@ public class GameManager : MonoBehaviour, ISaveManager
                 }
                 //Debug.Log("Player time scale = "+player.LocalTimeScale);
                 break;
-            case "Remove 1 Segment":
-                player.RemoveSegment();
-                player.RemoveSegment();
+            case "Remove 3 Segments":
+                for (int i = 0; i < 4; i++) {
+                    player.RemoveSegment();
+                }
                 break;
             default:
                 //Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
@@ -274,14 +276,14 @@ public class GameManager : MonoBehaviour, ISaveManager
     private void PythonUpgrades (UpgradeInfo currentUpgrade) {
         player.Grow(segmentsPerGrow);
         switch (currentUpgrade.Name) {
-            case "+2 Map Size":
-                mapSizeTemp += 2;
-                TileMapper.instance.RefreshTileMap();
-                break;
             case "+10% XP":
                 Debug.Log("player xp multi was "+Player.instance.XpMultiTemp);
                 Player.instance.XpMultiTemp += .1f;
                 Debug.Log("player xp multi now "+Player.instance.XpMultiTemp);
+                break;
+            case "+5 Seconds":
+                RunTimer.instance.AddRunTime(10);
+                RunTimer.instance.timerText.color = Color.white;
                 break;
             default:
                 //Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
@@ -296,8 +298,8 @@ public class GameManager : MonoBehaviour, ISaveManager
             case "+1 Food":
                 Instantiate(Resources.Load("Prefabs/TempFood"));
                 break;
-            case "Remove 3 Segments":
-                for (int i = 0; i < 4; i++) {
+            case "Remove 6 Segments":
+                for (int i = 0; i < 7; i++) {
                     player.RemoveSegment();
                 }
                 break;
@@ -311,9 +313,14 @@ public class GameManager : MonoBehaviour, ISaveManager
     private void ViperUpgrades (UpgradeInfo currentUpgrade) {
         player.Grow(segmentsPerGrow);
         switch (currentUpgrade.Name) {
-            case "+30 Seconds":
+            case "+10 Seconds":
                 RunTimer.instance.AddRunTime(30);
                 RunTimer.instance.timerText.color = Color.white;
+                break;
+            case "+50% XP":
+                Debug.Log("player xp multi was "+Player.instance.XpMultiTemp);
+                Player.instance.XpMultiTemp += .5f;
+                Debug.Log("player xp multi now "+Player.instance.XpMultiTemp);
                 break;
             default:
                 //Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");
@@ -325,9 +332,8 @@ public class GameManager : MonoBehaviour, ISaveManager
     private void CobraUpgrades (UpgradeInfo currentUpgrade) {
         player.Grow(segmentsPerGrow);
         switch (currentUpgrade.Name) {
-            case "+1 Map Size":
-                mapSizeTemp++;
-                TileMapper.instance.RefreshTileMap();
+            case "Remove All Segments":
+                player.RemoveAllSegments();
                 break;
             default:
                 //Debug.Log(currentUpgrade.Name+" hasn't been implemented yet.");

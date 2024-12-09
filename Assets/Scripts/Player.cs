@@ -7,10 +7,9 @@ using Unity.VisualScripting;
 
 public class Player : MonoBehaviour, ISaveManager
 {
+    //TODO: add stratton mode as a branch so that you can look at different scripts by clicking buttons where it's relevant.
+    //TODO: add a bullet that appears around 20 seconds in
 
-    //TODO:
-    //implement a red screen if you hit something and you have health left.
-    //upgrades for timer that make it longer so you balance utility with a longer time. 
     //BUGS:
     //If you input a direction you are already going, then another one right after that, it takes one segment move for it to update.
     //DDSA, see Input Handling.
@@ -69,23 +68,48 @@ public class Player : MonoBehaviour, ISaveManager
 
     private bool hasDash;
     private bool hasDashInvincibility;
+    private float dashCooldown;
 
     private bool dashing = false;
     private int dashAmount = 3;
     private int dashAmountTracker = 3;
     private bool canDash = false;
-    private float dashCooldown = 2f;
-    public float DashCooldown {
-        get =>dashCooldown; 
-        set{dashCooldown = value;}
-    }
     private float dashCooldownTracker = 2f;
+    public float DashCooldown {
+        get =>dashCooldown;
+    }
+    public float DashCooldownTracker {
+        get =>dashCooldownTracker;
+    }
     private float dashSpeed = .5f;
     private float tempDashTime;
+
+    private bool hasTimeSlow;
+    private float timeSlowCooldown;
+    private float tsLength;
+
+    private bool timeSlowed = false;
+    private bool canTimeSlow = false;
+    private float timeSlowCooldownTracker;
+    public float TimeSlowCooldown {
+        get => timeSlowCooldown;
+    }
+    public float TimeSlowCooldownTracker {
+        get => timeSlowCooldownTracker;
+    }
+    private float timeSlowSpeed;
+    private float timeSlowLengthTracker;
+    private float tempTimeSlowTime;
 
     private bool canReverse;
     private float reverseCooldown = .3f;
     private float reverseCooldownTracker = 0;
+    public float ReverseCooldown {
+        get => reverseCooldown;
+    }
+    public float ReverseCooldownTracker {
+        get => reverseCooldownTracker;
+    }
 
     private float health = 50f; //set on reset
     public float Health {get => health; set => health = value;}
@@ -98,6 +122,7 @@ public class Player : MonoBehaviour, ISaveManager
     private Vector2 lastSegmentDirection;
 
     //Trackers
+    public bool timerDone;
     private bool hasEverett;
     private bool hasMedium;
     private bool hasHard;
@@ -176,18 +201,25 @@ public class Player : MonoBehaviour, ISaveManager
         extraSegments = data.extraSegments;
         hasDash = data.hasDash;
         hasDashInvincibility = data.hasDashInvincibility;
+        hasTimeSlow = data.hasTimeSlow;
+        timeSlowSpeed = data.tsSpeed;
+        timeSlowCooldown = data.tsCooldown;
+        tsLength = data.tsLength;
         hasReverse = data.hasReverse;
         xpMulti = data.xpMulti;
         coinMulti = data.coinMulti;
         dashCooldown = data.dashCD;
         coins = data.coins;
         hasEverettSkin = data.hasEverettSkin;
+        timerDone = data.timerDone;
     }
     public void SaveData(GameData data) {
         data.hasMedium = hasMedium;
         data.hasHard = hasHard;
         data.hasEverett = hasEverett;
+        data.hasEverettSkin = hasEverettSkin;
         data.coins = coins;
+        data.timerDone = timerDone;
     }
 
     void Awake () {
@@ -216,14 +248,14 @@ public class Player : MonoBehaviour, ISaveManager
 
     private void InitThresholdValues () {
         growThreshold.Add(5);
-        for (int i = 1; i < 5; i++) {
-            growThreshold.Add(5);
-        } for (int i = 5; i < 10; i++) {
+        for (int i = 1; i < 3; i++) {
             growThreshold.Add(10);
-        } for (int i = 10; i < 15; i++) {
+        } for (int i = 3; i < 6; i++) {
             growThreshold.Add(20);
+        } for (int i = 6; i < 15; i++) {
+            growThreshold.Add(40);
         } for (int i = 15; i < 30; i++) {
-            growThreshold.Add(30);
+            growThreshold.Add(60);
         }
         string printThresholdVals = "";
         for (int i = 0; i < growThreshold.Count; i++) {
@@ -269,17 +301,20 @@ public class Player : MonoBehaviour, ISaveManager
             Debug.Log("Error: float difficultyTime not found.");
             difficultyTime = .001f;
         }
-        //Debug.Log("now resetting snake");
+        Debug.Log("now resetting snake");
         ResetSnake();
     }
 
     public void ResetSnake () {
         //isDead = false;
         canDash = false;
+        canTimeSlow = false;
         canShoot = false;
         canReverse = false;
         upgradeNumber = 0;
-        dashCooldownTracker = 2f;
+        dashCooldownTracker = dashCooldown;
+        timeSlowCooldownTracker = timeSlowCooldown;
+        timeSlowLengthTracker = tsLength;
         invincTracker = invincTimer;
         health = extraHealth + 50f;
         GameManager.instance.MapSizeTemp = GameManager.instance.MapSize + 6;
@@ -361,7 +396,7 @@ public class Player : MonoBehaviour, ISaveManager
             localTimeScale += difficultyTime;
         } else if (difficultyScale == "hard" && localTimeScale <= .33f){
             localTimeScale += difficultyTime;
-        } else if (localTimeScale <= .25f && difficultyScale == null || difficultyScale == "") {
+        } else if ((localTimeScale <= .25f && difficultyScale == null) || difficultyScale == "") {
             Debug.Log("problem in grow function of player script, difficulty scale = "+ difficultyScale);
             localTimeScale += difficultyTime;
         }
@@ -416,6 +451,19 @@ public class Player : MonoBehaviour, ISaveManager
         }
     }
 
+    public void RemoveAllSegments () {
+        if (segments.Count <= 2 && segments.Count > 0) {
+            return;
+        } else if (segments.Count > 2) {
+            GameObject segmentToRemove = segments[segments.Count - 1];
+            segments.RemoveAt(segments.Count - 1); //I'm not sure but this might be able to be implemented with segments.Remove(segments.FindLastIndex(segment)); no point in doing that but just I should prolly know
+            Destroy(segmentToRemove); //This needs to be after removal from the list or else the RemoveAt index is null.
+            RemoveAllSegments();
+        } else {
+            Debug.Log("Error: Tried to call RemoveSegment (Player.cs public void RemoveAllSegments()) but segment.Count < 1 (no head (huh??)). segments.Count = " + segments.Count);
+        }
+    }
+
     public void RemoveSegment () {
         if (segments.Count <= 2 && segments.Count > 0) {
             return;
@@ -439,6 +487,18 @@ public class Player : MonoBehaviour, ISaveManager
     }
 
     void Update() {
+        if (timeSlowed) {
+            //Debug.Log("Subtracting tsLengthTracker by "+Time.unscaledDeltaTime);
+            timeSlowLengthTracker -= Time.unscaledDeltaTime;
+        } 
+        if (timeSlowLengthTracker <= 0f && timeSlowed){
+            //Debug.Log("timeSlowLengthTracker = "+timeSlowLengthTracker);
+            timeSlowed = false;
+            timeSlowLengthTracker = tsLength;
+            if (!isDead && !isChoosing) { //if not dead or choosing
+                Time.timeScale = tempTimeSlowTime;
+            }
+        }
         fireCooldownTracker += Time.deltaTime; //if TimeScale is 0, this won't increment as opposed to unscaledDeltaTime which would.
         if (fireCooldownTracker > fireCooldown && !canShoot) {
             canShoot = true;
@@ -446,6 +506,12 @@ public class Player : MonoBehaviour, ISaveManager
         dashCooldownTracker += Time.deltaTime;
         if (dashCooldownTracker > dashCooldown && !canDash) {
             canDash = true;
+        }
+        if (!timeSlowed) { 
+            timeSlowCooldownTracker += Time.deltaTime;
+        }
+        if (timeSlowCooldownTracker > timeSlowCooldown && !canTimeSlow) {
+            canTimeSlow = true;
         }
         reverseCooldownTracker += Time.deltaTime;
         if (reverseCooldownTracker > reverseCooldown && !canReverse) {
@@ -458,7 +524,7 @@ public class Player : MonoBehaviour, ISaveManager
     }
 
     void FixedUpdate() {
-        // Using Time.fixedDeltaTime to accumulate time
+        //Using Time.fixedDeltaTime to accumulate time
         timeSinceLastUpdate += Time.fixedDeltaTime;
         //if timesincelast > .02 (normal amount for fixed update) / localtime (.1 or something, so it takes 10x longer to perform an action.)
         if (timeSinceLastUpdate >= customFixedInterval/localTimeScale) {
@@ -518,6 +584,13 @@ public class Player : MonoBehaviour, ISaveManager
             Fire();
             fireCooldownTracker = 0f; //needs to be before canShoot or maybe canShoot would set itself to true again?
             canShoot = false;
+        } else if (Input.GetKeyDown(KeyCode.T) && canTimeSlow && hasTimeSlow && !isChoosing && !isDead){
+            Debug.Log("Time Slowed to "+timeSlowSpeed);
+            timeSlowCooldownTracker = 0f;
+            timeSlowed = true;
+            canTimeSlow = false;
+            tempTimeSlowTime = Time.timeScale;
+            Time.timeScale = timeSlowSpeed;
         } else if (Input.GetKeyDown(KeyCode.F) && canReverse && hasReverse) {
             inputQueue.Clear();
             QueueInput(KeyCode.F);
@@ -714,6 +787,7 @@ public class Player : MonoBehaviour, ISaveManager
 
     public void KillPlayer () { //yeah
         Time.timeScale = 0f;
+        tempTimeSlowTime = 0f;
         isDead = true;
         //Debug.Log("died with "+upgradeNumber+" upgrades");
         int onDeathCoins = (int)Mathf.Round((snakeScore + (int)((RunTimer.instance.publicRunTime - RunTimer.instance.runTimeTracker)/3)) * coinMultiTemp);
@@ -732,7 +806,6 @@ public class Player : MonoBehaviour, ISaveManager
                 OnPlayerHitLogic(collide.tag); //this should always be "Laser".
             }
         }
-
     }
 
     void OnTriggerExit2D (Collider2D collide) {
@@ -759,19 +832,20 @@ public class Player : MonoBehaviour, ISaveManager
         UpdateHighScore();
         xpScore += 1 * xpMultiTemp;
         OnXPIncrease.Invoke();
-        if (snakeScore == 50 && !hasMedium) {
+        if (snakeScore == 120 && !hasMedium) {
             OnDiffUnlock.Invoke("MEDIUM MODE UNLOCKED!!!");
             hasMedium = true;
-        } else if (snakeScore == 60 && !hasHard && difficultyScale == "medium") {
+        } else if (snakeScore == 170 && !hasHard && difficultyScale == "medium") {
             OnDiffUnlock.Invoke("HARD MODE UNLOCKED!!!");
             hasHard = true;
-        } else if (snakeScore == 70 && !hasEverett && difficultyScale == "hard") {
+        } else if (snakeScore == 200 && !hasEverett && difficultyScale == "hard") {
             OnDiffUnlock.Invoke("EVERETT MODE UNLOCKED!!!");
             hasEverett = true;
-        } else if (snakeScore == 80 && difficultyScale == "everett") {
+        } else if (snakeScore == 250 && difficultyScale == "everett" && !hasEverettSkin) {
             OnDiffUnlock.Invoke("EVERETT SKIN UNLOCKED!");
             hasEverettSkin = true;
             //stop run timer
+            timerDone = true;
         }
         UpgradePlayer();
         OnXPIncrease.Invoke();

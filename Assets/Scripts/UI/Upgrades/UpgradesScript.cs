@@ -4,17 +4,12 @@ using TMPro;
 using System;
 using Unity.VisualScripting;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
 {
-    //holy SHIT i regret not doing these as a single script just when I thought about the switch case I would do I suddenly had flashbacks
-    //to a video essay about yanderedev's code and I was like nah fuck that but it LITERALLY would have been two switch cases at the start of the code
-    //and the onpointerclick plus a little extra checking stuff so much regret is within me (★‿★)
-
-    //Ok the honestly scuffed but pretty cool solution I have found is to make UnlockDash's Start method run before the other Upgrade things and then the other scripts
-    //have a reference to this one and get the list of Actions from this script so we don't have to run this in every script
     
-    //This was possibly the worst way I did something in this project bar nothing. However, through this I practiced data structures so it's fine
+    //The previous way I was doing this was possibly the worst way I did something in this project bar nothing. However, through this failure I practiced data structures so it's fine
 
     //Boy am I glad that this is basically the last thing in this project because THIS is spaghetti code. Unreadable, repetitive, messy... (◎﹏◎)
 
@@ -23,7 +18,9 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
 
     //bedtime but this needs to get done tmrw
 
-    //Needs to get coin amount from CoinDisplay every frame
+    //Wow this is still not great
+
+    //TODO: if the collection size is odd (maybe even?) for floats the max size gets activated one early
 
     //These are needed for all upgrades:
     private int coins;
@@ -52,9 +49,12 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     private int[] cost;
     int costSize;
     private TextMeshProUGUI amountText;
+    Image buttonImage;
     [SerializeField] private string type;
 
     //For bools, default is always false.
+
+    //bunch of variable definitions, they had to go somehwere.
 
     //Dash
     private bool hasDash;
@@ -63,7 +63,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     private bool hasReverse;
 
     //Dash Invincibility
-    //private bool hasDash
+    //secondary unlock is in ScriptType as unlocked1, for example hasDash for Dash Invincibility
     private bool hasDashInvincibility;
 
     //Time Slow Unlock
@@ -71,14 +71,14 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
 
     //Grow Amount
     private int segmentsPerGrow;
-    private int defaultSegmentsPer = 3;
+    private int defaultSegmentsPer = 4;
     private int minSegmentsPer = 1;
 
     //Extra Health Amount
     private float extraHealth;
-    private float maxHealth = 2000f;
+    private float maxHealth = 1000f;
     private float defaultHealth = 0;
-    private float healthIncrement = 25f;
+    private float healthIncrement = 50f;
 
     //Extra Food Amount
     private int extraFood;
@@ -93,7 +93,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
 
     //XP Multi
     private float xpMulti;
-    private float xpMultiMax = 4f;
+    private float xpMultiMax = 2.5f;
     private float defaultXpMulti = 1f;
     private float xpIncrement = .1f;
 
@@ -106,11 +106,11 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     //Map Size
     private int mapSize;
     private int defaultMapSize = 0;
-    private int maxMapSize = 300;
+    private int maxMapSize = 15;
 
     //Extra Segments
     private int extraSegments;
-    private int defaultExtraSegments = 5;
+    private int defaultExtraSegments = 10;
     private int minExtraSegments = 0;
 
     //Extra Choices
@@ -124,6 +124,18 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     private float defaultTSLength = 2f;
     private float tsIncrement = .1f;
 
+    //Time Slow Speed
+    private float tsSpeed;
+    private float minTSSpeed = .25f;
+    private float defaultTSSpeed = .5f;
+    private float tsSpeedIncrement = .05f;
+
+    //Time Slow Cooldown
+    private float tsCooldown; //inconsistent shortening of cooldown
+    private float minTSCooldown = .5f;
+    private float defaultTSCooldown = 2f;
+    private float tsCDIncrement = .1f;
+
     //Dash Cooldown
     private float dashCD;
     private float minDashCD = .7f;
@@ -133,7 +145,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
 
 
     public void SaveData (GameData data) {
-        SaveType(ref data); //this should be a reference, I think cause most stuff is auto passed as reference in C# it's fine
+        SaveType(ref data); //most stuff is auto passed as reference in C# but I don't think classes are - interesting
     }
     public void LoadData (GameData data) {
         hasDash = data.hasDash;
@@ -149,9 +161,12 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
         mapSize = data.mapSize;
         extraSegments = data.extraSegments;
         extraChoices = data.extraChoices;
-        tsLength = data.tsLength; //time 
+        tsLength = data.tsLength; //time
+        tsSpeed = data.tsSpeed;
+        tsCooldown = data.tsCooldown;
         dashCD = data.dashCD;
         ScriptType(); // ^_^
+        OnStartAndReload();
     }
 
     private void SaveType (ref GameData data) {
@@ -160,7 +175,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 data.hasDash = unlocked0;
                 break;
             case "DashInvincibility":
-                data.hasDashInvincibility = unlocked1;
+                data.hasDashInvincibility = unlocked0;
                 break;
             case "TimeSlow":
                 data.hasTimeSlow = unlocked0;
@@ -201,13 +216,19 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
             case "DashCD":
                 data.dashCD = condFloat;
                 break;
+            case "TimeSlowCooldown":
+                data.tsCooldown = condFloat;
+                break;
+            case "TimeSlowSpeed":
+                data.tsSpeed = condFloat;
+                break; //USE COND___ NOT "variablename" FOR ALL SAVES
             default:
                 Debug.Log("Error in SaveType: name = "+name);
                 break;
         }
     }
 
-    private void ScriptType () { //could do this on data load for efficiency but this makes it maybe a little more readable is what I'm telling myself (ﾟДﾟ)
+    private void ScriptType () { //(ﾟДﾟ)
         switch (type) {
             case "Dash":
                 unlocked0 = hasDash; //I would do this whole bit with pointers and return the actual variable in c++ for readability,
@@ -235,10 +256,17 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
             case "DecreaseGrowAmount":
                 increment = false;
                 condInt = segmentsPerGrow;
-                defaultInt = defaultSegmentsPer;
                 boundaryInt = minSegmentsPer;
-                costSize = 2;
-                cost = new int[]{50, 60}; //+3->+2, +2->+1, can't go past that
+                defaultInt = defaultSegmentsPer;
+                costSize = defaultInt - boundaryInt;
+                cost = new int[costSize];
+                cost[0] = 100; //I can forsee this being much easier if I assigned variables to costs with the others but honestly that might create even more clutter.
+                for (int i = 1; i < cost.Length/2; i++) {
+                    cost[i] = cost[i-1] + 50;
+                }
+                for (int i = cost.Length / 2; i < cost.Length; i++) {
+                    cost[i] = cost[i-1] + 60;
+                }
                 varType = 2;
                 break;
             case "ExtraHealth":
@@ -400,14 +428,52 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 condFloat = dashCD;
                 boundaryFloat = minDashCD;
                 defaultFloat = defaultDashCD;
-                costSize = (int)((defaultFloat - boundaryFloat) / incrementAmount); //2-.7f = 1.3f / .1f = 13
-                cost = new int[costSize]; //make sure this can always convert to an int, size 13
+                costSize = (int)((defaultFloat - boundaryFloat) / incrementAmount);
+                cost = new int[costSize];
                 cost[0] = 15;
                 for (int i = 1; i < cost.Length/2; i++) {
                     cost[i] = cost[i-1] + 3;
                 }
                 for (int i = cost.Length / 2; i < cost.Length; i++) {
                     cost[i] = cost[i-1] + 5;
+                }
+                varType = 3;
+                break;
+            case "TimeSlowCooldown":
+                increment = false;
+                usingUnlock = true;
+                unlocked1 = hasTimeSlow;
+                incrementAmount = tsCDIncrement;
+                condFloat = tsCooldown;
+                boundaryFloat = minTSCooldown;
+                defaultFloat = defaultTSCooldown;
+                costSize = (int)((defaultFloat - boundaryFloat) / incrementAmount);
+                cost = new int[costSize];
+                cost[0] = 50;
+                for (int i = 1; i < cost.Length/2; i++) {
+                    cost[i] = cost[i-1] + 10;
+                }
+                for (int i = cost.Length / 2; i < cost.Length; i++) {
+                    cost[i] = cost[i-1] + 15;
+                }
+                varType = 3;
+                break;
+            case "TimeSlowSpeed":
+                increment = false;
+                usingUnlock = true;
+                unlocked1 = hasTimeSlow;
+                incrementAmount = tsSpeedIncrement;
+                condFloat = tsSpeed;
+                boundaryFloat = minTSSpeed;
+                defaultFloat = defaultTSSpeed;
+                costSize = (int)((defaultFloat - boundaryFloat) / incrementAmount); //2-.7f = 1.3f / .1f = 13
+                cost = new int[costSize]; //make sure this can always convert to an int, size 13
+                cost[0] = 25;
+                for (int i = 1; i < cost.Length/2; i++) {
+                    cost[i] = cost[i-1] + 5;
+                }
+                for (int i = cost.Length / 2; i < cost.Length; i++) {
+                    cost[i] = cost[i-1] + 10;
                 }
                 varType = 3;
                 break;
@@ -418,14 +484,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     }
 
     void Start () {
-        TextMeshProUGUI[] textSet = gameObject.GetComponentsInChildren<TextMeshProUGUI>();
-        for (int i = 0; i < transform.childCount; i++) {
-            if (textSet[i].text == "") {
-                amountText = textSet[i];
-            } else if (textSet[i].text == "cost") {
-                costTracker = textSet[i];
-            }
-        }
+        OnStartAndReload();
         int onClickCostIndex = -1;
         switch (varType) {
             case 1:
@@ -455,8 +514,28 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 amountText.text = "" + condFloat;
                 break;
             default:
-                Debug.Log("varType out of bounds. Start method UpgradesScript. varType: "+varType);
+                Debug.Log("varType out of bounds. Start method UpgradesScript. varType: "+varType+". Type: "+type);
                 break;
+        }
+    }
+
+    private void OnStartAndReload () { //split off so that I can recheck for unlocks after a load, not everything needs to be in here but idc until I make the reload an event Action.
+        TextMeshProUGUI[] textSet = gameObject.GetComponentsInChildren<TextMeshProUGUI>();
+        for (int i = 0; i < transform.childCount; i++) {
+            if (textSet[i].text == "") {
+                amountText = textSet[i];
+            } else if (textSet[i].text == "cost") {
+                costTracker = textSet[i];
+            }
+        }
+        buttonImage = gameObject.GetComponent<Image>();
+        buttonImage.color = Color.white; //so they are all a uniform white
+        if (usingUnlock) {
+            if (!unlocked1) {
+                buttonImage.color = Color.gray;
+            } else {
+                buttonImage.color = Color.white;
+            }
         }
     }
 
@@ -471,7 +550,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
         } else if (pointerEventData.button == PointerEventData.InputButton.Right) {
             RightClickLogic();
         } else {
-            Debug.Log("Sir, we don't actually support that button here. You'll have to go to a different scr- no I can't do that either, we have- xbox controller? Get out. Get the fuck out.");
+            Debug.Log("We don't actually support that button here.");
         }
     }
 
@@ -489,9 +568,9 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
         }
     }
 
-    private void OnClickBool () { //working for 1 cond, need to test 2
+    private void OnClickBool () {
         if (coins >= cost[0]) {
-            if (usingUnlock && !unlocked1) { //too nested ew, but if need cond and cond not met
+            if (usingUnlock && !unlocked1) { //too nested ew, but if need unlock and unlock condition not met
                 //TODO: play sound for locked, should be different than not enough money
                 return;
             }
@@ -503,7 +582,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
             unlocked0 = true;
             amountText.text = unlockString;
             costTracker.text = "";
-            if (type == "Dash" || type == "TimeSlow") {
+            if (type == "Dash" || type == "TimeSlow") { // ¯\(°_o)/¯ what else am I supposed to use like an event Action that all the usingUnlock scripts subscribe to? Ridiculous.
                 SaveManager.instance.SaveGame();
                 SaveManager.instance.LoadGame();
             }
@@ -581,7 +660,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
             condFloat = (float)Math.Round(condFloat, 3);
             amountText.text = ""+condFloat;
             onClickCostIndex++;
-            if (onClickCostIndex > costSize - 1) {
+            if (onClickCostIndex >= costSize) { //maybe root of the problem?
                 costTracker.text = "MAX";
             } else {
                 costTracker.text = "Cost: "+cost[onClickCostIndex];
@@ -599,6 +678,10 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 unlocked0 = false;
                 amountText.text = unlockString;
                 costTracker.text = "Cost: "+cost[0];
+                if (type == "Dash" || type == "TimeSlow") {
+                    SaveManager.instance.SaveGame();
+                    SaveManager.instance.LoadGame();
+                }
                 break;
             case 2:
                 condInt = defaultInt;

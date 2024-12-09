@@ -34,6 +34,21 @@ public class SaveManager : MonoBehaviour {
         gameData = new GameData(); 
     }
 
+    public void NewGamePlus (bool done) { //starts a new game while retaining high scores.
+        int highScoreB = gameData.highScoreB;
+        int highScoreM = gameData.highScoreM;
+        int highScoreH = gameData.highScoreH;
+        int highScoreEv = gameData.highScoreEv;
+        gameData = new GameData();
+        gameData.timerDone = done;
+        gameData.highScoreB = highScoreB;
+        gameData.highScoreM = highScoreM;
+        gameData.highScoreH = highScoreH;
+        gameData.highScoreEv = highScoreEv;
+        dataHandler.Save(gameData); //should serialize the updated gameData to json and save to file without being affected by outside scripts
+        LoadGame(); //may need a SaveGame before this
+    }
+
     public void LoadGame () {
         //load saved file or make a new game
         this.gameData = dataHandler.Load();

@@ -7,16 +7,14 @@ public class StartMedium : MonoBehaviour, IPointerClickHandler, ISaveManager
     private bool hasMedium = false;
     public void LoadData (GameData data) {
         this.hasMedium = data.hasMedium;
-    }
-    public void SaveData (GameData data) {
-    }
-    void Start () {
         if (hasMedium) {
             gameObject.SetActive(true);
             //Debug.Log("active");
         } else {
             gameObject.SetActive(false);
         }
+    }
+    public void SaveData (GameData data) {
     }
     public void OnPointerClick (PointerEventData pointerEventData) {
         if (pointerEventData.button == PointerEventData.InputButton.Left) {
