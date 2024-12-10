@@ -243,19 +243,37 @@ public class Player : MonoBehaviour, ISaveManager
             skin.sprite = Resources.Load<Sprite>("Skins/Square");
         }
         difficultyScale = GameManager.instance.Difficulty;
-        InitThresholdValues();
+        InitThresholdValuesDifficultyBased();
     }
 
-    private void InitThresholdValues () {
-        growThreshold.Add(5);
+    private void InitThresholdValuesDifficultyBased () {
+        int[] intervals;
+        switch (difficultyScale) {
+            case "basic":
+                intervals = new int[]{10, 15, 20, 25};
+                break;
+            case "medium":
+                intervals = new int[]{15, 20, 25, 30};
+                break;
+            case "hard":
+                intervals = new int[]{20, 25, 30, 35};
+                break;
+            case "everett":
+                intervals = new int[]{20, 30, 40, 50};
+                break;
+            default:
+                intervals = new int[]{2, 2, 2, 2};
+                Debug.Log("no difficulty, InitThresholdValuesDifficultyBased (Player). difficultyScale = "+difficultyScale);
+                break;
+        }
         for (int i = 1; i < 3; i++) {
-            growThreshold.Add(10);
+            growThreshold.Add(intervals[0]);
         } for (int i = 3; i < 6; i++) {
-            growThreshold.Add(20);
+            growThreshold.Add(intervals[1]);
         } for (int i = 6; i < 15; i++) {
-            growThreshold.Add(40);
+            growThreshold.Add(intervals[2]);
         } for (int i = 15; i < 30; i++) {
-            growThreshold.Add(60);
+            growThreshold.Add(intervals[3]);
         }
         string printThresholdVals = "";
         for (int i = 0; i < growThreshold.Count; i++) {
@@ -263,25 +281,6 @@ public class Player : MonoBehaviour, ISaveManager
         }
         Debug.Log("Threshold vals = "+printThresholdVals);
     }
-
-    private void DeprecatedInitThresholdValues () {
-        growThreshold.Add(5);
-        for (int i = 1; i < 5; i++) {
-            growThreshold.Add(growThreshold[i - 1] + 5);
-        } for (int i = 5; i < 10; i++) {
-            growThreshold.Add(growThreshold[i - 1] + 10);
-        } for (int i = 10; i < 15; i++) {
-            growThreshold.Add(growThreshold[i - 1] + 20);
-        } for (int i = 15; i < 30; i++) {
-            growThreshold.Add(growThreshold[i - 1] + 30);
-        }
-        string printThresholdVals = "";
-        for (int i = 0; i < growThreshold.Count; i++) {
-            printThresholdVals += growThreshold[i]+", ";
-        }
-        Debug.Log("Threshold vals = "+printThresholdVals);
-    }
-    
     // Start is called before the first frame update
     void Start()
     {   
@@ -313,6 +312,7 @@ public class Player : MonoBehaviour, ISaveManager
         canReverse = false;
         upgradeNumber = 0;
         dashCooldownTracker = dashCooldown;
+        reverseCooldownTracker = reverseCooldown;
         timeSlowCooldownTracker = timeSlowCooldown;
         timeSlowLengthTracker = tsLength;
         invincTracker = invincTimer;
