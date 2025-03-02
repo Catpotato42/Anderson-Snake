@@ -10,6 +10,7 @@ public class EverettSkinEnabledOption : MonoBehaviour, IPointerClickHandler, ISa
     private string skinPref;
     private int highScoreEv;
     private bool hasEverettSkin;
+    private PlayUpgradeButtonAudio playUpgradeButtonAudio;
     public void SaveData (GameData data) {
         data.skinPref = skinPref;
     }
@@ -19,7 +20,8 @@ public class EverettSkinEnabledOption : MonoBehaviour, IPointerClickHandler, ISa
         hasEverettSkin = data.hasEverettSkin;
     }
     void Start()
-    {
+    {   
+        playUpgradeButtonAudio = GetComponent<PlayUpgradeButtonAudio>();
         button = gameObject.GetComponent<Button>();
         if (skinPref == "everett") {
             button.GetComponent<Image>().color = Color.green;
@@ -38,11 +40,14 @@ public class EverettSkinEnabledOption : MonoBehaviour, IPointerClickHandler, ISa
         if (pointerEventData.button == PointerEventData.InputButton.Left) {
             if (skinPref == "normal" && hasEverettSkin) {
                 skinPref = "everett";
+                playUpgradeButtonAudio.PlayChange();
                 button.GetComponent<Image>().color = Color.green;
             } else if (skinPref == "everett") {
                 skinPref = "normal";
+                playUpgradeButtonAudio.PlayChange();
                 button.GetComponent<Image>().color = Color.red;
             } else if (skinPref == "normal" && !hasEverettSkin) {
+                playUpgradeButtonAudio.PlayLocked();
                 //nothing happens
             } else {
                 Debug.Log("error: skinPref = "+skinPref);
