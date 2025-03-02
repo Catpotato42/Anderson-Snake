@@ -20,7 +20,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
 
     //Wow this is still not great
 
-    //TODO: if the collection size is odd (maybe even?) for floats the max size gets activated one early
+    //TODO BUGS: if the collection size is odd (maybe even?) for floats the max size gets activated one early
 
     //These are needed for all upgrades:
     private int coins;
@@ -142,7 +142,10 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     private float defaultDashCD = 2f;
     private float dashCDIncrement = .1f;
 
-
+    private AudioSource[] audioSources;
+    private AudioSource change;
+    private AudioSource locked;
+    private AudioSource noMoney;
 
     public void SaveData (GameData data) {
         SaveType(ref data); //most stuff is auto passed as reference in C# but I don't think classes are - interesting
@@ -482,8 +485,20 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 break;
         }
     }
-
     void Start () {
+        //audio stuff
+        audioSources = GetComponents<AudioSource>();
+        foreach (AudioSource temp in audioSources) {
+            if (temp.clip.name == "Locked") { //it is != Locked because then we can have buttons without the locked audio sound needed
+                locked = temp;
+            } else if (temp.clip.name == "noMoney") {
+                noMoney = temp;
+            } else if (temp.clip.name == "defaultButtonClick") {
+                change = temp;
+            } else {
+                Debug.Log("Error in Start: temp.clip.name = "+temp.clip.name);
+            }
+        }
         OnStartAndReload();
         int onClickCostIndex = -1;
         switch (varType) {
@@ -571,13 +586,14 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     private void OnClickBool () {
         if (coins >= cost[0]) {
             if (usingUnlock && !unlocked1) { //too nested ew, but if need unlock and unlock condition not met
-                //TODO: play sound for locked, should be different than not enough money
+                locked.Play();
                 return;
             }
             if (unlocked0) {
-                //nothing happens, already unlocked
+                //nothing happens, already unlocked: TODO: either add a sound or make it revert when you click this
                 return;
             }
+            change.Play();
             CoinsDisplay.instance.coins -= cost[0];
             unlocked0 = true;
             amountText.text = unlockString;
@@ -587,7 +603,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 SaveManager.instance.LoadGame();
             }
         } else {
-            //play sound
+            noMoney.Play(); //BROKE (╯▽╰ )
             Debug.Log("Not enough money, cost = "+cost[0]);
         }
     }
@@ -601,22 +617,24 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     }
 
     private void OnClickInt () { //if increment, condInt - defaultInt
-        int onClickCostIndex = -1;
-        DefineCostIndexInt(ref onClickCostIndex);
+        int onClickCostIndex = -1; //why is this this way, TODO: fix whatever causes these floats and ints to go out of where they're supposed to be, ALSO it could be caused
+        DefineCostIndexInt(ref onClickCostIndex); //by an interaction where you click it while it's locked and it still increments a variable.
         if (onClickCostIndex > costSize - 1) {
             return;
         }
         if (usingUnlock && !unlocked1) {
+            locked.Play();
             return;
         }
         if (coins >= cost[onClickCostIndex]) {
-            if (increment && condInt < boundaryInt) { //if incrementing and below the boundary
+            if (increment && condInt < boundaryInt) { //if incrementing and below the boundary, these two seem redundant due to the cost index
                 condInt++;
             } else if (!increment && condInt > boundaryInt) { //if decrementing, above boundary
                 condInt--;
             } else { //going above or below would be out of bounds
                 return;
             }
+            change.Play();
             CoinsDisplay.instance.coins -= cost[onClickCostIndex];
             amountText.text = ""+condInt;
             onClickCostIndex++;
@@ -626,7 +644,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 costTracker.text = "Cost: "+cost[onClickCostIndex];
             }
         } else {
-            //play sound
+            noMoney.Play();
             Debug.Log("Not enough money, cost = "+cost[onClickCostIndex]);
         }
     }
@@ -646,6 +664,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
             return;
         }
         if (usingUnlock && !unlocked1) {
+            locked.Play();
             return;
         }
         if (coins >= cost[onClickCostIndex]) {
@@ -656,6 +675,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
             } else { //going above or below would be out of bounds
                 return;
             }
+            change.Play();
             CoinsDisplay.instance.coins -= cost[onClickCostIndex];
             condFloat = (float)Math.Round(condFloat, 3);
             amountText.text = ""+condFloat;
@@ -666,12 +686,12 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 costTracker.text = "Cost: "+cost[onClickCostIndex];
             }
         } else {
-            //play sound
+            noMoney.Play();
             Debug.Log("Not enough money, cost = "+cost[onClickCostIndex]);
         }
     }
 
-    private void RightClickLogic () {
+    private void RightClickLogic () { //TODO: comment out on release version
         int onClickCostIndex = -1;
         switch(varType) {
             case 1:

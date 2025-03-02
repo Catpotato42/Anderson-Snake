@@ -552,6 +552,14 @@ public class Player : MonoBehaviour, ISaveManager
     }
 
     private void GetUserInput () {
+        if (Input.GetKeyDown(KeyCode.R) && isDead || Input.GetKeyDown(KeyCode.Space) && isDead) {
+            ResetSnake();
+            return;
+        }
+        if (Input.GetKeyDown(KeyCode.K) && !isDead) {
+            KillPlayer();
+            return;
+        }
         if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow)) {
             QueueInput(KeyCode.W);
         } else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) {
@@ -560,8 +568,6 @@ public class Player : MonoBehaviour, ISaveManager
             QueueInput(KeyCode.D);
         } else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)) {
             QueueInput(KeyCode.A);
-        } else if (Input.GetKeyDown(KeyCode.R) && isDead || Input.GetKeyDown(KeyCode.Space) && isDead) {
-            ResetSnake();
         } else if (Input.GetKeyDown(KeyCode.Escape) && isDead) {
             SaveManager.instance.SaveGame();
             SceneManager.LoadScene(0);
@@ -617,7 +623,7 @@ public class Player : MonoBehaviour, ISaveManager
         //moved one square down already if you hit ddsa really fast.
         //How to fix: maybe track actual movement? then I would be able to stop this,
         //but it would require a complete overhaul of the input system. 
-        //Definitely something reserved for like actual post-Demo or even full release bugfixing.
+        //Definitely something reserved for like full release bugfixing.
         //It's a big edge case and it will affect you at the start of the game if you hit dsa really fast because the first input is already
         //set to "D", but it's also very easy to avoid and I don't think would really make anyone scared of inputting too fast.
         //Currently LOW-priority.
@@ -763,7 +769,7 @@ public class Player : MonoBehaviour, ISaveManager
     }
 
     public void OnPlayerHitLogic (string tag) {
-        if ((tag == "Laser" || tag == "Obstacle") && hasDashInvincibility && dashing) {
+        if ((tag == "Laser" || tag == "Obstacle" || tag == "BasicBullet") && hasDashInvincibility && dashing) {
             return;
         } else if (tag == "Walls" && hasDashInvincibility && dashing) {
             //TODO: sound less harsh than a buzz to let the player know they were reversed on purpose 
@@ -772,6 +778,7 @@ public class Player : MonoBehaviour, ISaveManager
             return;
         }
         //this part means you actually were hit ಠ﹏ಠ noob
+        AudioManager.instance.PlayAudio("hurt");
         StartCoroutine(healthFlash.DecreaseHealthFlash());
         health -= 50;
         Debug.Log("health = "+health);
@@ -789,9 +796,10 @@ public class Player : MonoBehaviour, ISaveManager
         Time.timeScale = 0f;
         tempTimeSlowTime = 0f;
         isDead = true;
+        AudioManager.instance.PlayAudio("death");
         //Debug.Log("died with "+upgradeNumber+" upgrades");
         int onDeathCoins = (int)Mathf.Round((snakeScore + (int)((RunTimer.instance.publicRunTime - RunTimer.instance.runTimeTracker)/3)) * coinMultiTemp);
-        coins += onDeathCoins; //should watch out for being able to somehow die twice (Walter Tye reference)
+        coins += onDeathCoins; //should watch out for being able to somehow die twice
         deathScreen.Setup(snakeScore, onDeathCoins);
         UpdateHighScore();
     }
@@ -814,7 +822,7 @@ public class Player : MonoBehaviour, ISaveManager
     }
 
     void OnTriggerEnter2D (Collider2D collide) {
-        if (collide.CompareTag("Obstacle") || collide.CompareTag("Walls")) {
+        if (collide.CompareTag("Obstacle") || collide.CompareTag("Walls") || collide.CompareTag("BasicBullet")) {
             OnPlayerHitLogic(collide.tag);
         } else if (collide.CompareTag("Laser")) {
             if (invincTracker >= invincTimer) {
