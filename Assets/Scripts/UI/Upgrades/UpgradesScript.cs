@@ -92,13 +92,13 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     private float timeIncrement = 5f;
 
     //XP Multi
-    private float xpMulti;
+    private float xpMulti; //dont work, 2.4 costs 68 nothing past that
     private float xpMultiMax = 2.5f;
     private float defaultXpMulti = 1f;
     private float xpIncrement = .1f;
 
     //Coin Multi
-    private float coinMulti;
+    private float coinMulti; //dont work, 3.9 costs 172 nothing past that
     private float maxCoinMulti = 4f;
     private float defaultCoinMulti = 1f;
     private float coinMultiIncrement = .1f;
@@ -114,30 +114,30 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     private int minExtraSegments = 0;
 
     //Extra Choices
-    private int extraChoices;
+    private int extraChoices; //TODO: implement
     private int defaultExtraChoices = 0;
     private int maxExtraChoices = 2;
 
     //Time Slow Length
-    private float tsLength;
+    private float tsLength; //dont work, 2.9 costs 49 nothing past that
     private float maxTSLength = 3f;
     private float defaultTSLength = 2f;
     private float tsIncrement = .1f;
 
     //Time Slow Speed
-    private float tsSpeed;
+    private float tsSpeed; //dont work, .3 max .25 max
     private float minTSSpeed = .25f;
     private float defaultTSSpeed = .5f;
     private float tsSpeedIncrement = .05f;
 
     //Time Slow Cooldown
-    private float tsCooldown; //inconsistent shortening of cooldown
+    private float tsCooldown; //works
     private float minTSCooldown = .5f;
     private float defaultTSCooldown = 2f;
     private float tsCDIncrement = .1f;
 
     //Dash Cooldown
-    private float dashCD;
+    private float dashCD; //dont work, .8 max .7 max
     private float minDashCD = .7f;
     private float defaultDashCD = 2f;
     private float dashCDIncrement = .1f;
@@ -148,7 +148,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     private AudioSource noMoney;
 
     public void SaveData (GameData data) {
-        SaveType(ref data); //most stuff is auto passed as reference in C# but I don't think classes are - interesting
+        SaveType(ref data);
     }
     public void LoadData (GameData data) {
         hasDash = data.hasDash;
@@ -163,8 +163,8 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
         coinMulti = data.coinMulti;
         mapSize = data.mapSize;
         extraSegments = data.extraSegments;
-        extraChoices = data.extraChoices;
-        tsLength = data.tsLength; //time
+        extraChoices = data.extraChoices; //
+        tsLength = data.tsLength;
         tsSpeed = data.tsSpeed;
         tsCooldown = data.tsCooldown;
         dashCD = data.dashCD;
@@ -224,13 +224,16 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 break;
             case "TimeSlowSpeed":
                 data.tsSpeed = condFloat;
-                break; //USE COND___ NOT "variablename" FOR ALL SAVES
+                break; //USE cond___ NOT "variablename" FOR ALL SAVES
             default:
                 Debug.Log("Error in SaveType: name = "+name);
                 break;
         }
     }
-
+    //cost generation doesn't work because of casting the output of the costSize formula
+    //to an int. I could use what I learned from data structures to make the formula correct,
+    //but this is actually indicative of a different problem. I should be checking if I can click
+    //the upgrade based on if there is an array value past that, so I'll fix that instead.
     private void ScriptType () { //(ﾟДﾟ)
         switch (type) {
             case "Dash":
@@ -473,10 +476,10 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 cost = new int[costSize]; //make sure this can always convert to an int, size 13
                 cost[0] = 25;
                 for (int i = 1; i < cost.Length/2; i++) {
-                    cost[i] = cost[i-1] + 5;
+                    cost[i] = cost[i-1] + 10;
                 }
                 for (int i = cost.Length / 2; i < cost.Length; i++) {
-                    cost[i] = cost[i-1] + 10;
+                    cost[i] = cost[i-1] + 15;
                 }
                 varType = 3;
                 break;
@@ -651,14 +654,14 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
 
     private void DefineCostIndexFloat (ref int onClickCostIndex) {
         if (increment) {
-            onClickCostIndex = (int)((condFloat - defaultFloat) / incrementAmount);
+            onClickCostIndex = Mathf.RoundToInt((condFloat - defaultFloat) / incrementAmount) - 1; //-1?
         } else {
-            onClickCostIndex = (int)((defaultFloat - condFloat) / incrementAmount);
+            onClickCostIndex = Mathf.RoundToInt((defaultFloat - condFloat) / incrementAmount); //PROBLEM IS HERE WTH CASTING
         }
     }
 
     private void OnClickFloat () {
-        int onClickCostIndex = -1;
+        int onClickCostIndex = 100;
         DefineCostIndexFloat(ref onClickCostIndex);
         if (onClickCostIndex > costSize - 1) {
             return;

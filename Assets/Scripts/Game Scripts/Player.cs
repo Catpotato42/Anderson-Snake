@@ -476,6 +476,7 @@ public class Player : MonoBehaviour, ISaveManager
         }
     }
 
+    //will not be using this
     private void Fire () {
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         mousePosition.z = 0; //there has to be a way to just get Vector2 but this'll do

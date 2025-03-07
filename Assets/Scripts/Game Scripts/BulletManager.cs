@@ -84,7 +84,7 @@ public class BulletManager : MonoBehaviour
         float nextWarningAmount = 2;
         float nextSpawnTime = 3;
         if (bulletWaveTracker < lt[0]) {
-                nextAmount = 1;
+            nextAmount = 1;
             nextWarningAmount = Random.Range(10, 20);
             nextSpawnTime = duration;
         } else if (bulletWaveTracker >= lt[0] && bulletWaveTracker < lt[1]) {

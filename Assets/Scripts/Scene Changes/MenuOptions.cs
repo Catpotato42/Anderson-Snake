@@ -10,13 +10,17 @@ public class MenuOptions : MonoBehaviour, IPointerClickHandler
     }
     public void OnPointerClick (PointerEventData pointerEventData) {
         if (pointerEventData.button == PointerEventData.InputButton.Left) {
-            SaveManager.instance.SaveGame();
-            AudioManager.instance.PlayAudio("defaultButtonClick");
-            if (SceneManager.GetActiveScene().buildIndex == 0) {
-                SceneManager.LoadScene(3);
-            } else if (SceneManager.GetActiveScene().buildIndex == 3) {
-                SceneManager.LoadScene(0);
-            }
+            ButtonClicked();
+        }
+    }
+
+    private void ButtonClicked() {
+        SaveManager.instance.SaveGame();
+        AudioManager.instance.PlayAudio("defaultButtonClick");
+        if (SceneManager.GetActiveScene().buildIndex == 0) { //should replace with the name, build index isn't safe. Maybe next game though.
+            SceneManager.LoadScene(3);
+        } else if (SceneManager.GetActiveScene().buildIndex == 3) {
+            SceneManager.LoadScene(0);
         }
     }
 }
