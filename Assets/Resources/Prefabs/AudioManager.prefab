@@ -47,7 +47,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultButtonClick: {fileID: 8300000, guid: c3e0dda6c3773c447aa5e4dd9b0b1f7a, type: 3}
   hurt: {fileID: 8300000, guid: a3d98d715e5b67b4697fc5f18fe4249a, type: 3}
-  death: {fileID: 8300000, guid: c0848a786dca5b543bae41b9c87f5203, type: 3}
+  death: {fileID: 8300000, guid: 634560591b6889a469c54919caac8eb4, type: 3}
+  eat: {fileID: 8300000, guid: e56d2e027b9eec54590f5435e868aaab, type: 3}
 --- !u!82 &1201995274125987204
 AudioSource:
   m_ObjectHideFlags: 0
@@ -69,9 +70,9 @@ AudioSource:
   Priority: 128
   DopplerLevel: 1
   MinDistance: 1
-  MaxDistance: 500
+  MaxDistance: 50
   Pan2D: 0
-  rolloffMode: 0
+  rolloffMode: 2
   BypassEffects: 0
   BypassListenerEffects: 0
   BypassReverbZones: 0
@@ -83,6 +84,15 @@ AudioSource:
       value: 1
       inSlope: 0
       outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.9041066
+      value: 0.6120142
+      inSlope: -1.4847727
+      outSlope: -1.4847727
       tangentMode: 0
       weightedMode: 0
       inWeight: 0.33333334

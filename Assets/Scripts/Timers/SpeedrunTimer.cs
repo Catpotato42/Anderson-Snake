@@ -44,9 +44,6 @@ public class SpeedrunTimer : MonoBehaviour, ISaveManager
         } else if (speedrunTimer < 60f && speedrunTimer > 10f){
             speedrunText.text = "0:"+ (int)speedrunTimer;
         } else if (speedrunTimer < 10f) {
-            /*if (speedrunText.alignment != TextAlignmentOptions.Left) {
-                speedrunText.alignment = TextAlignmentOptions.Left;
-            }*/
             speedrunText.text = "" + Mathf.Round(speedrunTimer*100f)/100f; //fixed the fucking formatting with single digits ಠ﹏ಠ
         }
     }

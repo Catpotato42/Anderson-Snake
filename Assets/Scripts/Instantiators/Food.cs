@@ -5,7 +5,9 @@ using UnityEngine;
 
 public class Food : MonoBehaviour
 {
-    void Awake() { 
+    private SpriteRenderer sprite;
+    void Awake() {
+        sprite = gameObject.GetComponent<SpriteRenderer>();
         RandomPosition();
     }
     void Start () {
@@ -25,4 +27,6 @@ public class Food : MonoBehaviour
             RandomPosition();
         }
     }
+
+
 }

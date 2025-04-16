@@ -1,7 +1,8 @@
 using UnityEngine;
 
-public class TempFood : MonoBehaviour
+public class TempFood : MonoBehaviour // could be implemented as a child of Food
 {
+    private SpriteRenderer sprite;
     void Awake() //this should NEVER be instantiated at the start of a scene. use food for that.
     {    
         RandomPosition();

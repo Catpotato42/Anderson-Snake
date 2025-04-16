@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: b36126d6b9122824aa67af666c10484e
+guid: 85f128eb38f5bd8498c4dcd959d9138e
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -110,13 +110,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: acorn snake_0
+      name: golden acorn_0
       rect:
         serializedVersion: 2
-        x: 7
-        y: 7
-        width: 42
-        height: 50
+        x: 8
+        y: 8
+        width: 40
+        height: 48
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -124,8 +124,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 3281f69d0c8fb7a43b66a3f8505c06fd
-      internalID: 90282445
+      spriteID: 66ef2e6bbaf2f7e43b49eae4e49fab24
+      internalID: 1768469764
       vertices: []
       indices: 
       edges: []
@@ -141,7 +141,7 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      acorn snake_0: 90282445
+      golden acorn_0: 1768469764
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

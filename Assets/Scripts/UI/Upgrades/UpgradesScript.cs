@@ -16,12 +16,18 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     //Alright I'm gonna delete all of these scripts and use this as a skeleton for the final upgrades script, but I'm gonna leave this record of
     //how horrible the old system was. (12/2/24)
 
+    //The only script in the game that doesn't use audio manager!
+
     //bedtime but this needs to get done tmrw
 
     //Wow this is still not great
 
-    //TODO BUGS: if the collection size is odd (maybe even?) for floats the max size gets activated one early
+    //FINALLY FULLY COMPLETE! Only value tweaking is needed now, and maybe sprite changes but the actual coding is now done.
 
+    //Overview: This script is on every upgrade in the non-permanent upgrades section. It goes through a switch case at the start after determining what 
+    //upgrade it is, then is fully standalone. To add a new variable, make sure to put it in LoadData and SaveType (after putting it in the save system)
+    //and make an entry in the variable definitions section below this message. Then, set values in ScriptType and you're done.
+    
     //These are needed for all upgrades:
     private int coins;
     private int varType;
@@ -76,9 +82,9 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
 
     //Extra Health Amount
     private float extraHealth;
-    private float maxHealth = 1000f;
+    private float maxHealth = 20f;
     private float defaultHealth = 0;
-    private float healthIncrement = 50f;
+    private float healthIncrement = 1f;
 
     //Extra Food Amount
     private int extraFood;
@@ -87,18 +93,18 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
 
     //Time Amount
     private float runTime;
-    private float defaultTime = 20;
-    private float maxTime = 300;
-    private float timeIncrement = 5f;
+    private float defaultTime = 10;
+    private float maxTime = 150;
+    private float timeIncrement = 2f;
 
     //XP Multi
-    private float xpMulti;
+    private float xpMulti; //dont work, 2.4 costs 68 nothing past that
     private float xpMultiMax = 2.5f;
     private float defaultXpMulti = 1f;
     private float xpIncrement = .1f;
 
     //Coin Multi
-    private float coinMulti;
+    private float coinMulti; //dont work, 3.9 costs 172 nothing past that
     private float maxCoinMulti = 4f;
     private float defaultCoinMulti = 1f;
     private float coinMultiIncrement = .1f;
@@ -114,33 +120,39 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     private int minExtraSegments = 0;
 
     //Extra Choices
-    private int extraChoices;
+    private int extraChoices; //TODO: implement
     private int defaultExtraChoices = 0;
     private int maxExtraChoices = 2;
 
     //Time Slow Length
-    private float tsLength;
+    private float tsLength; //dont work, 2.9 costs 49 nothing past that
     private float maxTSLength = 3f;
     private float defaultTSLength = 2f;
     private float tsIncrement = .1f;
 
     //Time Slow Speed
-    private float tsSpeed;
+    private float tsSpeed; //dont work, .3 max .25 max
     private float minTSSpeed = .25f;
     private float defaultTSSpeed = .5f;
     private float tsSpeedIncrement = .05f;
 
     //Time Slow Cooldown
-    private float tsCooldown; //inconsistent shortening of cooldown
+    private float tsCooldown; //works
     private float minTSCooldown = .5f;
     private float defaultTSCooldown = 2f;
     private float tsCDIncrement = .1f;
 
     //Dash Cooldown
-    private float dashCD;
+    private float dashCD; //dont work, .8 max .7 max
     private float minDashCD = .7f;
     private float defaultDashCD = 2f;
     private float dashCDIncrement = .1f;
+
+    //Reverse Cooldown
+    private float reverseCD;
+    private float minReverseCD = .3f;
+    private float defaultReverseCD = .8f;
+    private float reverseCDIncrement = .1f;
 
     private AudioSource[] audioSources;
     private AudioSource change;
@@ -148,7 +160,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     private AudioSource noMoney;
 
     public void SaveData (GameData data) {
-        SaveType(ref data); //most stuff is auto passed as reference in C# but I don't think classes are - interesting
+        SaveType(ref data);
     }
     public void LoadData (GameData data) {
         hasDash = data.hasDash;
@@ -163,11 +175,12 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
         coinMulti = data.coinMulti;
         mapSize = data.mapSize;
         extraSegments = data.extraSegments;
-        extraChoices = data.extraChoices;
-        tsLength = data.tsLength; //time
+        extraChoices = data.extraChoices; //
+        tsLength = data.tsLength;
         tsSpeed = data.tsSpeed;
         tsCooldown = data.tsCooldown;
         dashCD = data.dashCD;
+        reverseCD = data.reverseCD;
         ScriptType(); // ^_^
         OnStartAndReload();
     }
@@ -224,7 +237,10 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 break;
             case "TimeSlowSpeed":
                 data.tsSpeed = condFloat;
-                break; //USE COND___ NOT "variablename" FOR ALL SAVES
+                break; //USE cond___ NOT "variablename" FOR ALL SAVES
+            case "ReverseCD":
+                data.reverseCD = condFloat;
+                break;
             default:
                 Debug.Log("Error in SaveType: name = "+name);
                 break;
@@ -278,7 +294,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 condFloat = extraHealth;
                 boundaryFloat = maxHealth;
                 defaultFloat = defaultHealth;
-                costSize = (int)((boundaryFloat - defaultFloat) / incrementAmount);
+                costSize = Mathf.RoundToInt((boundaryFloat - defaultFloat) / incrementAmount);
                 cost = new int[costSize]; //make sure this can always convert to an int
                 cost[0] = 50;
                 for (int i = 1; i < cost.Length/2; i++) {
@@ -311,7 +327,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 condFloat = runTime;
                 boundaryFloat = maxTime;
                 defaultFloat = defaultTime;
-                costSize = (int)((boundaryFloat - defaultFloat) / incrementAmount);
+                costSize = Mathf.RoundToInt((boundaryFloat - defaultFloat) / incrementAmount);
                 cost = new int[costSize]; //make sure this can always convert to an int
                 cost[0] = 25;
                 for (int i = 1; i < cost.Length/2; i++) {
@@ -328,7 +344,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 condFloat = xpMulti;
                 boundaryFloat = xpMultiMax;
                 defaultFloat = defaultXpMulti;
-                costSize = (int)((boundaryFloat - defaultFloat) / incrementAmount);
+                costSize = Mathf.RoundToInt((boundaryFloat - defaultFloat) / incrementAmount);
                 cost = new int[costSize]; //make sure this can always convert to an int
                 cost[0] = 15;
                 for (int i = 1; i < cost.Length/2; i++) {
@@ -345,7 +361,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 condFloat = coinMulti;
                 boundaryFloat = maxCoinMulti;
                 defaultFloat = defaultCoinMulti;
-                costSize = (int)((boundaryFloat - defaultFloat) / incrementAmount);
+                costSize = Mathf.RoundToInt((boundaryFloat - defaultFloat) / incrementAmount);
                 cost = new int[costSize]; //make sure this can always convert to an int
                 cost[0] = 30;
                 for (int i = 1; i < cost.Length/2; i++) {
@@ -381,10 +397,10 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 cost = new int[costSize]; //make sure this can always convert to an int
                 cost[0] = 25;
                 for (int i = 1; i < cost.Length/2; i++) {
-                    cost[i] = cost[i-1] + 10;
+                    cost[i] = cost[i-1] + 30;
                 }
                 for (int i = cost.Length / 2; i < cost.Length; i++) {
-                    cost[i] = cost[i-1] + 15;
+                    cost[i] = cost[i-1] + 70;
                 }
                 varType = 2;
                 break;
@@ -412,7 +428,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 condFloat = tsLength;
                 boundaryFloat = maxTSLength;
                 defaultFloat = defaultTSLength;
-                costSize = (int)((boundaryFloat - defaultFloat) / incrementAmount); // 3 - 2 = 1 / .1 = 10
+                costSize = Mathf.RoundToInt((boundaryFloat - defaultFloat) / incrementAmount); // 3 - 2 = 1 / .1 = 10
                 cost = new int[costSize]; //make sure this can always convert to an int
                 cost[0] = 15;
                 for (int i = 1; i < cost.Length/2; i++) {
@@ -431,7 +447,26 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 condFloat = dashCD;
                 boundaryFloat = minDashCD;
                 defaultFloat = defaultDashCD;
-                costSize = (int)((defaultFloat - boundaryFloat) / incrementAmount);
+                costSize = Mathf.RoundToInt((defaultFloat - boundaryFloat) / incrementAmount);
+                cost = new int[costSize];
+                cost[0] = 15;
+                for (int i = 1; i < cost.Length/2; i++) {
+                    cost[i] = cost[i-1] + 3;
+                }
+                for (int i = cost.Length / 2; i < cost.Length; i++) {
+                    cost[i] = cost[i-1] + 5;
+                }
+                varType = 3;
+                break;
+            case "ReverseCD":
+                increment = false;
+                usingUnlock = true;
+                unlocked1 = hasReverse;
+                incrementAmount = reverseCDIncrement;
+                condFloat = reverseCD;
+                boundaryFloat = minReverseCD;
+                defaultFloat = defaultReverseCD;
+                costSize = Mathf.RoundToInt((defaultFloat - boundaryFloat) / incrementAmount);
                 cost = new int[costSize];
                 cost[0] = 15;
                 for (int i = 1; i < cost.Length/2; i++) {
@@ -450,7 +485,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 condFloat = tsCooldown;
                 boundaryFloat = minTSCooldown;
                 defaultFloat = defaultTSCooldown;
-                costSize = (int)((defaultFloat - boundaryFloat) / incrementAmount);
+                costSize = Mathf.RoundToInt((defaultFloat - boundaryFloat) / incrementAmount);
                 cost = new int[costSize];
                 cost[0] = 50;
                 for (int i = 1; i < cost.Length/2; i++) {
@@ -469,14 +504,14 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 condFloat = tsSpeed;
                 boundaryFloat = minTSSpeed;
                 defaultFloat = defaultTSSpeed;
-                costSize = (int)((defaultFloat - boundaryFloat) / incrementAmount); //2-.7f = 1.3f / .1f = 13
+                costSize = Mathf.RoundToInt((defaultFloat - boundaryFloat) / incrementAmount); //2-.7f = 1.3f / .1f = 13
                 cost = new int[costSize]; //make sure this can always convert to an int, size 13
                 cost[0] = 25;
                 for (int i = 1; i < cost.Length/2; i++) {
-                    cost[i] = cost[i-1] + 5;
+                    cost[i] = cost[i-1] + 10;
                 }
                 for (int i = cost.Length / 2; i < cost.Length; i++) {
-                    cost[i] = cost[i-1] + 10;
+                    cost[i] = cost[i-1] + 15;
                 }
                 varType = 3;
                 break;
@@ -590,7 +625,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 return;
             }
             if (unlocked0) {
-                //nothing happens, already unlocked: TODO: either add a sound or make it revert when you click this
+                locked.Play();
                 return;
             }
             change.Play();
@@ -598,7 +633,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
             unlocked0 = true;
             amountText.text = unlockString;
             costTracker.text = "";
-            if (type == "Dash" || type == "TimeSlow") { // ¯\(°_o)/¯ what else am I supposed to use like an event Action that all the usingUnlock scripts subscribe to? Ridiculous.
+            if (type == "Dash" || type == "TimeSlow" || type == "Reverse") { // ¯\(°_o)/¯ what else am I supposed to use like an event Action that all the usingUnlock scripts subscribe to? Ridiculous.
                 SaveManager.instance.SaveGame();
                 SaveManager.instance.LoadGame();
             }
@@ -617,9 +652,11 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     }
 
     private void OnClickInt () { //if increment, condInt - defaultInt
-        int onClickCostIndex = -1; //why is this this way, TODO: fix whatever causes these floats and ints to go out of where they're supposed to be, ALSO it could be caused
-        DefineCostIndexInt(ref onClickCostIndex); //by an interaction where you click it while it's locked and it still increments a variable.
+        int onClickCostIndex = -1;
+        DefineCostIndexInt(ref onClickCostIndex);
         if (onClickCostIndex > costSize - 1) {
+            //Debug.Log("onClickCostIndex = "+onClickCostIndex+", costSize = "+costSize);
+            locked.Play();
             return;
         }
         if (usingUnlock && !unlocked1) {
@@ -651,16 +688,17 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
 
     private void DefineCostIndexFloat (ref int onClickCostIndex) {
         if (increment) {
-            onClickCostIndex = (int)((condFloat - defaultFloat) / incrementAmount);
+            onClickCostIndex = Mathf.RoundToInt((condFloat - defaultFloat) / incrementAmount);
         } else {
-            onClickCostIndex = (int)((defaultFloat - condFloat) / incrementAmount);
+            onClickCostIndex = Mathf.RoundToInt((defaultFloat - condFloat) / incrementAmount); //PROBLEM IS HERE WTH CASTING
         }
     }
 
     private void OnClickFloat () {
-        int onClickCostIndex = -1;
+        int onClickCostIndex = 100;
         DefineCostIndexFloat(ref onClickCostIndex);
         if (onClickCostIndex > costSize - 1) {
+            locked.Play();
             return;
         }
         if (usingUnlock && !unlocked1) {
@@ -698,7 +736,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 unlocked0 = false;
                 amountText.text = unlockString;
                 costTracker.text = "Cost: "+cost[0];
-                if (type == "Dash" || type == "TimeSlow") {
+                if (type == "Dash" || type == "TimeSlow" || type == "Reverse") {
                     SaveManager.instance.SaveGame();
                     SaveManager.instance.LoadGame();
                 }
