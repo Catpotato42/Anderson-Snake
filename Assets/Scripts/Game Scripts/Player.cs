@@ -102,18 +102,18 @@ public class Player : MonoBehaviour, ISaveManager
     private float tempTimeSlowTime;
 
     private bool canReverse;
-    private float reverseCooldown = .3f;
+    private float reverseCD;
     private float reverseCooldownTracker = 0;
     public float ReverseCooldown {
-        get => reverseCooldown;
+        get => reverseCD;
     }
     public float ReverseCooldownTracker {
         get => reverseCooldownTracker;
     }
 
-    private float health = 50f; //set on reset
+    private float health = 1f; //set on reset
     public float Health {get => health; set => health = value;}
-    private static float invincTimer = .2f;
+    private static float invincTimer = .5f;
     private float invincTracker = invincTimer;
 
     private float extraHealth = 0;
@@ -127,6 +127,7 @@ public class Player : MonoBehaviour, ISaveManager
     private bool hasMedium;
     private bool hasHard;
     private bool hasEverettSkin;
+    private bool hasChallengeRun;
     private int highScore;
     private int coins;
     public int HighScore {
@@ -206,11 +207,13 @@ public class Player : MonoBehaviour, ISaveManager
         timeSlowCooldown = data.tsCooldown;
         tsLength = data.tsLength;
         hasReverse = data.hasReverse;
+        reverseCD = data.reverseCD;
         xpMulti = data.xpMulti;
         coinMulti = data.coinMulti;
         dashCooldown = data.dashCD;
         coins = data.coins;
         hasEverettSkin = data.hasEverettSkin;
+        hasChallengeRun = data.hasChallengeRun;
         timerDone = data.timerDone;
     }
     public void SaveData(GameData data) {
@@ -218,6 +221,7 @@ public class Player : MonoBehaviour, ISaveManager
         data.hasHard = hasHard;
         data.hasEverett = hasEverett;
         data.hasEverettSkin = hasEverettSkin;
+        data.hasChallengeRun = hasChallengeRun;
         data.coins = coins;
         data.timerDone = timerDone;
     }
@@ -312,11 +316,11 @@ public class Player : MonoBehaviour, ISaveManager
         canReverse = false;
         upgradeNumber = 0;
         dashCooldownTracker = dashCooldown;
-        reverseCooldownTracker = reverseCooldown;
+        reverseCooldownTracker = reverseCD;
         timeSlowCooldownTracker = timeSlowCooldown;
         timeSlowLengthTracker = tsLength;
         invincTracker = invincTimer;
-        health = extraHealth + 50f;
+        health = extraHealth + 1f;
         GameManager.instance.MapSizeTemp = GameManager.instance.MapSize + 6;
         TileMapper.instance.RefreshTileMap();
         GameManager.instance.SetDictionaryValues(); //called in awake of gamemanager too, probably redundant.
@@ -515,7 +519,7 @@ public class Player : MonoBehaviour, ISaveManager
             canTimeSlow = true;
         }
         reverseCooldownTracker += Time.deltaTime;
-        if (reverseCooldownTracker > reverseCooldown && !canReverse) {
+        if (reverseCooldownTracker > reverseCD && !canReverse) {
             canReverse = true;
         }
         GetUserInput();
@@ -554,6 +558,7 @@ public class Player : MonoBehaviour, ISaveManager
 
     private void GetUserInput () {
         if (Input.GetKeyDown(KeyCode.R) && isDead || Input.GetKeyDown(KeyCode.Space) && isDead) {
+            AudioManager.instance.PlayAudio("defaultButtonClick");
             ResetSnake();
             return;
         }
@@ -570,6 +575,7 @@ public class Player : MonoBehaviour, ISaveManager
         } else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)) {
             QueueInput(KeyCode.A);
         } else if (Input.GetKeyDown(KeyCode.Escape) && isDead) {
+            AudioManager.instance.PlayAudio("defaultButtonClick");
             SaveManager.instance.SaveGame();
             SceneManager.LoadScene(0);
         } else if (Input.GetKeyDown(KeyCode.Space) && canDash && hasDash) { //pausing is only in for testing purposes! Dashing is the intended functionalty of space
@@ -781,7 +787,7 @@ public class Player : MonoBehaviour, ISaveManager
         //this part means you actually were hit ಠ﹏ಠ noob
         AudioManager.instance.PlayAudio("hurt");
         StartCoroutine(healthFlash.DecreaseHealthFlash());
-        health -= 50;
+        health -= 1;
         Debug.Log("health = "+health);
         if (health <= 0) {
             KillPlayer();
@@ -838,21 +844,23 @@ public class Player : MonoBehaviour, ISaveManager
 
     private void AteFood () { //meant to just be called in OnTrigger, logic for post eating food
         AddScore(1);
+        AudioManager.instance.PlayAudio("eat");
         UpdateHighScore();
         xpScore += 1 * xpMultiTemp;
         OnXPIncrease.Invoke();
-        if (snakeScore == 120 && !hasMedium) {
+        if (snakeScore == 30 && !hasMedium) {
             OnDiffUnlock.Invoke("MEDIUM MODE UNLOCKED!!!");
             hasMedium = true;
-        } else if (snakeScore == 170 && !hasHard && difficultyScale == "medium") {
+        } else if (snakeScore == 50 && !hasHard && difficultyScale == "medium") {
             OnDiffUnlock.Invoke("HARD MODE UNLOCKED!!!");
             hasHard = true;
-        } else if (snakeScore == 200 && !hasEverett && difficultyScale == "hard") {
+        } else if (snakeScore == 70 && !hasEverett && difficultyScale == "hard") {
             OnDiffUnlock.Invoke("EVERETT MODE UNLOCKED!!!");
             hasEverett = true;
-        } else if (snakeScore == 250 && difficultyScale == "everett" && !hasEverettSkin) {
+        } else if (snakeScore == 100 && difficultyScale == "everett" && !hasEverettSkin) {
             OnDiffUnlock.Invoke("EVERETT SKIN UNLOCKED!");
             hasEverettSkin = true;
+            hasChallengeRun = true;
             //stop run timer
             timerDone = true;
         }

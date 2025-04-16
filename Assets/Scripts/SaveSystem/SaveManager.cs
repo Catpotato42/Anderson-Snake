@@ -31,7 +31,8 @@ public class SaveManager : MonoBehaviour {
     }
 
     public void NewGame () {
-        gameData = new GameData(); 
+        gameData = new GameData();
+        gameData.timerDone = false;
     }
 
     public void NewGamePlus (bool done) { //starts a new game while retaining high scores.
@@ -39,12 +40,32 @@ public class SaveManager : MonoBehaviour {
         int highScoreM = gameData.highScoreM;
         int highScoreH = gameData.highScoreH;
         int highScoreEv = gameData.highScoreEv;
+        bool acorn1 = gameData.acorn1;
+        bool acorn2 = gameData.acorn2;
+        bool acorn3 = gameData.acorn3;
+        bool acorn4 = gameData.acorn4;
+        bool acorn5 = gameData.acorn5;
+        bool allAcornsCollected = gameData.allAcornsCollected;
+        int acornsCollected = gameData.acornsCollected;
         gameData = new GameData();
+        gameData.acorn1 = acorn1;
+        gameData.acorn2 = acorn2;
+        gameData.acorn3 = acorn3;
+        gameData.acorn4 = acorn4;
+        gameData.acorn5 = acorn5;
+        gameData.allAcornsCollected = allAcornsCollected;
+        gameData.acornsCollected = acornsCollected;
         gameData.timerDone = done;
         gameData.highScoreB = highScoreB;
         gameData.highScoreM = highScoreM;
         gameData.highScoreH = highScoreH;
         gameData.highScoreEv = highScoreEv;
+        gameData.hasChallengeRun = true;
+        if (!done) {
+            gameData.challengeUpgrades = true;
+        } else {
+            gameData.challengeUpgrades = false;
+        }
         dataHandler.Save(gameData); //should serialize the updated gameData to json and save to file without being affected by outside scripts
         LoadGame(); //may need a SaveGame before this
     }
@@ -59,7 +80,11 @@ public class SaveManager : MonoBehaviour {
         }
         //push loaded data
         foreach (ISaveManager saveManagerObj in saveManagerObjects) {
-            saveManagerObj.LoadData(gameData);
+            if (saveManagerObj != null) {
+                saveManagerObj.LoadData(gameData);
+            } else {
+                Debug.Log("Missing Save Manager Object!");
+            }
         }
 
         //Debug.Log("Loaded mapSize and health, "+gameData.mapSize+" and "+gameData.extraHealth+".");

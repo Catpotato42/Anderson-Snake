@@ -2,17 +2,22 @@ using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 
 public class CoinsDisplay : MonoBehaviour, IPointerClickHandler, ISaveManager
 {
     public static CoinsDisplay instance;
     public int coins;
     private TextMeshProUGUI coinsText;
+    [SerializeField] private GameObject goldAcorn; 
+    private bool acornFound;
+    private bool canSpawnAcorn;
     public void SaveData (GameData data) {
         data.coins = coins;
     }
     public void LoadData (GameData data) {
         coins = data.coins;
+        acornFound = data.acorn3;
     }
 
     void Awake () {
@@ -37,7 +42,14 @@ public class CoinsDisplay : MonoBehaviour, IPointerClickHandler, ISaveManager
         if (pointerEventData.button == PointerEventData.InputButton.Left) {
             coins += 1000; //TODO: REMOVE, replace with an audio output
             coinsText.text = "Coins: "+coins; //TODO: REMOVE
-            //why would I remove that
+            AudioManager.instance.PlayAudio("defaultButtonClick");
+            if (SceneManager.GetActiveScene().buildIndex == 4 && !acornFound && canSpawnAcorn) {
+                canSpawnAcorn = false;
+                Debug.Log("acornFound = "+acornFound+", spawning acorn");
+                GameObject acorn = Instantiate(goldAcorn, new Vector3(7f, 1.5f, 0f), Quaternion.identity);
+                acorn.name = "Acorn3";
+                SaveManager.instance.LoadGame();
+            }
         } /*else if (pointerEventData.button == PointerEventData.InputButton.Right) { //TODO: REMOVE right button input completely
             coins = 0;
             coinsText.text = "Coins: "+coins;

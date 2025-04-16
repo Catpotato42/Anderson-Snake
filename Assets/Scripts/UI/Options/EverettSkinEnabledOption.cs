@@ -32,7 +32,7 @@ public class EverettSkinEnabledOption : MonoBehaviour, IPointerClickHandler, ISa
             button.GetComponent<Image>().color = Color.gray;
             gameObject.GetComponentInParent<TextMeshProUGUI>().text = "Git Gud";
         } else if (highScoreEv < 50 && skinPref == "everett") {
-            Debug.Log("You shouldn't have that skin... (╯°□°）╯︵ ┻━┻"); //TODO: error message?
+            Debug.LogWarning("You shouldn't have that skin... (╯°□°）╯︵ ┻━┻");
         }
     }
 

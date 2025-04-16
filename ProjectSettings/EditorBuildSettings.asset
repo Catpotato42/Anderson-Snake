@@ -17,4 +17,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/OptionsScreen.unity
     guid: 35a490ecc6e6e134e8855252c9a23add
+  - enabled: 1
+    path: Assets/Scenes/ChallengeUpgradeScreen.unity
+    guid: 6af00067735f6e24aa1c63526c08dbd5
   m_configObjects: {}
