@@ -10,6 +10,9 @@ public class EverettSkinEnabledOption : MonoBehaviour, IPointerClickHandler, ISa
     private string skinPref;
     private int highScoreEv;
     private bool hasEverettSkin;
+    private bool acornFound;
+    private bool canSpawnAcorn = true;
+    [SerializeField] private GameObject goldAcorn;
     private PlayUpgradeButtonAudio playUpgradeButtonAudio;
     public void SaveData (GameData data) {
         data.skinPref = skinPref;
@@ -18,6 +21,7 @@ public class EverettSkinEnabledOption : MonoBehaviour, IPointerClickHandler, ISa
         skinPref = data.skinPref;
         highScoreEv = data.highScoreEv; //if high score everett is 50 or greater, you can use this skin.
         hasEverettSkin = data.hasEverettSkin;
+        acornFound = data.acorn4;
     }
     void Start()
     {   
@@ -30,7 +34,7 @@ public class EverettSkinEnabledOption : MonoBehaviour, IPointerClickHandler, ISa
         }
         if (!hasEverettSkin && skinPref != "everett") {
             button.GetComponent<Image>().color = Color.gray;
-            gameObject.GetComponentInParent<TextMeshProUGUI>().text = "Git Gud";
+            gameObject.GetComponentInParent<TextMeshProUGUI>().text = "Locked";
         } else if (highScoreEv < 50 && skinPref == "everett") {
             Debug.LogWarning("You shouldn't have that skin... (╯°□°）╯︵ ┻━┻");
         }
@@ -42,6 +46,15 @@ public class EverettSkinEnabledOption : MonoBehaviour, IPointerClickHandler, ISa
                 skinPref = "everett";
                 playUpgradeButtonAudio.PlayChange();
                 button.GetComponent<Image>().color = Color.green;
+                if (!acornFound && canSpawnAcorn) {
+                    canSpawnAcorn = false;
+                    Debug.Log("acornFound = "+acornFound+", spawning acorn");
+                    GameObject acorn = Instantiate(goldAcorn, new Vector3(2.5f, 1.8f, 0f), Quaternion.identity);
+                    acorn.transform.localScale = new Vector3 (2,2,0);
+                    acorn.name = "Acorn4";
+                    SaveManager.instance.UpdateSaveManagerObjects();
+                    SaveManager.instance.LoadGame();
+                }
             } else if (skinPref == "everett") {
                 skinPref = "normal";
                 playUpgradeButtonAudio.PlayChange();

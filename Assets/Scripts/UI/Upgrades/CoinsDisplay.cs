@@ -11,7 +11,7 @@ public class CoinsDisplay : MonoBehaviour, IPointerClickHandler, ISaveManager
     private TextMeshProUGUI coinsText;
     [SerializeField] private GameObject goldAcorn; 
     private bool acornFound;
-    private bool canSpawnAcorn;
+    private bool canSpawnAcorn = true;
     public void SaveData (GameData data) {
         data.coins = coins;
     }
@@ -47,7 +47,9 @@ public class CoinsDisplay : MonoBehaviour, IPointerClickHandler, ISaveManager
                 canSpawnAcorn = false;
                 Debug.Log("acornFound = "+acornFound+", spawning acorn");
                 GameObject acorn = Instantiate(goldAcorn, new Vector3(7f, 1.5f, 0f), Quaternion.identity);
+                acorn.transform.localScale = new Vector3 (2,2,0);
                 acorn.name = "Acorn3";
+                SaveManager.instance.UpdateSaveManagerObjects();
                 SaveManager.instance.LoadGame();
             }
         } /*else if (pointerEventData.button == PointerEventData.InputButton.Right) { //TODO: REMOVE right button input completely

@@ -108,4 +108,8 @@ public class SaveManager : MonoBehaviour {
     private void OnApplicationQuit() {
         SaveGame();
     }
+
+    public void UpdateSaveManagerObjects () {
+        saveManagerObjects = FindAllSaveManagerObjects();
+    }
 }
