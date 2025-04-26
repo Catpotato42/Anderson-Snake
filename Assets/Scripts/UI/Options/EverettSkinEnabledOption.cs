@@ -13,8 +13,9 @@ public class EverettSkinEnabledOption : MonoBehaviour, IPointerClickHandler, ISa
     private bool acornFound;
     private bool canSpawnAcorn = true;
     [SerializeField] private GameObject goldAcorn;
-    private PlayUpgradeButtonAudio playUpgradeButtonAudio;
-    public void SaveData (GameData data) {
+    private AudioSource locked;
+    public void SaveData(GameData data)
+    {
         data.skinPref = skinPref;
     }
     public void LoadData (GameData data) {
@@ -24,8 +25,8 @@ public class EverettSkinEnabledOption : MonoBehaviour, IPointerClickHandler, ISa
         acornFound = data.acorn4;
     }
     void Start()
-    {   
-        playUpgradeButtonAudio = GetComponent<PlayUpgradeButtonAudio>();
+    {
+        locked = GetComponent<AudioSource>();
         button = gameObject.GetComponent<Button>();
         if (skinPref == "everett") {
             button.GetComponent<Image>().color = Color.green;
@@ -44,7 +45,7 @@ public class EverettSkinEnabledOption : MonoBehaviour, IPointerClickHandler, ISa
         if (pointerEventData.button == PointerEventData.InputButton.Left) {
             if (skinPref == "normal" && hasEverettSkin) {
                 skinPref = "everett";
-                playUpgradeButtonAudio.PlayChange();
+                AudioManager.instance.PlayAudio("defaultButtonClick");
                 button.GetComponent<Image>().color = Color.green;
                 if (!acornFound && canSpawnAcorn) {
                     canSpawnAcorn = false;
@@ -57,10 +58,10 @@ public class EverettSkinEnabledOption : MonoBehaviour, IPointerClickHandler, ISa
                 }
             } else if (skinPref == "everett") {
                 skinPref = "normal";
-                playUpgradeButtonAudio.PlayChange();
+                AudioManager.instance.PlayAudio("defaultButtonClick");
                 button.GetComponent<Image>().color = Color.red;
             } else if (skinPref == "normal" && !hasEverettSkin) {
-                playUpgradeButtonAudio.PlayLocked();
+                locked.Play();
                 //nothing happens
             } else {
                 Debug.Log("error: skinPref = "+skinPref);

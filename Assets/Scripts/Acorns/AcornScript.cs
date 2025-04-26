@@ -12,7 +12,12 @@ public class AcornScript : MonoBehaviour, ISaveManager
     private float targetSize = 0;
     private float velocity = 0f;
     public void LoadData (GameData data) {
-        switch (name) {
+        if (this == null)
+        {
+            return;
+        }
+        switch (name)
+        {
             case "Acorn1":
                 thisAcornCollected = data.acorn1;
                 break;
@@ -29,7 +34,7 @@ public class AcornScript : MonoBehaviour, ISaveManager
                 thisAcornCollected = data.acorn5;
                 break;
             default:
-                Debug.Log("AcornScript on non-acorn, name = "+name);
+                Debug.Log("AcornScript on non-acorn, name = " + name);
                 break;
         }
         if (thisAcornCollected) {
@@ -37,44 +42,54 @@ public class AcornScript : MonoBehaviour, ISaveManager
         }
     }
     public void SaveData (GameData data) {
-        switch (name) {
+        if (this == null)
+        {
+            return;
+        }
+        switch (name)
+        {
             case "Acorn1":
-                if (data.acorn1 == true && thisAcornCollected == true) {
+                if (data.acorn1 == true && thisAcornCollected == true)
+                {
                     extraSave = true;
                 }
                 data.acorn1 = thisAcornCollected;
                 Debug.Log("Acorn1 Collected");
                 break;
             case "Acorn2":
-                if (data.acorn2 == true && thisAcornCollected == true) {
+                if (data.acorn2 == true && thisAcornCollected == true)
+                {
                     extraSave = true;
                 }
                 data.acorn2 = thisAcornCollected;
                 Debug.Log("Acorn2 Collected");
                 break;
             case "Acorn3":
-                if (data.acorn3 == true && thisAcornCollected == true) {
+                if (data.acorn3 == true && thisAcornCollected == true)
+                {
                     extraSave = true;
                 }
                 data.acorn3 = thisAcornCollected;
                 Debug.Log("Acorn3 Collected");
                 break;
             case "Acorn4":
-                if (data.acorn4 == true && thisAcornCollected == true) {
+                if (data.acorn4 == true && thisAcornCollected == true)
+                {
                     extraSave = true;
                 }
                 data.acorn4 = thisAcornCollected;
                 Debug.Log("Acorn4 Collected");
                 break;
             case "Acorn5":
-                if (data.acorn5 == true && thisAcornCollected == true) {
+                if (data.acorn5 == true && thisAcornCollected == true)
+                {
                     extraSave = true;
                 }
                 data.acorn5 = thisAcornCollected;
                 Debug.Log("Acorn5 Collected");
                 break;
             default:
-                Debug.Log("AcornScript on non-acorn, name = "+name);
+                Debug.Log("AcornScript on non-acorn, name = " + name);
                 break;
         }
         if (thisAcornCollected && !extraSave) {
@@ -82,6 +97,7 @@ public class AcornScript : MonoBehaviour, ISaveManager
             Debug.Log("Acorns Collected: "+data.acornsCollected);
         }
         if (data.acornsCollected >= 5) {
+            Debug.Log("ALL ACORNS COLLECTED! Number of Acorns collected (should be 5): "+data.acornsCollected);
             data.allAcornsCollected = true;
             //TODO: Steam achievement
         }

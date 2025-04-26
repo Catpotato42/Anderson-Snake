@@ -35,13 +35,13 @@ public class CoinsDisplay : MonoBehaviour, IPointerClickHandler, ISaveManager
     }
 
     void Update () {
-        coinsText.text = "Coins: "+coins; //jank and I know I could do a thing when I set coins but mehhhh
+        coinsText.text = "Coins: "+coins; //jank and I know I could do an event when I set coins but mehhhh
     }
 
     public void OnPointerClick (PointerEventData pointerEventData) {
         if (pointerEventData.button == PointerEventData.InputButton.Left) {
-            coins += 1000; //TODO: REMOVE, replace with an audio output
-            coinsText.text = "Coins: "+coins; //TODO: REMOVE
+            //coins += 1000;
+            coinsText.text = "Coins: "+coins; //Kept this in case I need it for debugging
             AudioManager.instance.PlayAudio("defaultButtonClick");
             if (SceneManager.GetActiveScene().buildIndex == 4 && !acornFound && canSpawnAcorn) {
                 canSpawnAcorn = false;
@@ -52,7 +52,7 @@ public class CoinsDisplay : MonoBehaviour, IPointerClickHandler, ISaveManager
                 SaveManager.instance.UpdateSaveManagerObjects();
                 SaveManager.instance.LoadGame();
             }
-        } /*else if (pointerEventData.button == PointerEventData.InputButton.Right) { //TODO: REMOVE right button input completely
+        } /*else if (pointerEventData.button == PointerEventData.InputButton.Right) {
             coins = 0;
             coinsText.text = "Coins: "+coins;
         }*/
