@@ -120,7 +120,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     private int minExtraSegments = 0;
 
     //Extra Choices
-    private int extraChoices; //TODO: implement
+    private int extraChoices;
     private int defaultExtraChoices = 0;
     private int maxExtraChoices = 2;
 

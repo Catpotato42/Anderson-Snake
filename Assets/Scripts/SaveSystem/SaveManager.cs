@@ -72,7 +72,7 @@ public class SaveManager : MonoBehaviour {
 
     public void LoadGame () {
         //load saved file or make a new game
-        this.gameData = dataHandler.Load();
+        gameData = dataHandler.Load();
 
         if (gameData == null) {
             Debug.Log("Game not found, making default new game.");
@@ -93,7 +93,10 @@ public class SaveManager : MonoBehaviour {
     public void SaveGame () { //should be called when going back and forth from the main menu as well as in OnApplicationQuit
         //pass data to other scripts
         foreach (ISaveManager saveManagerObj in saveManagerObjects) {
-            saveManagerObj.SaveData(gameData);
+            if (saveManagerObj != null)
+            {
+                saveManagerObj.SaveData(gameData);
+            }
         }
         //Debug.Log("Loaded mapSize and health, "+gameData.mapSize+" and "+gameData.extraHealth+".");
         //save to file using the data handler

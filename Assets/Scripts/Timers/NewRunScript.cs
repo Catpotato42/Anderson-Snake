@@ -10,7 +10,6 @@ public class NewRunScript : MonoBehaviour, ISaveManager, IPointerClickHandler
     //this should ONLY be on the title screen.
     private bool timerDone;
     private bool hasChallengeRun;
-    private PlayUpgradeButtonAudio playUpgradeButtonAudio;
     public void LoadData (GameData data) {
         timerDone = data.timerDone;
         hasChallengeRun = data.hasChallengeRun;
@@ -20,18 +19,14 @@ public class NewRunScript : MonoBehaviour, ISaveManager, IPointerClickHandler
         data.timerDone = timerDone;
     }
 
-    void Start () {
-        playUpgradeButtonAudio = GetComponent<PlayUpgradeButtonAudio>();
-    }
-
     public void OnPointerClick (PointerEventData pointerEventData) {
         if (timerDone) { //if the timer has been stopped or if it was not started yet
             SaveManager.instance.NewGamePlus(false);
-            playUpgradeButtonAudio.PlayChange();
+            AudioManager.instance.PlayAudio("defaultButtonClick");
             timerDone = false;
         } else { //otherwise, reset timer and start new game.
             SaveManager.instance.NewGamePlus(true);
-            playUpgradeButtonAudio.PlayChange();
+            AudioManager.instance.PlayAudio("defaultButtonClick");
             timerDone = true;
         }
     }
