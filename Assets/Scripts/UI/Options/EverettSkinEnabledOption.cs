@@ -36,8 +36,6 @@ public class EverettSkinEnabledOption : MonoBehaviour, IPointerClickHandler, ISa
         if (!hasEverettSkin && skinPref != "everett") {
             button.GetComponent<Image>().color = Color.gray;
             gameObject.GetComponentInParent<TextMeshProUGUI>().text = "Locked";
-        } else if (highScoreEv < 50 && skinPref == "everett") {
-            Debug.LogWarning("You shouldn't have that skin... (╯°□°）╯︵ ┻━┻");
         }
     }
 

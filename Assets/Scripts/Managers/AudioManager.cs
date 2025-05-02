@@ -12,6 +12,7 @@ public class AudioManager : MonoBehaviour, ISaveManager
     [SerializeField] private AudioClip hurt;
     [SerializeField] private AudioClip death;
     [SerializeField] private AudioClip eat;
+    [SerializeField] private AudioClip goldAcorn;
 
     void Awake() {
         if (instance == null) {
@@ -64,6 +65,9 @@ public class AudioManager : MonoBehaviour, ISaveManager
                 } else {
                     Debug.Log("eat not found in PlayAudio!");
                 }
+                break;
+            case "goldAcorn":
+                audioSource.PlayOneShot(goldAcorn);
                 break;
             default:
                 Debug.Log("In PlayAudio: clip name "+clipName+" does not match known clips");

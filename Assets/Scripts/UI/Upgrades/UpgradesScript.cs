@@ -75,6 +75,24 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
     //Time Slow Unlock
     private bool hasTimeSlow;
 
+    //Everett Skin
+    private bool hasEverettSkin;
+    private bool hasEverett;
+    private bool timerDone;
+    private bool hasChallengeRun;
+    public event Action onTimerDone;
+    public bool TimerDone {
+        get => timerDone;
+        set
+        {
+            if (!timerDone && value) //if timer is not done and we are setting it to done (true)
+            {
+                timerDone = value;
+                onTimerDone?.Invoke();
+            }
+        }
+    }
+
     //Grow Amount
     private int segmentsPerGrow;
     private int defaultSegmentsPer = 4;
@@ -105,9 +123,9 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
 
     //Coin Multi
     private float coinMulti; //dont work, 3.9 costs 172 nothing past that
-    private float maxCoinMulti = 4f;
+    private float maxCoinMulti = 10f;
     private float defaultCoinMulti = 1f;
-    private float coinMultiIncrement = .1f;
+    private float coinMultiIncrement = .2f;
 
     //Map Size
     private int mapSize;
@@ -167,6 +185,9 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
         hasDashInvincibility = data.hasDashInvincibility;
         hasReverse = data.hasReverse;
         hasTimeSlow = data.hasTimeSlow;
+        hasEverett = data.hasEverett;
+        hasEverettSkin = data.hasEverettSkin;
+        hasChallengeRun = data.hasChallengeRun;
         segmentsPerGrow = data.segmentsPerGrow;
         extraHealth = data.extraHealth;
         extraFood = data.extraFood;
@@ -181,6 +202,7 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
         tsCooldown = data.tsCooldown;
         dashCD = data.dashCD;
         reverseCD = data.reverseCD;
+        timerDone = data.timerDone;
         ScriptType(); // ^_^
         OnStartAndReload();
     }
@@ -198,6 +220,11 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 break;
             case "Reverse":
                 data.hasReverse = unlocked0;
+                break;
+            case "Everett":
+                data.timerDone = timerDone;
+                data.hasEverettSkin = unlocked0;
+                data.hasChallengeRun = hasChallengeRun;
                 break;
             case "DecreaseGrowAmount":
                 data.segmentsPerGrow = condInt;
@@ -272,6 +299,16 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 cost = new int[]{150};
                 varType = 1;
                 break;
+            case "Everett":
+                usingUnlock = true;
+                unlocked0 = hasEverettSkin;
+                unlocked1 = hasEverett; //shouldn't matter, but a good fallback.
+                cost = new int[]{3000};
+                varType = 1;
+                if (!hasEverett) { //If Everett mode not unlocked
+                    gameObject.SetActive(false);
+                }
+                break;
             case "DecreaseGrowAmount":
                 increment = false;
                 condInt = segmentsPerGrow;
@@ -279,9 +316,12 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 defaultInt = defaultSegmentsPer;
                 costSize = defaultInt - boundaryInt;
                 cost = new int[costSize];
-                cost[0] = 100; //I can forsee this being much easier if I assigned variables to costs with the others but honestly that might create even more clutter.
-                for (int i = 1; i < cost.Length/2; i++) {
-                    cost[i] = cost[i-1] + 50;
+                cost[0] = 30; //I can forsee this being much easier if I assigned variables to costs with the others but honestly that might create even more clutter.
+                cost[1] = 60;
+                cost[2] = 100;
+                for (int i = 3; i < cost.Length / 2; i++)
+                {
+                    cost[i] = cost[i - 1] + 50;
                 }
                 for (int i = cost.Length / 2; i < cost.Length; i++) {
                     cost[i] = cost[i-1] + 60;
@@ -297,11 +337,15 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 costSize = Mathf.RoundToInt((boundaryFloat - defaultFloat) / incrementAmount);
                 cost = new int[costSize]; //make sure this can always convert to an int
                 cost[0] = 50;
-                for (int i = 1; i < cost.Length/2; i++) {
-                    cost[i] = cost[i-1] + 10;
+                cost[1] = 65;
+                cost[2] = 80;
+                cost[3] = 100;
+                for (int i = 4; i < cost.Length / 2; i++)
+                {
+                    cost[i] = cost[i - 1] + 20;
                 }
                 for (int i = cost.Length / 2; i < cost.Length; i++) {
-                    cost[i] = cost[i-1] + 20;
+                    cost[i] = cost[i-1] + 40;
                 }
                 varType = 3;
                 break;
@@ -312,12 +356,17 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 boundaryInt = maxFood;
                 costSize = boundaryInt - defaultInt;
                 cost = new int[costSize]; //make sure this can always convert to an int
-                cost[0] = 40;
-                for (int i = 1; i < cost.Length/2; i++) {
-                    cost[i] = cost[i-1] + 5;
+                cost[0] = 30;
+                cost[1] = 80;
+                cost[2] = 120;
+                cost[3] = 160;
+                cost[4] = 215;
+                for (int i = 5; i < cost.Length / 2; i++)
+                {
+                    cost[i] = cost[i - 1] + 50;
                 }
                 for (int i = cost.Length / 2; i < cost.Length; i++) {
-                    cost[i] = cost[i-1] + 7;
+                    cost[i] = cost[i-1] + 70;
                 }
                 varType = 2;
                 break;
@@ -331,10 +380,10 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 cost = new int[costSize]; //make sure this can always convert to an int
                 cost[0] = 25;
                 for (int i = 1; i < cost.Length/2; i++) {
-                    cost[i] = cost[i-1] + 5;
+                    cost[i] = cost[i-1] + 10;
                 }
                 for (int i = cost.Length / 2; i < cost.Length; i++) {
-                    cost[i] = cost[i-1] + 7;
+                    cost[i] = cost[i-1] + 20;
                 }
                 varType = 3;
                 break;
@@ -346,9 +395,9 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 defaultFloat = defaultXpMulti;
                 costSize = Mathf.RoundToInt((boundaryFloat - defaultFloat) / incrementAmount);
                 cost = new int[costSize]; //make sure this can always convert to an int
-                cost[0] = 15;
+                cost[0] = 10;
                 for (int i = 1; i < cost.Length/2; i++) {
-                    cost[i] = cost[i-1] + 3;
+                    cost[i] = cost[i-1] + 5;
                 }
                 for (int i = cost.Length / 2; i < cost.Length; i++) {
                     cost[i] = cost[i-1] + 5;
@@ -363,12 +412,15 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 defaultFloat = defaultCoinMulti;
                 costSize = Mathf.RoundToInt((boundaryFloat - defaultFloat) / incrementAmount);
                 cost = new int[costSize]; //make sure this can always convert to an int
-                cost[0] = 30;
-                for (int i = 1; i < cost.Length/2; i++) {
-                    cost[i] = cost[i-1] + 4;
+                cost[0] = 25;
+                cost[1] = 50;
+                cost[2] = 90;
+                for (int i = 3; i < cost.Length / 2; i++)
+                {
+                    cost[i] = cost[i - 1] + 60;
                 }
                 for (int i = cost.Length / 2; i < cost.Length; i++) {
-                    cost[i] = cost[i-1] + 6;
+                    cost[i] = cost[i-1] + 100;
                 }
                 varType = 3;
                 break;
@@ -396,8 +448,10 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 costSize = defaultInt - boundaryInt;
                 cost = new int[costSize]; //make sure this can always convert to an int
                 cost[0] = 25;
-                for (int i = 1; i < cost.Length/2; i++) {
-                    cost[i] = cost[i-1] + 30;
+                cost[1] = 40;
+                for (int i = 2; i < cost.Length / 2; i++)
+                {
+                    cost[i] = cost[i - 1] + 30;
                 }
                 for (int i = cost.Length / 2; i < cost.Length; i++) {
                     cost[i] = cost[i-1] + 70;
@@ -411,12 +465,12 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
                 boundaryInt = maxExtraChoices;
                 costSize = boundaryInt - defaultInt;
                 cost = new int[costSize]; //make sure this can always convert to an int
-                cost[0] = 100;
+                cost[0] = 50;
                 for (int i = 1; i < cost.Length/2; i++) {
-                    cost[i] = cost[i-1] + 100;
+                    cost[i] = cost[i-1] + 50;
                 }
                 for (int i = cost.Length / 2; i < cost.Length; i++) {
-                    cost[i] = cost[i-1] + 200;
+                    cost[i] = cost[i-1] + 150;
                 }
                 varType = 2;
                 break;
@@ -633,7 +687,19 @@ public class UpgradesScript : MonoBehaviour, IPointerClickHandler, ISaveManager
             unlocked0 = true;
             amountText.text = unlockString;
             costTracker.text = "";
-            if (type == "Dash" || type == "TimeSlow" || type == "Reverse") { // ¯\(°_o)/¯ what else am I supposed to use like an event Action that all the usingUnlock scripts subscribe to? Ridiculous.
+            if (type == "Everett")
+            {
+                if (!timerDone)
+                {
+                    TimerDone = true;
+                }
+                if (!hasChallengeRun)
+                {
+                    hasChallengeRun = true;
+                }
+            }
+            if (type == "Dash" || type == "TimeSlow" || type == "Reverse")
+            { // ¯\(°_o)/¯ what else am I supposed to use like an event Action that all the usingUnlock scripts subscribe to? Ridiculous.
                 SaveManager.instance.SaveGame();
                 SaveManager.instance.LoadGame();
             }

@@ -8,7 +8,6 @@ using Unity.VisualScripting;
 public class Player : MonoBehaviour, ISaveManager
 {
     //TODO: add stratton mode as a branch so that you can look at different scripts by clicking buttons where it's relevant.
-    //TODO: add a bullet that appears around 20 seconds in
 
     //BUGS:
     //If you input a direction you are already going, then another one right after that, it takes one segment move for it to update.
@@ -53,6 +52,8 @@ public class Player : MonoBehaviour, ISaveManager
     private string difficultyScale;
     private float customFixedInterval = 0.02f; // Time interval in seconds (same as default Time.fixedDeltaTime so should run fixedupdate at the same rate)
     private float timeSinceLastUpdate = 0f;
+    private float soundTracker = 0f; //uses customFixedInterval as well
+    private float soundTracker2 = 0f; //uses customFixedInterval as well
     private float localTimeScale;
     //private bool paused = true;
     private bool isChoosing = false;
@@ -122,7 +123,6 @@ public class Player : MonoBehaviour, ISaveManager
     private Vector2 lastSegmentDirection;
 
     //Trackers
-    public bool timerDone;
     private bool hasEverett;
     private bool hasMedium;
     private bool hasHard;
@@ -214,7 +214,6 @@ public class Player : MonoBehaviour, ISaveManager
         coins = data.coins;
         hasEverettSkin = data.hasEverettSkin;
         hasChallengeRun = data.hasChallengeRun;
-        timerDone = data.timerDone;
     }
     public void SaveData(GameData data) {
         data.hasMedium = hasMedium;
@@ -223,7 +222,6 @@ public class Player : MonoBehaviour, ISaveManager
         data.hasEverettSkin = hasEverettSkin;
         data.hasChallengeRun = hasChallengeRun;
         data.coins = coins;
-        data.timerDone = timerDone;
     }
 
     void Awake () {
@@ -289,7 +287,7 @@ public class Player : MonoBehaviour, ISaveManager
     void Start()
     {   
         if (difficultyScale == "everett") {
-            difficultyTime = .015f;
+            difficultyTime = .017f;
             Debug.Log("Difficulty = everett");
         } else if (difficultyScale == "basic") {
             difficultyTime = .008f;
@@ -349,13 +347,13 @@ public class Player : MonoBehaviour, ISaveManager
                 coinMultiTemp = coinMulti;
                 break;
             case "medium":
-                coinMultiTemp = coinMulti + 1f;
+                coinMultiTemp = coinMulti + 2.5f;
                 break;
             case "hard":
-                coinMultiTemp = coinMulti + 2f;
+                coinMultiTemp = coinMulti + 3f;
                 break;
             case "everett":
-                coinMultiTemp = coinMulti + 3f;
+                coinMultiTemp = coinMulti + 5f;
                 break;
             default:
                 Debug.Log("difficultyScale (Player) error in SetCoinMulti, difficulty = "+difficultyScale);
@@ -392,7 +390,7 @@ public class Player : MonoBehaviour, ISaveManager
             Time.timeScale = 1f;
             isChoosing = false;
         }
-        if (difficultyScale == "everett" && localTimeScale <= .4f) {
+        if (difficultyScale == "everett" && localTimeScale <= .45f) {
             localTimeScale += difficultyTime;
         } else if (difficultyScale == "basic" && localTimeScale <= .25f){
             localTimeScale += difficultyTime;
@@ -522,6 +520,8 @@ public class Player : MonoBehaviour, ISaveManager
         if (reverseCooldownTracker > reverseCD && !canReverse) {
             canReverse = true;
         }
+        soundTracker += Time.deltaTime;
+        soundTracker2 += Time.deltaTime;
         GetUserInput();
         if (canChangeDirection) {
             ProcessInputQueue();
@@ -684,8 +684,13 @@ public class Player : MonoBehaviour, ISaveManager
 
     private void MoveSegments () {
         //put on top of one in front
-        for (int i = segments.Count - 2; i > 0; i--) {
+        for (int i = segments.Count - 1; i > 0; i--) //-2?
+        {
             segments[i].transform.position = segments[i - 1].transform.position;
+            if (i != segments.Count - 1)
+            {
+                segments[i].transform.rotation = segments[i - 1].transform.rotation;
+            }
         }
         Vector3 oldPosLast = segments[segments.Count - 1].transform.position; //getting the direction 
         segments[segments.Count - 1].transform.position = segments[segments.Count - 2].transform.position;
@@ -785,7 +790,10 @@ public class Player : MonoBehaviour, ISaveManager
             return;
         }
         //this part means you actually were hit ಠ﹏ಠ noob
-        AudioManager.instance.PlayAudio("hurt");
+        if (soundTracker >= customFixedInterval) {
+            AudioManager.instance.PlayAudio("hurt");
+            soundTracker = 0f;
+        }
         StartCoroutine(healthFlash.DecreaseHealthFlash());
         health -= 1;
         Debug.Log("health = "+health);
@@ -803,9 +811,12 @@ public class Player : MonoBehaviour, ISaveManager
         Time.timeScale = 0f;
         tempTimeSlowTime = 0f;
         isDead = true;
-        AudioManager.instance.PlayAudio("death");
+        if (soundTracker2 >= customFixedInterval) {
+            AudioManager.instance.PlayAudio("death");
+            soundTracker2 = 0f;
+        }
         //Debug.Log("died with "+upgradeNumber+" upgrades");
-        int onDeathCoins = (int)Mathf.Round((snakeScore + (int)((RunTimer.instance.publicRunTime - RunTimer.instance.runTimeTracker)/3)) * coinMultiTemp);
+        int onDeathCoins = (int)Mathf.Round((snakeScore + (int)((RunTimer.instance.publicRunTime - RunTimer.instance.runTimeTracker)/2.5f)) * coinMultiTemp);
         coins += onDeathCoins; //should watch out for being able to somehow die twice
         deathScreen.Setup(snakeScore, onDeathCoins);
         UpdateHighScore();
@@ -857,13 +868,12 @@ public class Player : MonoBehaviour, ISaveManager
         } else if (snakeScore == 70 && !hasEverett && difficultyScale == "hard") {
             OnDiffUnlock.Invoke("EVERETT MODE UNLOCKED!!!");
             hasEverett = true;
-        } else if (snakeScore == 100 && difficultyScale == "everett" && !hasEverettSkin) {
+        } /*else if (snakeScore == 100 && difficultyScale == "everett" && !hasEverettSkin) {
             OnDiffUnlock.Invoke("EVERETT SKIN UNLOCKED!");
             hasEverettSkin = true;
             hasChallengeRun = true;
             //stop run timer
-            timerDone = true;
-        }
+        }*/
         UpgradePlayer();
         OnXPIncrease.Invoke();
     }

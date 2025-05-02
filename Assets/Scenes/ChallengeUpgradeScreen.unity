@@ -3517,8 +3517,8 @@ Canvas:
   m_GameObject: {fileID: 563365073}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 0
-  m_Camera: {fileID: 0}
+  m_RenderMode: 1
+  m_Camera: {fileID: 818491431}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
   m_ReceivesEvents: 1
@@ -8319,7 +8319,7 @@ MonoBehaviour:
   m_text: 0:00
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 912e089e6bdeb25469abbabef941c847, type: 2}
-  m_sharedMaterial: {fileID: -3259791092611307699, guid: 912e089e6bdeb25469abbabef941c847, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: dae2f0657b107df4795910989554a292, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

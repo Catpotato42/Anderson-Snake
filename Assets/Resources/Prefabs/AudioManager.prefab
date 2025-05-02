@@ -49,6 +49,7 @@ MonoBehaviour:
   hurt: {fileID: 8300000, guid: a3d98d715e5b67b4697fc5f18fe4249a, type: 3}
   death: {fileID: 8300000, guid: 634560591b6889a469c54919caac8eb4, type: 3}
   eat: {fileID: 8300000, guid: e56d2e027b9eec54590f5435e868aaab, type: 3}
+  goldAcorn: {fileID: 8300000, guid: fe081dc7ce86af346976efcd3dfd8329, type: 3}
 --- !u!82 &1201995274125987204
 AudioSource:
   m_ObjectHideFlags: 0

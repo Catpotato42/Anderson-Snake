@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class SpeedrunTimer : MonoBehaviour, ISaveManager
 {
@@ -25,26 +26,47 @@ public class SpeedrunTimer : MonoBehaviour, ISaveManager
         speedrunText = GetComponent<TextMeshProUGUI>();
     }
 
+    void Start()
+    {
+        
+        if (SceneManager.GetActiveScene().buildIndex == 2 || SceneManager.GetActiveScene().buildIndex == 4)
+        {
+            UpgradesScript[] allUpgrades = FindObjectsOfType<UpgradesScript>();
+            foreach (UpgradesScript upgrade in allUpgrades)
+            {
+                upgrade.onTimerDone += TimerDone; //easier than dragging and dropping in for each upgrade scene
+            }
+        }
+    }
+
+    private void TimerDone()
+    {
+        timerDone = true; //just for clarity
+    }
+
     void Update ()
     {
-        if (Player.instance != null) {
-            timerDone = Player.instance.timerDone;
-        }
         if (!timerDone) {
             speedrunTimer += Time.unscaledDeltaTime;
         }
         SetSeconds();
     }
 
-    private void SetSeconds () {//copied completely from RunTimer
+    private void SetSeconds()
+    {//copied completely from RunTimer
         int minutes = (int)speedrunTimer / 60;
         int seconds = (int)speedrunTimer % 60;
-        if (speedrunTimer >= 60f) { //if more than a minute on the speedrunTimer
+        if (speedrunTimer >= 60f)
+        { //if more than a minute on the speedrunTimer
             speedrunText.text = minutes + ":" + seconds.ToString("00");
-        } else if (speedrunTimer < 60f && speedrunTimer > 10f){
-            speedrunText.text = "0:"+ (int)speedrunTimer;
-        } else if (speedrunTimer < 10f) {
-            speedrunText.text = "" + Mathf.Round(speedrunTimer*100f)/100f; //fixed the fucking formatting with single digits ಠ﹏ಠ
+        }
+        else if (speedrunTimer < 60f && speedrunTimer > 10f)
+        {
+            speedrunText.text = "0:" + (int)speedrunTimer;
+        }
+        else if (speedrunTimer < 10f)
+        {
+            speedrunText.text = "" + Mathf.Round(speedrunTimer * 100f) / 100f; //fixed the fucking formatting with single digits ಠ﹏ಠ
         }
     }
 }

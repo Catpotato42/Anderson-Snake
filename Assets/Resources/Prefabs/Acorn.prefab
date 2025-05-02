@@ -206,3 +206,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d236015753f3a14d983c682d0e3b1ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  acornCollected: {fileID: 1295111549690421175, guid: a883f3b46b8ed8e42aab1be914d2a9cc, type: 3}
